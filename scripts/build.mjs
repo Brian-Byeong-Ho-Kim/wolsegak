@@ -79,9 +79,22 @@ function shape(t, x, dongFilter) {
   };
 }
 
+// 인증키가 아직 등록(활용신청 승인·동기화)되지 않은 API는 전국에서 건너뛴다
+const skipped = new Set();
+const notRegistered = e => /SERVICE_KEY_IS_NOT_REGISTERED|등록되지 않은 서비스키|SERVICE ACCESS DENIED/.test(String(e.message));
+
 async function buildSgg([code, name]) {
   const rows = [], dongs = [], dIdx = new Map(), perType = [0, 0, 0, 0];
   for (const t of TYPES) {
+    if (skipped.has(t.svc)) continue;
+    try { await typeRows(t); }
+    catch (e) {
+      if (!notRegistered(e)) throw e;
+      if (!skipped.has(t.svc)) console.warn(`⚠ ${t.svc}: 인증키가 이 API에 등록되지 않아 건너뜀 (공공데이터포털 활용신청 확인)`);
+      skipped.add(t.svc);
+    }
+  }
+  async function typeRows(t) {
     for (const ym of months) {
       let items = await fetchMonth(t.svc, code, ym), filter = null;
       if (!items.length && alias[code]) {
