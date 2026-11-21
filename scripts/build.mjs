@@ -131,14 +131,19 @@ async function worker() {
         cols: ['type', 'dong', 'area', 'deposit', 'rent', 'floor', 'built', 'yymmdd', 'contract'],
         dongs: r.dongs, rows: r.rows,
       }));
-      index.push({ code: r.code, name: r.name, n: r.rows.length, t: r.perType });
+      // 전국 비교용: 원룸(단독·연립·오피스텔, ~23㎡) 보증금 2천↓ 신규 월세 중간값, 월세 비중
+      const one = r.rows.filter(x => x[0] !== 3 && x[2] <= 23 && x[8] !== 2);
+      const lowW = one.filter(x => x[4] > 0 && x[3] <= 2000).map(x => x[4]).sort((p, q) => p - q);
+      const med = lowW.length ? lowW[Math.floor((lowW.length - 1) / 2)] : null;
+      index.push({ code: r.code, name: r.name, n: r.rows.length, t: r.perType, m1: med, c1: lowW.length,
+        ws: one.length ? Math.round(one.filter(x => x[4] > 0).length / one.length * 100) : null });
       console.log(`${r.code} ${r.name}: ${r.rows.length}건 (누적 호출 ${calls})`);
     } catch (e) {
       failed++; console.error(`실패 ${s[0]} ${s[1]}: ${e.message}`);
     }
   }
 }
-await Promise.all(Array.from({ length: 4 }, worker));
+await Promise.all(Array.from({ length: 8 }, worker));
 
 // 대학 목록 → 시군구 매핑
 const leafByName = new Map(leaf.map(([c, n]) => [n.trim(), c]));
@@ -165,6 +170,8 @@ await writeFile(new URL('public/data/index.json', root), JSON.stringify({
   updated, from: months.at(-1), to: months[0], maxArea: MAX_AREA,
   src: '국토교통부 단독/다가구·연립다세대·오피스텔·아파트 전월세 실거래가 자료 (공공데이터포털)',
   sgg: [...merged.values()].sort((a, b) => a.code.localeCompare(b.code)),
+  // 2026년 개편 지역의 동 목록 (지도에 옛 구 이름이 나올 때 동으로 찾기)
+  split: Object.fromEntries(Object.entries(alias).filter(([, v]) => v[0] && v[0][1]).map(([k, v]) => [k, v[0][1]])),
   univ: univ.filter(u => u.sgg).map(({ name, campus, kind, addr, sgg }) => ({ name, campus, kind, addr, sgg })),
 }));
 console.log(`완료: 시군구 ${index.length}곳, 실패 ${failed}곳, API 호출 ${calls}회`);

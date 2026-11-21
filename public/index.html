@@ -9,6 +9,8 @@
 <meta property="og:description" content="학교 이름이나 동네로 찾고, 보증금·월세만 넣으면 같은 동네 실거래와 비교해 드려요.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23ff6b3d'/><path d='M14 34 32 18l18 16v14a2 2 0 0 1-2 2H16a2 2 0 0 1-2-2z' fill='white'/><path d='m24 38 6 6 11-12' stroke='%23ff6b3d' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <style>
 :root{
   --bg:#fff8f3; --card:#ffffff; --ink:#1f1a17; --sub:#6d635c; --line:#efe3da; --soft:#fff1e8;
@@ -92,6 +94,14 @@ footer{font-size:12px;color:var(--sub);margin-top:30px;line-height:1.7}
 .loading{color:var(--sub);font-size:14px;padding:8px 0}
 .hide{display:none!important}
 svg text{font-family:inherit}
+#map{height:340px;border-radius:14px;margin-top:12px;z-index:0;border:1px solid var(--line)}
+.dlab{background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:2px 8px;font:600 12px/1.4 "Pretendard Variable",sans-serif;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.dlab.on{background:var(--ink);color:#fff}
+.leaflet-tooltip.dtip{background:transparent;border:0;box-shadow:none;padding:0}
+.leaflet-tooltip.dtip::before{display:none}
+h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--sub);margin-top:4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
 @media (max-width:520px){.stats{grid-template-columns:1fr 1fr}.verdict .big{font-size:26px}}
 </style>
 </head>
@@ -108,6 +118,7 @@ svg text{font-family:inherit}
     <div class="tabs" role="tablist">
       <button role="tab" aria-selected="true" data-tab="univ">학교로 찾기</button>
       <button role="tab" aria-selected="false" data-tab="area">동네로 찾기</button>
+      <button role="tab" aria-selected="false" data-tab="map">지도로 찾기</button>
     </div>
     <div id="tab-univ">
       <div class="sugg">
@@ -121,6 +132,10 @@ svg text{font-family:inherit}
         <select id="sido" aria-label="시도"></select>
         <select id="sgg" aria-label="시군구"></select>
       </div>
+    </div>
+    <div id="mapWrap" class="hide">
+      <div id="map" role="application" aria-label="지도"></div>
+      <p class="hint" id="mapHint">지도에서 집을 구할 곳을 누르면 그 동네로 찾아요. 숫자는 동별 월세 중간값(보증금 2천만원 이하, 위 조건 기준)이에요.</p>
     </div>
     <div class="place" id="places"></div>
     <div id="addWrap" class="hide">
@@ -150,6 +165,26 @@ svg text{font-family:inherit}
       <button class="chip" aria-pressed="false" data-v="60-85">60~85㎡</button>
     </div>
     <p class="hint">단독·다가구는 신고된 계약면적, 나머지는 전용면적 기준이에요.</p>
+  </section>
+
+  <section class="card hide" id="statsCard">
+    <h2>📊 <span id="stTitle">실거래 통계</span></h2>
+    <p class="note" style="margin-top:0" id="stSub"></p>
+    <div class="stats" id="stTiles"></div>
+    <h3 class="sub">월별 추이</h3>
+    <div id="stTrend"></div>
+    <h3 class="sub">집 종류별</h3>
+    <div class="scroll"><table id="stTypes"></table></div>
+    <h3 class="sub">크기별 <span class="note">(위에서 고른 집 종류)</span></h3>
+    <div class="scroll"><table id="stAreas"></table></div>
+    <div id="stRankWrap" class="hide">
+      <h3 class="sub">전국 비교 <span class="note">(원룸 ~23㎡, 보증금 2천만원 이하 신규 월세 중간값)</span></h3>
+      <p class="note" id="stRankMe"></p>
+      <div class="row" style="gap:16px;align-items:flex-start">
+        <div><div class="note" style="font-weight:700">비싼 곳 TOP 10</div><table id="stTop"></table></div>
+        <div><div class="note" style="font-weight:700">저렴한 곳 TOP 10</div><table id="stLow"></table></div>
+      </div>
+    </div>
   </section>
 
   <section class="card">
@@ -186,7 +221,7 @@ svg text{font-family:inherit}
       <div class="calc">
         <div><label class="f" for="cDep">보증금 바꿔서</label><div class="unit"><input id="cDep" inputmode="numeric"><span>만원</span></div></div>
         <div class="eq">→</div>
-        <div><label class="f">이 동네 시세로는</label><div class="out" id="cOut">-</div></div>
+        <div><label class="f">전환율로 따지면</label><div class="out" id="cOut">-</div></div>
       </div>
       <p class="note" id="cNote"></p>
     </section>
@@ -213,6 +248,7 @@ svg text{font-family:inherit}
   <footer>
     <div id="srcLine">데이터: 국토교통부 전월세 실거래가 자료(단독/다가구·연립다세대·오피스텔·아파트), 한국대학교육협의회 전국대학및전문대학정보표준데이터 (공공데이터포털)</div>
     <div>전용 85㎡ 이하 계약만 모았어요. 법정 전환율 상한은 한국은행 기준금리 <span id="baseRate"></span>% + 2%p 기준.</div>
+    <div>지도 © OpenStreetMap 기여자, 위치 검색 Nominatim.</div>
     <div>월세각은 공공데이터로 만든 비영리 참고 서비스이며, 법률·금융 자문이 아닙니다.</div>
   </footer>
 </div>
@@ -221,7 +257,7 @@ svg text{font-family:inherit}
 // ===== 설정 =====
 const BASE_RATE = 3.00;          // 한국은행 기준금리(%) — 2026-10-22 금통위 기준. 바뀌면 여기만 고치세요.
 const LEGAL_CAP = Math.min(10, BASE_RATE + 2) / 100; // 주택임대차보호법 시행령 제9조
-const DEFAULT_RATE = 0.06;       // 지역 전환율을 추정할 거래가 모자랄 때 쓰는 값
+const DEFAULT_RATE = 0.06;       // 보증금 차이를 월세로 환산할 때 쓰는 기본 전환율(연). 화면에서 바꿀 수 있음
 const TYPE_NAMES = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
 const DATA = './data/';
 
@@ -232,7 +268,7 @@ const q = (a, p) => { if (!a.length) return NaN; const s = [...a].sort((x, y) =>
 $('#baseRate').textContent = BASE_RATE.toFixed(2);
 
 let INDEX = null;
-const state = { places: [], dongs: new Set(), types: new Set([0, 1, 2]), areas: new Set(['0-23']), mode: 'wolse', univ: null };
+const state = { places: [], dongs: new Set(), types: new Set([0, 1, 2]), areas: new Set(['0-23']), mode: 'wolse', univ: null, rate: DEFAULT_RATE };
 const cache = new Map();
 
 async function loadIndex() {
@@ -272,7 +308,8 @@ function fillSido(sel, sub, optional) {
 }
 
 // ===== 학교 검색 =====
-const norm = s => s.replace(/\s|대학교|대학|\(|\)/g, '').toLowerCase();
+// "성균관대", "성균관대학교", "성균관" 모두 맞도록 대학교·대학을 "대"로 줄여 비교
+const norm = s => s.replace(/[\s()]/g, '').replace(/대학교|대학/g, '대').toLowerCase();
 let sIdx = -1, sList = [];
 $('#uq').addEventListener('input', () => {
   const v = norm($('#uq').value);
@@ -294,6 +331,7 @@ function pickUniv(u) {
   $('#uq').value = u.name;
   $('#ul').classList.add('hide');
   setPlaces([u.sgg]);
+  markUniv(u);
 }
 
 // ===== 지역/동 =====
@@ -303,7 +341,13 @@ async function loadSgg(code) {
   cache.set(code, p);
   try { return await p; } catch (e) { cache.delete(code); throw e; }
 }
-function setPlaces(codes) { state.places = codes; state.dongs.clear(); renderPlaces(); }
+function setPlaces(codes, dongs = []) { state.places = codes; state.dongs = new Set(dongs); renderPlaces(); }
+function toggleDong(d) {
+  state.dongs.has(d) ? state.dongs.delete(d) : state.dongs.add(d);
+  $$('#dongs .chip').forEach(b => b.setAttribute('aria-pressed', state.dongs.has(b.dataset.d)));
+  refreshDongLabels(); renderStats(); writeHash();
+  if (!$('#result').classList.contains('hide')) run();
+}
 function addPlace(code) { if (!state.places.includes(code)) state.places.push(code); renderPlaces(); }
 async function renderPlaces() {
   const box = $('#places');
@@ -323,7 +367,9 @@ async function renderPlaces() {
     const top = [...counts].sort((a, b) => b[1] - a[1]);
     for (const d of [...state.dongs]) if (!counts.has(d)) state.dongs.delete(d);
     $('#dongs').innerHTML = top.slice(0, 30).map(([d, n]) => `<button class="chip" aria-pressed="${state.dongs.has(d)}" data-d="${d}">${d} <small style="opacity:.6">${n.toLocaleString()}</small></button>`).join('') || '<span class="loading">이 지역은 아직 데이터가 없어요.</span>';
-    $$('#dongs .chip').forEach(b => b.onclick = () => { const d = b.dataset.d; state.dongs.has(d) ? state.dongs.delete(d) : state.dongs.add(d); b.setAttribute('aria-pressed', state.dongs.has(d)); writeHash(); if (!$('#result').classList.contains('hide')) run(); });
+    $$('#dongs .chip').forEach(b => b.onclick = () => toggleDong(b.dataset.d));
+    showMap(); drawDongs(sets, top.slice(0, 25).map(([d]) => d));
+    statSets = sets; renderStats();
   } catch (e) {
     $('#dongs').innerHTML = '<span class="loading">이 지역 데이터를 불러오지 못했어요.</span>';
   }
@@ -334,6 +380,7 @@ $$('[data-tab]').forEach(b => b.onclick = () => {
   $$('[data-tab]').forEach(x => x.setAttribute('aria-selected', x === b));
   $('#tab-univ').classList.toggle('hide', b.dataset.tab !== 'univ');
   $('#tab-area').classList.toggle('hide', b.dataset.tab !== 'area');
+  if (b.dataset.tab === 'map') showMap();
 });
 function chipGroup(sel, set, num) {
   $$(sel + ' .chip').forEach(b => b.onclick = () => {
@@ -341,6 +388,7 @@ function chipGroup(sel, set, num) {
     if (set.has(v) && set.size === 1) return;
     set.has(v) ? set.delete(v) : set.add(v);
     b.setAttribute('aria-pressed', set.has(v));
+    refreshDongLabels(); renderStats();
     if (!$('#result').classList.contains('hide')) run();
   });
 }
@@ -355,7 +403,8 @@ $$('[data-mode]').forEach(b => b.onclick = () => {
 });
 $('#go').onclick = run;
 ['#dep', '#rent', '#myArea'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') run(); }));
-$('#onlyNew').onchange = () => { if (!$('#result').classList.contains('hide')) run(); };
+$('#myArea').addEventListener('change', renderStats);
+$('#onlyNew').onchange = () => { renderStats(); refreshDongLabels(); if (!$('#result').classList.contains('hide')) run(); };
 
 // ===== 계산 =====
 function areaRanges() {
@@ -363,32 +412,6 @@ function areaRanges() {
   if (my > 0) return [[my * 0.75, my * 1.25]];
   return [...state.areas].map(s => s.split('-').map(Number));
 }
-// 월세 거래로 이 동네 전환율(연)을 추정: 월세 = a + b·보증금 + c·면적 에서 b → r = -12b
-function estimateRate(rows) {
-  const xs = rows.filter(r => r[4] > 0 && r[3] <= 10000);
-  if (xs.length < 40) return { r: DEFAULT_RATE, est: false };
-  const n = xs.length; let m = [0, 0, 0], X = [];
-  for (const r of xs) X.push([1, r[3], r[2], r[4]]);
-  // 정규방정식 3x3
-  const A = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], B = [0, 0, 0];
-  for (const [a, d, s, y] of X) { const v = [a, d, s]; for (let i = 0; i < 3; i++) { B[i] += v[i] * y; for (let j = 0; j < 3; j++) A[i][j] += v[i] * v[j]; } }
-  const sol = solve3(A, B);
-  if (!sol) return { r: DEFAULT_RATE, est: false };
-  const r = -12 * sol[1];
-  if (!(r > 0.025 && r < 0.15)) return { r: DEFAULT_RATE, est: false };
-  return { r, est: true };
-}
-function solve3(A, B) {
-  const M = A.map((row, i) => [...row, B[i]]);
-  for (let c = 0; c < 3; c++) {
-    let p = c; for (let r = c + 1; r < 3; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
-    if (Math.abs(M[p][c]) < 1e-9) return null;
-    [M[c], M[p]] = [M[p], M[c]];
-    for (let r = 0; r < 3; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k < 4; k++) M[r][k] -= f * M[c][k]; }
-  }
-  return M.map((row, i) => row[3] / row[i]);
-}
-
 let last = null;
 async function run() {
   if (!state.places.length) return;
@@ -417,8 +440,15 @@ async function run() {
   const pick = x => !state.dongs.size || state.dongs.has(x.dong);
   const wolse = state.mode === 'wolse';
   const pool = base.filter(x => wolse ? x.r[4] > 0 : x.r[4] === 0);
-  const sel = pool.filter(pick);
-  const { r: rate, est } = estimateRate(sel.length >= 40 ? sel.map(x => x.r) : pool.map(x => x.r));
+  const selAll = pool.filter(pick);
+  const rate = state.rate;
+  // 보증금이 비슷한 거래끼리 먼저 비교 (거래가 30건 이상일 때). 남은 차이만 전환율로 맞춘다.
+  let sel = selAll, banded = false;
+  if (wolse) {
+    const lo = dep <= 1000 ? 0 : dep * 0.5, hi = dep <= 1000 ? Math.max(2000, dep * 2) : dep * 2;
+    const b = selAll.filter(x => x.r[3] >= lo && x.r[3] <= hi);
+    if (b.length >= 30) { sel = b; banded = true; }
+  }
   const val = x => wolse ? x.r[4] + x.r[3] * rate / 12 : x.r[3] / x.r[2];  // 월세: 환산월세(만원), 전세: ㎡당 보증금
   const my = parseFloat($('#myArea').value);
   const midArea = q(sel.map(x => x.r[2]), .5);
@@ -426,7 +456,7 @@ async function run() {
   const vals = sel.map(val);
   const n = vals.length;
   const pct = n ? vals.filter(v => v < myVal).length / n + vals.filter(v => v === myVal).length / n / 2 : NaN;
-  last = { sel, pool, rate, est, dep, rent, myVal, wolse, val, midArea };
+  last = { sel, pool, rate, banded, dep, rent, myVal, wolse, val, midArea };
 
   // 판정
   const V = $('#verdict');
@@ -454,7 +484,9 @@ async function run() {
       <div class="stat"><span>내 보증금이면 적정 월세</span><b>${n >= 8 ? `${fmt(atMy(p25))}~${fmt(atMy(p75))}만원` : '-'}</b></div>
       <div class="stat"><span>중간값 (내 보증금 기준)</span><b>${n >= 8 ? fmt(atMy(p50)) + '만원' : '-'}</b></div>
       <div class="stat"><span>비교한 거래</span><b>${n.toLocaleString()}건</b></div>`;
-    $('#method').innerHTML = `보증금이 다른 집끼리 비교하려고 보증금을 월세로 환산했어요 (환산월세 = 월세 + 보증금 × ${(rate * 100).toFixed(1)}% ÷ 12). ${est ? `${(rate * 100).toFixed(1)}%는 이 동네 실제 월세 거래에서 추정한 전환율이에요.` : `거래가 적어 전환율은 일반적인 수준인 ${(DEFAULT_RATE * 100).toFixed(0)}%로 잡았어요.`} 내 환산월세는 ${fmt(myVal)}만원이에요.`;
+    $('#method').innerHTML = `${banded ? `보증금이 비슷한 집(${won(dep <= 1000 ? 0 : dep * 0.5)}~${won(dep <= 1000 ? Math.max(2000, dep * 2) : dep * 2)})끼리 비교했어요. ` : '보증금이 비슷한 거래가 적어 보증금이 다른 집도 함께 비교했어요. '}남은 보증금 차이는 월세로 환산해 맞췄어요 (환산월세 = 월세 + 보증금 × 전환율 ÷ 12, 내 환산월세 ${fmt(myVal)}만원).
+      <label class="toggle" style="margin-top:8px">전환율(연) <input id="rateIn" type="number" min="2" max="15" step="0.5" value="${(rate * 100).toFixed(1)}" style="width:80px;padding:6px 8px;font-size:14px">% <span>보통 원룸 월세는 5~8% 수준에서 거래돼요</span></label>`;
+    $('#rateIn').onchange = e => { const v = parseFloat(e.target.value); if (v >= 2 && v <= 15) { state.rate = v / 100; run(); } };
   } else {
     const a = my > 0 ? my : midArea;
     $('#stats').innerHTML = `
@@ -496,11 +528,11 @@ function calc() {
   if (!$('#cDep').value) $('#cDep').value = Math.max(0, dep + (dep < 1000 ? 500 : 1000));
   const d2 = parseFloat($('#cDep').value) || 0, diff = d2 - dep;
   const mkt = Math.max(0, rent - diff * rate / 12), legal = Math.max(0, rent - diff * LEGAL_CAP / 12);
-  $('#cOut').innerHTML = `월세 ${fmt(mkt)}만원<small>${diff >= 0 ? '보증금을 올리면 월세는 이만큼 내려가는 게 시세' : '보증금을 내리면 월세가 이만큼 오르는 게 시세'}</small>`;
+  $('#cOut').innerHTML = `월세 ${fmt(mkt)}만원<small>${diff >= 0 ? '보증금을 올리면 이 정도로 내려가는 게 맞아요' : '보증금을 내리면 이 정도 오르는 게 맞아요'}</small>`;
   $('#cNote').innerHTML = diff > 0
-    ? `보증금 ${won(diff)}을 더 내면 월세가 약 <b>${fmt(diff * rate / 12)}만원</b> 내려가야 이 동네 시세(전환율 ${(rate * 100).toFixed(1)}%)에 맞아요. 덜 깎아 준다면 보증금을 더 내는 만큼 손해예요. 늘어난 보증금은 돌려받아야 할 돈이니 보증금이 안전한 집인지도 함께 확인하세요.`
+    ? `보증금 ${won(diff)}을 더 내면 월세가 약 <b>${fmt(diff * rate / 12)}만원</b> 내려가야 전환율 ${(rate * 100).toFixed(1)}% 기준에 맞아요. 덜 깎아 준다면 보증금을 더 내는 만큼 손해예요. 늘어난 보증금은 돌려받아야 할 돈이니 보증금이 안전한 집인지도 함께 확인하세요.`
     : diff < 0
-      ? `보증금을 ${won(-diff)} 낮추면 시세로는 월세가 약 <b>${fmt(-diff * rate / 12)}만원</b> 올라요. 살고 있는 집을 갱신하며 전환하는 경우 법정 상한으로는 최대 <b>${fmt(-diff * LEGAL_CAP / 12)}만원</b>까지만 올릴 수 있어요 (월세 ${fmt(legal)}만원).`
+      ? `보증금을 ${won(-diff)} 낮추면 전환율 기준으로 월세가 약 <b>${fmt(-diff * rate / 12)}만원</b> 올라요. 살고 있는 집을 갱신하며 전환하는 경우 법정 상한으로는 최대 <b>${fmt(-diff * LEGAL_CAP / 12)}만원</b>까지만 올릴 수 있어요 (월세 ${fmt(legal)}만원).`
       : '바꿀 보증금을 넣어 보세요.';
 }
 $('#cDep').addEventListener('input', calc);
@@ -529,6 +561,197 @@ function deals(sel, wolse) {
   $('#deals').innerHTML = `<tr><th>계약일</th><th>동</th><th>종류</th><th>면적</th><th>층</th><th>${wolse ? '보증금/월세' : '보증금'}</th><th>준공</th></tr>` +
     list.map(({ r, dong }) => `<tr><td>${dt(r[7])}</td><td>${dong}</td><td>${TYPE_NAMES[r[0]]}</td><td>${r[2]}㎡</td><td>${r[5] ?? '-'}</td><td>${wolse ? `${fmt(r[3])}/${fmt(r[4])}` : won(r[3])}</td><td>${r[6] || '-'}</td></tr>`).join('') +
     (list.length ? '' : '<tr><td colspan="7">해당 조건의 거래가 없어요.</td></tr>');
+}
+
+// ===== 지도 (OpenStreetMap + Nominatim, 키 없음) =====
+let map, clickMk, univMk, dongLayer, dongMk = new Map(), geoGen = 0;
+const geoQ = []; let geoBusy = false;
+function nominatim(path, gen) {
+  const url = 'https://nominatim.openstreetmap.org/' + path + (path.includes('?') ? '&' : '?') + 'format=jsonv2&accept-language=ko&countrycodes=kr';
+  const k = 'wsg:' + path;
+  try { const c = localStorage.getItem(k); if (c) return Promise.resolve(JSON.parse(c)); } catch {}
+  return new Promise(res => { geoQ.push({ url, k, res, gen }); pump(); });
+}
+async function pump() {  // Nominatim 이용 정책: 초당 1회
+  if (geoBusy) return; geoBusy = true;
+  while (geoQ.length) {
+    const j = geoQ.shift();
+    if (j.gen != null && j.gen !== geoGen) { j.res(null); continue; }
+    try { const d = await (await fetch(j.url)).json(); try { localStorage.setItem(j.k, JSON.stringify(d)); } catch {} j.res(d); }
+    catch { j.res(null); }
+    await new Promise(r => setTimeout(r, 1100));
+  }
+  geoBusy = false;
+}
+function showMap() {
+  if (!window.L) return;
+  $('#mapWrap').classList.remove('hide');
+  if (map) { setTimeout(() => map.invalidateSize(), 50); return; }
+  map = L.map('map', { scrollWheelZoom: false }).setView([36.4, 127.8], 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap' }).addTo(map);
+  dongLayer = L.layerGroup().addTo(map);
+  map.on('click', onMapClick);
+}
+const SIDO_ALIAS = { 광주광역시: '전남광주통합특별시', 전라남도: '전남광주통합특별시' };
+function matchSgg(parts) {
+  const P = new Set(parts.map(p => SIDO_ALIAS[p] || p));
+  let best = null, bestN = 0;
+  for (const s of INDEX.sgg) {
+    const [sd, ...rest] = s.name.split(' ');
+    if (!P.has(sd)) continue;
+    if (!rest.length) { if (bestN < 1) { best = s.code; bestN = 1; } continue; }
+    if (rest.every(t => P.has(t)) && rest.length + 1 > bestN) { best = s.code; bestN = rest.length + 1; }
+  }
+  if (best && bestN > 1) return best;
+  // 2026년 개편 지역(인천 중·동·서구, 화성시)은 지도에 옛 이름이 남아 있을 수 있어 동 이름으로 찾는다
+  for (const [code, dongs] of Object.entries(INDEX.split || {})) if (dongs.some(d => P.has(d) || P.has(d + '동'))) return code;
+  return best;
+}
+function dongIn(parts, dongs) {
+  const P = new Set(parts);
+  return dongs.find(d => d.split(' ').every(t => P.has(t) || P.has(t + '동'))) || null;
+}
+async function onMapClick(e) {
+  if (!INDEX) return;
+  if (clickMk) clickMk.remove();
+  clickMk = L.marker(e.latlng).addTo(map);
+  $('#mapHint').textContent = '어느 동네인지 찾는 중…';
+  const r = await nominatim(`reverse?lat=${e.latlng.lat.toFixed(5)}&lon=${e.latlng.lng.toFixed(5)}&zoom=16`);
+  const parts = (r && r.display_name || '').split(',').map(x => x.trim());
+  const code = matchSgg(parts);
+  if (!code) { $('#mapHint').textContent = '이 위치의 시·군·구를 찾지 못했어요. 조금 옆을 눌러 보세요.'; return; }
+  state.univ = null; $('#uq').value = '';
+  let dong = null;
+  try { const s = await loadSgg(code); dong = dongIn(parts, s.dongs); } catch {}
+  setPlaces([code], dong ? [dong] : []);
+  $('#mapHint').textContent = `${shortName(code)}${dong ? ' ' + dong : ''}을(를) 골랐어요. 숫자 동그라미를 눌러 동을 더하거나 뺄 수 있어요.`;
+}
+async function markUniv(u) {
+  showMap();
+  const gen = ++geoGen;
+  let r = await nominatim(`search?q=${encodeURIComponent(u.addr.replace(/\s*\(.*\)$/, ''))}&limit=1`);
+  if (!(r && r.length)) r = await nominatim(`search?q=${encodeURIComponent(u.name.replace(/\(.*\)/, ''))}&limit=1`);
+  if (gen !== geoGen && gen !== geoGen - 1) return;
+  if (r && r.length) {
+    if (univMk) univMk.remove();
+    univMk = L.marker([+r[0].lat, +r[0].lon], { icon: L.divIcon({ className: '', html: '<div style="font-size:26px">🎓</div>', iconSize: [28, 28], iconAnchor: [14, 14] }) }).addTo(map).bindTooltip(u.name);
+    map.setView([+r[0].lat, +r[0].lon], 14);
+  }
+}
+let dongSets = [];
+function dongMedian(dong) {
+  const ranges = areaRanges(), onlyNew = $('#onlyNew').checked, v = [];
+  for (const s of dongSets) for (const r of s.rows) {
+    if (s.dongs[r[1]] !== dong || !state.types.has(r[0]) || r[4] <= 0 || r[3] > 2000) continue;
+    if (onlyNew && r[8] === 2) continue;
+    if (!ranges.some(([lo, hi]) => r[2] > lo && r[2] <= hi)) continue;
+    v.push(r[4]);
+  }
+  return v.length >= 3 ? q(v, .5) : null;
+}
+function labelHtml(d) {
+  const m = dongMedian(d);
+  return `<div class="dlab ${state.dongs.has(d) ? 'on' : ''}">${d.split(' ').pop()} ${m == null ? '-' : fmt(m) + '만'}</div>`;
+}
+function refreshDongLabels() { for (const [d, mk] of dongMk) mk.setTooltipContent(labelHtml(d)); }
+async function drawDongs(sets, dongs) {
+  if (!map) return;
+  dongSets = sets; dongLayer.clearLayers(); dongMk.clear();
+  const gen = ++geoGen, names = new Map();
+  for (const s of sets) for (const d of s.dongs) if (!names.has(d)) names.set(d, s.name);
+  const pts = [];
+  if (!univMk || !state.univ) {
+    const c = await nominatim(`search?q=${encodeURIComponent(sets[0].name)}&limit=1`, gen);
+    if (gen !== geoGen) return;
+    if (c && c.length) map.setView([+c[0].lat, +c[0].lon], 13);
+  }
+  for (const d of dongs) {
+    const r = await nominatim(`search?q=${encodeURIComponent(names.get(d) + ' ' + d)}&limit=1`, gen);
+    if (gen !== geoGen) return;
+    if (!(r && r.length)) continue;
+    const ll = [+r[0].lat, +r[0].lon];
+    const mk = L.circleMarker(ll, { radius: 6, color: '#ff6b3d', fillOpacity: .8 })
+      .bindTooltip(labelHtml(d), { permanent: true, direction: 'top', className: 'dtip', interactive: true })
+      .on('click', () => toggleDong(d)).addTo(dongLayer);
+    dongMk.set(d, mk); pts.push(ll);
+    if (pts.length === 4 && !state.univ) map.fitBounds(pts, { padding: [30, 30], maxZoom: 15 });
+  }
+  if (pts.length > 1 && !state.univ) map.fitBounds(pts, { padding: [30, 30], maxZoom: 15 });
+}
+
+// ===== 실거래 통계 =====
+let statSets = [];
+function renderStats() {
+  const card = $('#statsCard');
+  if (!statSets.length || !state.places.length) { card.classList.add('hide'); return; }
+  card.classList.remove('hide');
+  const ranges = areaRanges(), onlyNew = $('#onlyNew').checked;
+  const inArea = a => ranges.some(([lo, hi]) => a > lo && a <= hi);
+  const all = [];
+  for (const s of statSets) for (const r of s.rows) {
+    if (state.dongs.size && !state.dongs.has(s.dongs[r[1]])) continue;
+    if (onlyNew && r[8] === 2) continue;
+    all.push(r);
+  }
+  const sel = all.filter(r => state.types.has(r[0]) && inArea(r[2]));
+  const wol = sel.filter(r => r[4] > 0), jeon = sel.filter(r => r[4] === 0);
+  const low = wol.filter(r => r[3] <= 2000);
+  const where = (state.dongs.size ? [...state.dongs].slice(0, 3).join('·') + (state.dongs.size > 3 ? ` 외 ${state.dongs.size - 3}곳` : '') : state.places.map(shortName).join(' + '));
+  $('#stTitle').textContent = `${where} 전월세 실거래 통계`;
+  const typeTxt = [...state.types].sort().map(t => TYPE_NAMES[t]).join('·');
+  const areaTxt = ($('#myArea').value ? `${$('#myArea').value}㎡ 안팎` : [...state.areas].sort((a, b) => parseFloat(a) - parseFloat(b)).map(a => a.replace('-', '~').replace(/^0~/, '~') + '㎡').join(', '));
+  $('#stSub').textContent = `${typeTxt} · ${areaTxt}${onlyNew ? ' · 신규 계약' : ''} · 계약 ${INDEX.from ? INDEX.from.slice(2, 4) + '.' + INDEX.from.slice(4) : ''}~${INDEX.to ? INDEX.to.slice(2, 4) + '.' + INDEX.to.slice(4) : ''}`;
+  const share = sel.length ? wol.length / sel.length : NaN;
+  const jm = jeon.length ? q(jeon.map(r => r[3] / r[2]), .5) : NaN, ja = jeon.length ? q(jeon.map(r => r[2]), .5) : NaN;
+  $('#stTiles').innerHTML = `
+    <div class="stat"><span>거래</span><b>${sel.length.toLocaleString()}건</b></div>
+    <div class="stat"><span>월세 비중</span><b>${isNaN(share) ? '-' : Math.round(share * 100) + '%'}</b></div>
+    <div class="stat"><span>월세 중간값 (보증금 2천↓)</span><b>${low.length >= 3 ? fmt(q(low.map(r => r[4]), .5)) + '만원' : '-'}</b></div>
+    <div class="stat"><span>그때 보증금 중간값</span><b>${low.length >= 3 ? won(q(low.map(r => r[3]), .5)) : '-'}</b></div>
+    <div class="stat"><span>전세 중간값</span><b>${jeon.length >= 3 ? won(jm * ja) : '-'}</b></div>
+    <div class="stat"><span>전세 ㎡당</span><b>${jeon.length >= 3 ? fmt(jm) + '만원' : '-'}</b></div>`;
+  // 월별
+  const months = [];
+  if (INDEX.from && INDEX.to) { let y = +INDEX.from.slice(0, 4), m = +INDEX.from.slice(4); while (y * 100 + m <= +INDEX.to) { months.push(`${String(y).slice(2)}${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++; } } }
+  const by = new Map(months.map(k => [k, { w: [], n: 0, nw: 0 }]));
+  for (const r of sel) { const k = String(r[7]).padStart(6, '0').slice(0, 4); const b = by.get(k); if (!b) continue; b.n++; if (r[4] > 0) { b.nw++; if (r[3] <= 2000) b.w.push(r[4]); } }
+  const mo = months.map(k => ({ k, n: by.get(k).n, med: by.get(k).w.length >= 3 ? q(by.get(k).w, .5) : null, sh: by.get(k).n ? by.get(k).nw / by.get(k).n : null }));
+  trendChart(mo);
+  // 종류별
+  const row = (label, rs) => { const w = rs.filter(r => r[4] > 0), l = w.filter(r => r[3] <= 2000), j = rs.filter(r => r[4] === 0);
+    return `<tr><td>${label}</td><td>${rs.length.toLocaleString()}</td><td>${rs.length ? Math.round(w.length / rs.length * 100) + '%' : '-'}</td><td>${l.length >= 3 ? fmt(q(l.map(r => r[4]), .5)) + '만' : '-'}</td><td>${j.length >= 3 ? won(q(j.map(r => r[3]), .5)) : '-'}</td><td>${rs.length ? fmt(q(rs.map(r => r[2]), .5)) + '㎡' : '-'}</td></tr>`; };
+  const head = `<tr><th></th><th>거래</th><th>월세 비중</th><th>월세 중간</th><th>전세 중간</th><th>면적 중간</th></tr>`;
+  $('#stTypes').innerHTML = head + [0, 1, 2, 3].map(t => row(TYPE_NAMES[t], all.filter(r => r[0] === t && inArea(r[2])))).join('');
+  const bands = [[0, 23, '~23㎡'], [23, 36, '23~36㎡'], [36, 60, '36~60㎡'], [60, 85, '60~85㎡']];
+  $('#stAreas').innerHTML = head + bands.map(([lo, hi, l]) => row(l, all.filter(r => state.types.has(r[0]) && r[2] > lo && r[2] <= hi))).join('');
+  // 전국 비교 (index에 통계가 있을 때)
+  const ranked = (INDEX.sgg || []).filter(s => s.m1 != null && s.c1 >= 30).sort((a, b) => b.m1 - a.m1);
+  $('#stRankWrap').classList.toggle('hide', ranked.length < 10);
+  if (ranked.length >= 10) {
+    const li = list => list.map((s, i) => `<tr class="${state.places.includes(s.code) ? 'me' : ''}"><td>${shortName(s.code)}</td><td>${fmt(s.m1)}만</td></tr>`).join('');
+    $('#stTop').innerHTML = li(ranked.slice(0, 10)); $('#stLow').innerHTML = li(ranked.slice(-10).reverse());
+    const me = ranked.findIndex(s => s.code === state.places[0]);
+    $('#stRankMe').innerHTML = me >= 0 ? `<b>${shortName(ranked[me].code)}</b>는 전국 ${ranked.length}개 시·군·구 중 <b>${me + 1}번째로 비싸요</b> (원룸 월세 중간값 ${fmt(ranked[me].m1)}만원).` : '이 지역은 원룸 월세 거래가 적어 순위에서 빠졌어요.';
+  }
+}
+function trendChart(mo) {
+  const el = $('#stTrend');
+  if (!mo.length) { el.innerHTML = ''; return; }
+  const W = 680, H = 170, P = 34, bw = (W - P * 2) / mo.length;
+  const maxN = Math.max(1, ...mo.map(m => m.n));
+  const meds = mo.map(m => m.med).filter(v => v != null);
+  const lo = meds.length ? Math.min(...meds) * 0.9 : 0, hi = meds.length ? Math.max(...meds) * 1.1 : 1;
+  const y = v => H - 22 - (v - lo) / ((hi - lo) || 1) * (H - 50);
+  const x = i => P + bw * i + bw / 2;
+  const line = mo.map((m, i) => m.med == null ? null : `${x(i)},${y(m.med)}`).filter(Boolean);
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="월별 거래량과 월세 중간값">
+    ${mo.map((m, i) => `<rect x="${P + bw * i + 3}" y="${H - 22 - m.n / maxN * (H - 60)}" width="${bw - 6}" height="${m.n / maxN * (H - 60)}" rx="3" fill="#fed7aa"><title>${m.k.slice(0, 2)}.${m.k.slice(2)} 거래 ${m.n}건</title></rect>`).join('')}
+    ${line.length > 1 ? `<polyline points="${line.join(' ')}" fill="none" stroke="#c2410c" stroke-width="3" stroke-linejoin="round"/>` : ''}
+    ${mo.map((m, i) => m.med == null ? '' : `<circle cx="${x(i)}" cy="${y(m.med)}" r="4" fill="#c2410c"><title>${m.k.slice(0, 2)}.${m.k.slice(2)} 월세 중간값 ${fmt(m.med)}만원</title></circle>`).join('')}
+    ${mo.map((m, i) => (i % 2 === 0 || mo.length <= 8) ? `<text x="${x(i)}" y="${H - 6}" font-size="15" fill="#6d635c" text-anchor="middle">${+m.k.slice(2)}월</text>` : '').join('')}
+    ${meds.length ? `<text x="${P - 6}" y="${y(Math.max(...meds)) + 5}" font-size="14" fill="#c2410c" text-anchor="end">${fmt(Math.max(...meds))}</text><text x="${P - 6}" y="${y(Math.min(...meds)) + 5}" font-size="14" fill="#c2410c" text-anchor="end">${fmt(Math.min(...meds))}</text>` : ''}
+  </svg>
+  <div class="legend"><span><i style="background:#fed7aa"></i>거래 건수</span><span><i style="background:#c2410c"></i>월세 중간값(만원, 보증금 2천↓)</span><span>최근 달은 신고가 덜 들어와 적게 보여요</span></div>`;
 }
 
 // ===== 링크 공유용 주소(#) =====
