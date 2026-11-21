@@ -136,7 +136,8 @@ async function worker() {
       const lowW = one.filter(x => x[4] > 0 && x[3] <= 2000).map(x => x[4]).sort((p, q) => p - q);
       const med = lowW.length ? lowW[Math.floor((lowW.length - 1) / 2)] : null;
       index.push({ code: r.code, name: r.name, n: r.rows.length, t: r.perType, m1: med, c1: lowW.length,
-        ws: one.length ? Math.round(one.filter(x => x[4] > 0).length / one.length * 100) : null });
+        ws: one.length ? Math.round(one.filter(x => x[4] > 0).length / one.length * 100) : null,
+        d: [...new Set(r.dongs.map(x => x.split(' ')[0]))] });
       console.log(`${r.code} ${r.name}: ${r.rows.length}건 (누적 호출 ${calls})`);
     } catch (e) {
       failed++; console.error(`실패 ${s[0]} ${s[1]}: ${e.message}`);

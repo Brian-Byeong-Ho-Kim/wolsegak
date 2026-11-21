@@ -19,6 +19,7 @@ for (const f of files) {
     ...(byCode.get(d.code) || {}), code: d.code, name: d.name, n: d.rows.length, t: perType,
     m1: lowW.length ? lowW[Math.floor((lowW.length - 1) / 2)] : null, c1: lowW.length,
     ws: one.length ? Math.round(one.filter(x => x[4] > 0).length / one.length * 100) : null,
+    d: [...new Set(d.dongs.map(x => x.split(' ')[0]))],
   });
 }
 index.sgg = [...byCode.values()].sort((a, b) => a.code.localeCompare(b.code));
