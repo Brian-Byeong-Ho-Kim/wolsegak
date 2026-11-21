@@ -66,7 +66,7 @@ async function fetchMonth(svc, lawd, ym) {
 
 function shape(t, x, dongFilter) {
   const dong = tag(x, 'umdNm');
-  if (dongFilter && !dongFilter.includes(dong)) return null;
+  if (dongFilter && !dongFilter.includes(dong.split(' ')[0])) return null;
   const area = num(tag(x, t.area));
   const dep = num(tag(x, 'deposit')), rent = num(tag(x, 'monthlyRent')) ?? 0;
   if (area == null || dep == null || area <= 0 || area > MAX_AREA) return null;
