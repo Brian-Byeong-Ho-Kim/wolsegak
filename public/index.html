@@ -769,6 +769,7 @@ function readHash() {
   if (s) { state.places = s.split(',').filter(c => INDEX.sgg.some(x => x.code === c)); }
   if (p.get('d')) p.get('d').split(',').forEach(d => state.dongs.add(d));
   if (state.places.length) renderPlaces();
+  if (state.univ) markUniv(state.univ);
 }
 loadIndex();
 </script>
