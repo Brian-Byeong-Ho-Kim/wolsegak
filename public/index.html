@@ -113,10 +113,22 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
     <div class="logo"><svg width="26" height="26" viewBox="0 0 64 64"><path d="M10 32 32 13l22 19v19a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3z" fill="#fff"/><path d="m22 37 7 7 13-14" stroke="#ff6b3d" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     <div class="brand"><h1>월세각</h1><p>이 월세, 각 나오나?</p></div>
   </header>
-  <p class="hero">계약 전에 <b>같은 동네·비슷한 크기 집의 실제 전월세 계약</b>과 비교해 보세요. 학교 이름이나 동네만 고르면 됩니다.</p>
+  <p class="hero"><b>내 예산</b>으로 어느 동네에서 어떤 집을 구할 수 있는지, 제안받은 집이 <b>같은 동네·비슷한 크기 집의 실제 전월세 계약</b>보다 비싼지 확인해 보세요.</p>
 
   <section class="card">
-    <h2><span class="step">1</span>어디서 구하세요?</h2>
+    <h2><span class="step">1</span>내 예산은?</h2>
+    <p class="note" style="margin-top:0">가진 보증금과 낼 수 있는 월세를 고르면, 동네를 고를 때 그 돈으로 구할 수 있는 집을 보여 드려요. 입력값은 이 브라우저에만 저장돼요. 건너뛰어도 돼요.</p>
+    <div class="row">
+      <div><label class="f" for="bDep">가진 보증금</label><div class="unit"><input id="bDep" inputmode="numeric" placeholder="예: 500"><span>만원</span></div>
+        <div class="chips qk" data-for="bDep"><button class="chip" data-v="300">300</button><button class="chip" data-v="500">500</button><button class="chip" data-v="1000">1천</button><button class="chip" data-v="2000">2천</button><button class="chip" data-v="5000">5천</button></div></div>
+      <div><label class="f" for="bRent">월세는 최대</label><div class="unit"><input id="bRent" inputmode="numeric" placeholder="예: 50"><span>만원</span></div>
+        <div class="chips qk" data-for="bRent"><button class="chip" data-v="35">35</button><button class="chip" data-v="45">45</button><button class="chip" data-v="55">55</button><button class="chip" data-v="65">65</button><button class="chip" data-v="80">80</button></div></div>
+    </div>
+    <p class="hint" id="bHint"></p>
+  </section>
+
+  <section class="card">
+    <h2><span class="step">2</span>어디서 구하세요?</h2>
     <div class="tabs" role="tablist">
       <button role="tab" aria-selected="true" data-tab="univ">학교로 찾기</button>
       <button role="tab" aria-selected="false" data-tab="area">동네로 찾기</button>
@@ -151,7 +163,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
   </section>
 
   <section class="card">
-    <h2><span class="step">2</span>어떤 집이에요?</h2>
+    <h2><span class="step">3</span>어떤 집이에요?</h2>
     <label class="f">집 종류 (여러 개 선택 가능)</label>
     <div class="chips" id="types">
       <button class="chip" aria-pressed="true" data-v="0">원룸·다가구</button>
@@ -170,14 +182,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
   </section>
 
   <section class="card hide" id="budgetCard">
-    <h2>💰 내 예산으로 보기</h2>
-    <p class="note" style="margin-top:0">가진 보증금과 낼 수 있는 월세를 고르면, 이 동네에서 그 돈으로 구할 수 있는 집을 보여 드려요. 입력값은 이 브라우저에만 저장돼요.</p>
-    <div class="row">
-      <div><label class="f" for="bDep">가진 보증금</label><div class="unit"><input id="bDep" inputmode="numeric" placeholder="예: 500"><span>만원</span></div>
-        <div class="chips qk" data-for="bDep"><button class="chip" data-v="300">300</button><button class="chip" data-v="500">500</button><button class="chip" data-v="1000">1천</button><button class="chip" data-v="2000">2천</button><button class="chip" data-v="5000">5천</button></div></div>
-      <div><label class="f" for="bRent">월세는 최대</label><div class="unit"><input id="bRent" inputmode="numeric" placeholder="예: 50"><span>만원</span></div>
-        <div class="chips qk" data-for="bRent"><button class="chip" data-v="35">35</button><button class="chip" data-v="45">45</button><button class="chip" data-v="55">55</button><button class="chip" data-v="65">65</button><button class="chip" data-v="80">80</button></div></div>
-    </div>
+    <h2>💰 내 예산으로 보면</h2>
     <div id="bOut" class="hide">
       <div class="verdict" id="bHead"></div>
       <div class="stats" id="bTiles"></div>
@@ -214,7 +219,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
   </section>
 
   <section class="card">
-    <h2><span class="step">3</span>제안받은 조건</h2>
+    <h2><span class="step">4</span>제안받은 집 확인하기 <span class="note" style="font-weight:400">(선택)</span></h2>
     <div class="tabs" role="tablist" id="modeTabs">
       <button role="tab" aria-selected="true" data-mode="wolse">월세·반전세</button>
       <button role="tab" aria-selected="false" data-mode="jeonse">전세</button>
@@ -310,6 +315,7 @@ async function loadIndex() {
   fillSido($('#sido'), $('#sgg'));
   fillSido($('#sido2'), $('#sgg2'), true);
   readHash();
+  renderBudget();
 }
 
 function sidoOf(name) { return name.split(' ')[0]; }
@@ -733,13 +739,14 @@ let budgetDong = new Map();
 const fits = (r, B) => r[4] > 0 ? (r[3] <= B.dep && r[4] <= B.rent) : r[3] <= B.dep; // 월세는 보증금·월세 모두 예산 안, 전세는 보증금만
 function renderBudget() {
   const card = $('#budgetCard');
-  if (!statSets.length || !state.places.length) { card.classList.add('hide'); return; }
-  card.classList.remove('hide');
   const B = budget();
   $$('.qk .chip').forEach(c => c.setAttribute('aria-pressed', $('#' + c.closest('.qk').dataset.for).value === c.dataset.v));
-  $('#bOut').classList.toggle('hide', !B);
+  $('#bHint').textContent = B ? (state.places.length ? '아래 「내 예산으로 보면」에서 결과를 확인하세요.' : '이제 학교나 동네를 골라 주세요.') : '';
   budgetDong = new Map();
-  if (!B) { refreshDongLabels(); return; }
+  const show = B && statSets.length && state.places.length;
+  card.classList.toggle('hide', !show);
+  $('#bOut').classList.toggle('hide', !show);
+  if (!show) { refreshDongLabels(); return; }
   const ranges = areaRanges(), onlyNew = $('#onlyNew').checked;
   const inArea = a => ranges.some(([lo, hi]) => a > lo && a <= hi);
   const base = [];  // 집 종류·신규 조건만 (크기·동은 아래에서 따로)
