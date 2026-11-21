@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>월세각 — 이 월세, 각 나오나?</title>
+<meta name="description" content="대학가·사회초년생 전월세 적정가 체크. 국토교통부 전월세 실거래가로 같은 동네 비슷한 집과 비교해 보증금·월세가 적정한지 알려드려요.">
+<meta property="og:title" content="월세각 — 이 월세, 각 나오나?">
+<meta property="og:description" content="학교 이름이나 동네로 찾고, 보증금·월세만 넣으면 같은 동네 실거래와 비교해 드려요.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23ff6b3d'/><path d='M14 34 32 18l18 16v14a2 2 0 0 1-2 2H16a2 2 0 0 1-2-2z' fill='white'/><path d='m24 38 6 6 11-12' stroke='%23ff6b3d' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --bg:#fff8f3; --card:#ffffff; --ink:#1f1a17; --sub:#6d635c; --line:#efe3da; --soft:#fff1e8;
+  --brand:#ff6b3d; --brand-ink:#c2410c;
+  --good:#16a34a; --ok:#2563eb; --warn:#d97706; --bad:#dc2626;
+  --r:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased}
+body{line-height:1.55}
+a{color:var(--brand-ink)}
+.wrap{max-width:760px;margin:0 auto;padding:0 18px 80px}
+header{padding:28px 0 8px;display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:12px;background:var(--brand);display:grid;place-items:center;flex:none}
+.brand h1{font-size:24px;margin:0;letter-spacing:-.02em}
+.brand p{margin:0;color:var(--sub);font-size:14px}
+.hero{margin:14px 0 18px;font-size:15px;color:var(--sub)}
+.hero b{color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin:14px 0;box-shadow:0 1px 0 rgba(0,0,0,.02)}
+.card h2{font-size:17px;margin:0 0 12px;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
+.step{width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-size:13px;display:grid;place-items:center;flex:none}
+.tabs{display:flex;background:var(--soft);border-radius:12px;padding:4px;gap:4px;margin-bottom:12px}
+.tabs button{flex:1;border:0;background:transparent;padding:10px;border-radius:9px;font:inherit;font-weight:600;color:var(--sub);cursor:pointer}
+.tabs button[aria-selected=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+label.f{display:block;font-size:13px;color:var(--sub);margin:12px 0 6px;font-weight:600}
+input,select{width:100%;font:inherit;font-size:16px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none}
+input:focus,select:focus{border-color:var(--brand)}
+.row{display:flex;gap:10px}
+.row>*{flex:1;min-width:0}
+.sugg{position:relative}
+.sugg ul{position:absolute;z-index:5;left:0;right:0;top:calc(100% + 4px);list-style:none;margin:0;padding:6px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.08);max-height:300px;overflow:auto}
+.sugg li{padding:10px 12px;border-radius:8px;cursor:pointer}
+.sugg li:hover,.sugg li[aria-selected=true]{background:var(--soft)}
+.sugg li small{color:var(--sub);display:block;font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+.chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip.x{padding-right:10px}
+.chip.x::after{content:" ✕";opacity:.6}
+.place{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.place .chip{background:var(--soft);border-color:transparent}
+.hint{font-size:13px;color:var(--sub);margin:8px 0 0}
+.unit{position:relative}
+.unit input{padding-right:52px}
+.unit span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--sub);font-size:14px}
+.btn{display:block;width:100%;border:0;background:var(--brand);color:#fff;font:inherit;font-weight:700;font-size:17px;padding:15px;border-radius:14px;margin-top:16px;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.toggle{display:flex;align-items:center;gap:8px;font-size:14px;margin-top:12px;color:var(--sub)}
+.toggle input{width:18px;height:18px;accent-color:var(--brand)}
+.verdict{border-radius:var(--r);padding:22px;margin:14px 0;color:#fff}
+.verdict .lab{font-size:14px;opacity:.9}
+.verdict .big{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:2px 0 6px}
+.verdict .desc{font-size:15px;opacity:.95}
+.v-good{background:linear-gradient(135deg,#16a34a,#15803d)}
+.v-ok{background:linear-gradient(135deg,#2563eb,#1d4ed8)}
+.v-warn{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.v-bad{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.v-none{background:linear-gradient(135deg,#78716c,#57534e)}
+.meter{position:relative;height:12px;border-radius:999px;background:linear-gradient(90deg,#16a34a 0 25%,#2563eb 25% 60%,#f59e0b 60% 80%,#ef4444 80%);margin:26px 0 8px}
+.meter i{position:absolute;top:-8px;width:4px;height:28px;background:var(--ink);border-radius:2px;transform:translateX(-50%)}
+.meter i::after{content:attr(data-l);position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-style:normal;font-size:12px;font-weight:700;white-space:nowrap}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--sub)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.stat{background:var(--soft);border-radius:12px;padding:12px}
+.stat b{display:block;font-size:18px}
+.stat span{font-size:12px;color:var(--sub)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:9px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:12px;color:var(--sub);font-weight:600}
+tr.me td{background:var(--soft);font-weight:700}
+.scroll{overflow-x:auto;margin:0 -6px;padding:0 6px}
+.bar{display:inline-block;height:8px;border-radius:4px;background:var(--brand);opacity:.7;vertical-align:middle}
+.calc{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+.calc .eq{font-size:20px;color:var(--sub)}
+.out{background:var(--soft);border-radius:12px;padding:12px 14px;font-weight:700;font-size:18px}
+.out small{display:block;font-weight:500;font-size:12px;color:var(--sub)}
+.note{font-size:13px;color:var(--sub)}
+.note li{margin:4px 0}
+footer{font-size:12px;color:var(--sub);margin-top:30px;line-height:1.7}
+.loading{color:var(--sub);font-size:14px;padding:8px 0}
+.hide{display:none!important}
+svg text{font-family:inherit}
+@media (max-width:520px){.stats{grid-template-columns:1fr 1fr}.verdict .big{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"><svg width="26" height="26" viewBox="0 0 64 64"><path d="M10 32 32 13l22 19v19a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3z" fill="#fff"/><path d="m22 37 7 7 13-14" stroke="#ff6b3d" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="brand"><h1>월세각</h1><p>이 월세, 각 나오나?</p></div>
+  </header>
+  <p class="hero">계약 전에 <b>같은 동네·비슷한 크기 집의 실제 전월세 계약</b>과 비교해 보세요. 학교 이름이나 동네만 고르면 됩니다.</p>
+
+  <section class="card">
+    <h2><span class="step">1</span>어디서 구하세요?</h2>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="univ">학교로 찾기</button>
+      <button role="tab" aria-selected="false" data-tab="area">동네로 찾기</button>
+    </div>
+    <div id="tab-univ">
+      <div class="sugg">
+        <input id="uq" placeholder="예: 성균관대, 부산대, 영진전문대" autocomplete="off" aria-label="학교 이름">
+        <ul id="ul" class="hide" role="listbox"></ul>
+      </div>
+      <p class="hint">전국 대학·전문대 캠퍼스 400여 곳. 학교가 있는 시·군·구의 거래로 비교해요.</p>
+    </div>
+    <div id="tab-area" class="hide">
+      <div class="row">
+        <select id="sido" aria-label="시도"></select>
+        <select id="sgg" aria-label="시군구"></select>
+      </div>
+    </div>
+    <div class="place" id="places"></div>
+    <div id="addWrap" class="hide">
+      <label class="f">같이 볼 구·시 추가 <span style="font-weight:400">(학교가 경계에 있으면 옆 동네도 넣어 보세요)</span></label>
+      <div class="row"><select id="sido2" aria-label="추가 시도"></select><select id="sgg2" aria-label="추가 시군구"></select></div>
+    </div>
+    <div id="dongWrap" class="hide">
+      <label class="f">동 고르기 <span style="font-weight:400">(안 고르면 전체)</span></label>
+      <div class="chips" id="dongs"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span class="step">2</span>어떤 집이에요?</h2>
+    <label class="f">집 종류 (여러 개 선택 가능)</label>
+    <div class="chips" id="types">
+      <button class="chip" aria-pressed="true" data-v="0">원룸·다가구</button>
+      <button class="chip" aria-pressed="true" data-v="1">빌라(연립·다세대)</button>
+      <button class="chip" aria-pressed="true" data-v="2">오피스텔</button>
+      <button class="chip" aria-pressed="false" data-v="3">아파트</button>
+    </div>
+    <label class="f">크기</label>
+    <div class="chips" id="areas">
+      <button class="chip" aria-pressed="true" data-v="0-23">~23㎡ <small>(~7평, 원룸)</small></button>
+      <button class="chip" aria-pressed="false" data-v="23-36">23~36㎡ <small>(1.5룸·투룸)</small></button>
+      <button class="chip" aria-pressed="false" data-v="36-60">36~60㎡</button>
+      <button class="chip" aria-pressed="false" data-v="60-85">60~85㎡</button>
+    </div>
+    <p class="hint">단독·다가구는 신고된 계약면적, 나머지는 전용면적 기준이에요.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="step">3</span>제안받은 조건</h2>
+    <div class="tabs" role="tablist" id="modeTabs">
+      <button role="tab" aria-selected="true" data-mode="wolse">월세·반전세</button>
+      <button role="tab" aria-selected="false" data-mode="jeonse">전세</button>
+    </div>
+    <div class="row">
+      <div><label class="f" for="dep">보증금</label><div class="unit"><input id="dep" inputmode="numeric" placeholder="500"><span>만원</span></div></div>
+      <div id="rentBox"><label class="f" for="rent">월세</label><div class="unit"><input id="rent" inputmode="numeric" placeholder="50"><span>만원</span></div></div>
+    </div>
+    <div class="row" id="areaRow">
+      <div><label class="f" for="myArea">면적 (선택)</label><div class="unit"><input id="myArea" inputmode="decimal" placeholder="모르면 비워 두세요"><span>㎡</span></div></div>
+    </div>
+    <label class="toggle"><input type="checkbox" id="onlyNew" checked> 신규 계약만 비교 (갱신 계약은 인상 상한 5%라 시세보다 낮아요)</label>
+    <button class="btn" id="go" disabled>적정가 확인하기</button>
+    <p class="hint" id="goHint">먼저 학교나 동네를 골라 주세요.</p>
+  </section>
+
+  <div id="result" class="hide">
+    <div class="verdict" id="verdict"></div>
+    <section class="card">
+      <h2>비슷한 집들 사이에서 내 위치</h2>
+      <div class="meter"><i id="pin" data-l="나"></i></div>
+      <div class="scale"><span>싼 편</span><span>중간</span><span>비싼 편</span></div>
+      <div class="stats" id="stats"></div>
+      <div id="hist" style="margin-top:16px"></div>
+      <p class="note" id="method"></p>
+    </section>
+    <section class="card" id="calcCard">
+      <h2>보증금 ↔ 월세 바꾸면?</h2>
+      <p class="note" style="margin-top:0">집주인이 "보증금 올리면 월세 깎아 줄게요" 할 때 손해인지 계산해 보세요.</p>
+      <div class="calc">
+        <div><label class="f" for="cDep">보증금 바꿔서</label><div class="unit"><input id="cDep" inputmode="numeric"><span>만원</span></div></div>
+        <div class="eq">→</div>
+        <div><label class="f">이 동네 시세로는</label><div class="out" id="cOut">-</div></div>
+      </div>
+      <p class="note" id="cNote"></p>
+    </section>
+    <section class="card">
+      <h2>동네별 시세 <span style="font-weight:400;font-size:13px;color:var(--sub)">· 같은 조건, 보증금 <span id="stdDep"></span>만원 기준 월세</span></h2>
+      <div class="scroll"><table id="dongTable"></table></div>
+    </section>
+    <section class="card">
+      <h2>최근 비슷한 실거래</h2>
+      <div class="scroll"><table id="deals"></table></div>
+      <p class="note">신고된 계약만 있어요. 같은 건물이라도 층·방향·옵션·관리비에 따라 달라요.</p>
+    </section>
+    <section class="card">
+      <h2>계약 전에 꼭 확인하세요</h2>
+      <ul class="note">
+        <li><b>관리비는 이 비교에 없어요.</b> 실거래 신고에는 관리비가 빠져 있어서, 월세는 싸고 관리비가 비싼 집일 수 있어요.</li>
+        <li><b>전세·고액 보증금이면</b> 등기부등본(근저당), 집주인 세금 체납, 전세보증보험 가입 가능 여부를 꼭 확인하세요. 국토교통부·HUG의 「안심전세」 앱에서 확인할 수 있어요.</li>
+        <li>전입신고와 확정일자는 이사 당일 바로 받아 두세요.</li>
+        <li>이 결과는 공개된 실거래로 낸 참고 추정치예요. 실제 집 상태나 위치는 직접 보고 판단하세요.</li>
+      </ul>
+    </section>
+  </div>
+
+  <footer>
+    <div id="srcLine">데이터: 국토교통부 전월세 실거래가 자료(단독/다가구·연립다세대·오피스텔·아파트), 한국대학교육협의회 전국대학및전문대학정보표준데이터 (공공데이터포털)</div>
+    <div>전용 85㎡ 이하 계약만 모았어요. 법정 전환율 상한은 한국은행 기준금리 <span id="baseRate"></span>% + 2%p 기준.</div>
+    <div>월세각은 공공데이터로 만든 비영리 참고 서비스이며, 법률·금융 자문이 아닙니다.</div>
+  </footer>
+</div>
+
+<script>
+// ===== 설정 =====
+const BASE_RATE = 3.00;          // 한국은행 기준금리(%) — 2026-10-22 금통위 기준. 바뀌면 여기만 고치세요.
+const LEGAL_CAP = Math.min(10, BASE_RATE + 2) / 100; // 주택임대차보호법 시행령 제9조
+const DEFAULT_RATE = 0.06;       // 지역 전환율을 추정할 거래가 모자랄 때 쓰는 값
+const TYPE_NAMES = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
+const DATA = './data/';
+
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const fmt = n => n == null || !isFinite(n) ? '-' : Math.round(n).toLocaleString('ko-KR');
+const won = m => { m = Math.round(m); if (Math.abs(m) >= 10000) { const e = Math.floor(m / 10000), r = m % 10000; return `${e}억${r ? ' ' + r.toLocaleString('ko-KR') : ''}만원`; } return `${m.toLocaleString('ko-KR')}만원`; };
+const q = (a, p) => { if (!a.length) return NaN; const s = [...a].sort((x, y) => x - y), i = (s.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return s[lo] + (s[hi] - s[lo]) * (i - lo); };
+$('#baseRate').textContent = BASE_RATE.toFixed(2);
+
+let INDEX = null;
+const state = { places: [], dongs: new Set(), types: new Set([0, 1, 2]), areas: new Set(['0-23']), mode: 'wolse', univ: null };
+const cache = new Map();
+
+async function loadIndex() {
+  try {
+    const r = await fetch(DATA + 'index.json', { cache: 'no-cache' });
+    INDEX = await r.json();
+  } catch (e) {
+    INDEX = { sgg: [], univ: [] };
+    $('#goHint').textContent = '데이터를 불러오지 못했어요. 잠시 후 다시 열어 주세요.';
+  }
+  if (INDEX.updated) $('#srcLine').textContent += ` · 계약 ${INDEX.from.slice(0,4)}.${INDEX.from.slice(4)}~${INDEX.to.slice(0,4)}.${INDEX.to.slice(4)} · 갱신 ${INDEX.updated}`;
+  fillSido($('#sido'), $('#sgg'));
+  fillSido($('#sido2'), $('#sgg2'), true);
+  readHash();
+}
+
+function sidoOf(name) { return name.split(' ')[0]; }
+const SIDO_SHORT = { 서울특별시: '서울', 부산광역시: '부산', 대구광역시: '대구', 인천광역시: '인천', 대전광역시: '대전', 울산광역시: '울산', 세종특별자치시: '세종', 경기도: '경기', 충청북도: '충북', 충청남도: '충남', 경상북도: '경북', 경상남도: '경남', 제주특별자치도: '제주', 강원특별자치도: '강원', 전북특별자치도: '전북', 전남광주통합특별시: '전남광주' };
+function shortName(code) {
+  const s = INDEX.sgg.find(x => x.code === code); if (!s) return code;
+  const [sd, ...rest] = s.name.split(' ');
+  return [SIDO_SHORT[sd] || sd, ...rest].join(' ');
+}
+function fillSido(sel, sub, optional) {
+  const sidos = [...new Set(INDEX.sgg.map(s => sidoOf(s.name)))];
+  sel.innerHTML = `<option value="">${optional ? '추가할 시도' : '시도 선택'}</option>` + sidos.map(s => `<option>${s}</option>`).join('');
+  sub.innerHTML = '<option value="">시군구</option>';
+  sel.onchange = () => {
+    const list = INDEX.sgg.filter(s => sidoOf(s.name) === sel.value);
+    sub.innerHTML = '<option value="">시군구 선택</option>' + list.map(s => `<option value="${s.code}">${s.name.split(' ').slice(1).join(' ') || s.name}</option>`).join('');
+  };
+  sub.onchange = () => {
+    if (!sub.value) return;
+    if (optional) { addPlace(sub.value); sel.value = ''; sub.innerHTML = '<option value="">시군구</option>'; }
+    else { state.univ = null; setPlaces([sub.value]); }
+  };
+}
+
+// ===== 학교 검색 =====
+const norm = s => s.replace(/\s|대학교|대학|\(|\)/g, '').toLowerCase();
+let sIdx = -1, sList = [];
+$('#uq').addEventListener('input', () => {
+  const v = norm($('#uq').value);
+  if (!v || !INDEX) { $('#ul').classList.add('hide'); return; }
+  sList = INDEX.univ.filter(u => norm(u.name).includes(v) || norm(u.name).startsWith(v)).slice(0, 12);
+  sIdx = -1;
+  $('#ul').innerHTML = sList.map((u, i) => `<li role="option" data-i="${i}">${u.name}${u.campus !== '본교' && !u.name.includes('(') ? ' (' + u.campus + ')' : ''}<small>${u.kind} · ${u.addr}</small></li>`).join('') || '<li>찾는 학교가 없어요. 「동네로 찾기」를 써 보세요.</li>';
+  $('#ul').classList.remove('hide');
+});
+$('#uq').addEventListener('keydown', e => {
+  if ($('#ul').classList.contains('hide')) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); sIdx = Math.max(0, Math.min(sList.length - 1, sIdx + (e.key === 'ArrowDown' ? 1 : -1))); $$('#ul li').forEach((li, i) => li.setAttribute('aria-selected', i === sIdx)); }
+  if (e.key === 'Enter' && sList.length) { e.preventDefault(); pickUniv(sList[Math.max(0, sIdx)]); }
+});
+$('#ul').addEventListener('click', e => { const li = e.target.closest('li[data-i]'); if (li) pickUniv(sList[+li.dataset.i]); });
+document.addEventListener('click', e => { if (!e.target.closest('.sugg')) $('#ul').classList.add('hide'); });
+function pickUniv(u) {
+  state.univ = u;
+  $('#uq').value = u.name;
+  $('#ul').classList.add('hide');
+  setPlaces([u.sgg]);
+}
+
+// ===== 지역/동 =====
+async function loadSgg(code) {
+  if (cache.has(code)) return cache.get(code);
+  const p = fetch(DATA + `sgg/${code}.json`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+  cache.set(code, p);
+  try { return await p; } catch (e) { cache.delete(code); throw e; }
+}
+function setPlaces(codes) { state.places = codes; state.dongs.clear(); renderPlaces(); }
+function addPlace(code) { if (!state.places.includes(code)) state.places.push(code); renderPlaces(); }
+async function renderPlaces() {
+  const box = $('#places');
+  box.innerHTML = state.places.map((c, i) => `<button class="chip ${i ? 'x' : ''}" data-c="${c}" ${i ? '' : 'disabled'}>${state.univ && i === 0 ? '🎓 ' : '📍 '}${shortName(c)}</button>`).join('');
+  box.querySelectorAll('.chip.x').forEach(b => b.onclick = () => { state.places = state.places.filter(c => c !== b.dataset.c); renderPlaces(); });
+  $('#addWrap').classList.toggle('hide', !state.places.length);
+  $('#go').disabled = !state.places.length;
+  $('#goHint').textContent = state.places.length ? '' : '먼저 학교나 동네를 골라 주세요.';
+  writeHash();
+  if (!state.places.length) { $('#dongWrap').classList.add('hide'); return; }
+  $('#dongs').innerHTML = '<span class="loading">동 목록 불러오는 중…</span>';
+  $('#dongWrap').classList.remove('hide');
+  try {
+    const sets = await Promise.all(state.places.map(loadSgg));
+    const counts = new Map();
+    for (const s of sets) for (const r of s.rows) { if (r[0] === 3) continue; const k = s.dongs[r[1]]; counts.set(k, (counts.get(k) || 0) + 1); }
+    const top = [...counts].sort((a, b) => b[1] - a[1]);
+    for (const d of [...state.dongs]) if (!counts.has(d)) state.dongs.delete(d);
+    $('#dongs').innerHTML = top.slice(0, 30).map(([d, n]) => `<button class="chip" aria-pressed="${state.dongs.has(d)}" data-d="${d}">${d} <small style="opacity:.6">${n.toLocaleString()}</small></button>`).join('') || '<span class="loading">이 지역은 아직 데이터가 없어요.</span>';
+    $$('#dongs .chip').forEach(b => b.onclick = () => { const d = b.dataset.d; state.dongs.has(d) ? state.dongs.delete(d) : state.dongs.add(d); b.setAttribute('aria-pressed', state.dongs.has(d)); writeHash(); if (!$('#result').classList.contains('hide')) run(); });
+  } catch (e) {
+    $('#dongs').innerHTML = '<span class="loading">이 지역 데이터를 불러오지 못했어요.</span>';
+  }
+}
+
+// ===== 칩/탭 =====
+$$('[data-tab]').forEach(b => b.onclick = () => {
+  $$('[data-tab]').forEach(x => x.setAttribute('aria-selected', x === b));
+  $('#tab-univ').classList.toggle('hide', b.dataset.tab !== 'univ');
+  $('#tab-area').classList.toggle('hide', b.dataset.tab !== 'area');
+});
+function chipGroup(sel, set, num) {
+  $$(sel + ' .chip').forEach(b => b.onclick = () => {
+    const v = num ? +b.dataset.v : b.dataset.v;
+    if (set.has(v) && set.size === 1) return;
+    set.has(v) ? set.delete(v) : set.add(v);
+    b.setAttribute('aria-pressed', set.has(v));
+    if (!$('#result').classList.contains('hide')) run();
+  });
+}
+chipGroup('#types', state.types, true);
+chipGroup('#areas', state.areas, false);
+$$('[data-mode]').forEach(b => b.onclick = () => {
+  state.mode = b.dataset.mode;
+  $$('[data-mode]').forEach(x => x.setAttribute('aria-selected', x === b));
+  $('#rentBox').classList.toggle('hide', state.mode === 'jeonse');
+  $('#dep').placeholder = state.mode === 'jeonse' ? '15000' : '500';
+  if (!$('#result').classList.contains('hide')) run();
+});
+$('#go').onclick = run;
+['#dep', '#rent', '#myArea'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') run(); }));
+$('#onlyNew').onchange = () => { if (!$('#result').classList.contains('hide')) run(); };
+
+// ===== 계산 =====
+function areaRanges() {
+  const my = parseFloat($('#myArea').value);
+  if (my > 0) return [[my * 0.75, my * 1.25]];
+  return [...state.areas].map(s => s.split('-').map(Number));
+}
+// 월세 거래로 이 동네 전환율(연)을 추정: 월세 = a + b·보증금 + c·면적 에서 b → r = -12b
+function estimateRate(rows) {
+  const xs = rows.filter(r => r[4] > 0 && r[3] <= 10000);
+  if (xs.length < 40) return { r: DEFAULT_RATE, est: false };
+  const n = xs.length; let m = [0, 0, 0], X = [];
+  for (const r of xs) X.push([1, r[3], r[2], r[4]]);
+  // 정규방정식 3x3
+  const A = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], B = [0, 0, 0];
+  for (const [a, d, s, y] of X) { const v = [a, d, s]; for (let i = 0; i < 3; i++) { B[i] += v[i] * y; for (let j = 0; j < 3; j++) A[i][j] += v[i] * v[j]; } }
+  const sol = solve3(A, B);
+  if (!sol) return { r: DEFAULT_RATE, est: false };
+  const r = -12 * sol[1];
+  if (!(r > 0.025 && r < 0.15)) return { r: DEFAULT_RATE, est: false };
+  return { r, est: true };
+}
+function solve3(A, B) {
+  const M = A.map((row, i) => [...row, B[i]]);
+  for (let c = 0; c < 3; c++) {
+    let p = c; for (let r = c + 1; r < 3; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    if (Math.abs(M[p][c]) < 1e-9) return null;
+    [M[c], M[p]] = [M[p], M[c]];
+    for (let r = 0; r < 3; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k < 4; k++) M[r][k] -= f * M[c][k]; }
+  }
+  return M.map((row, i) => row[3] / row[i]);
+}
+
+let last = null;
+async function run() {
+  if (!state.places.length) return;
+  const dep = parseFloat(($('#dep').value || '').replace(/,/g, ''));
+  const rent = state.mode === 'jeonse' ? 0 : parseFloat(($('#rent').value || '').replace(/,/g, ''));
+  if (!(dep >= 0) || (state.mode === 'wolse' && !(rent > 0))) {
+    $('#goHint').textContent = state.mode === 'wolse' ? '보증금과 월세를 만원 단위 숫자로 넣어 주세요. (예: 500 / 50)' : '전세 보증금을 만원 단위로 넣어 주세요. (예: 15000)';
+    return;
+  }
+  $('#goHint').textContent = '';
+  $('#go').disabled = true; $('#go').textContent = '비교하는 중…';
+  let sets;
+  try { sets = await Promise.all(state.places.map(loadSgg)); }
+  catch (e) { $('#goHint').textContent = '데이터를 불러오지 못했어요.'; $('#go').disabled = false; $('#go').textContent = '적정가 확인하기'; return; }
+  $('#go').disabled = false; $('#go').textContent = '적정가 확인하기';
+
+  const ranges = areaRanges(), onlyNew = $('#onlyNew').checked;
+  const inArea = a => ranges.some(([lo, hi]) => a > lo && a <= hi);
+  // 같은 조건 전체(동 무관) / 선택 동
+  const base = [];
+  for (const s of sets) for (const r of s.rows) {
+    if (!state.types.has(r[0]) || !inArea(r[2])) continue;
+    if (onlyNew && r[8] === 2) continue;
+    base.push({ r, dong: s.dongs[r[1]], sgg: s.code });
+  }
+  const pick = x => !state.dongs.size || state.dongs.has(x.dong);
+  const wolse = state.mode === 'wolse';
+  const pool = base.filter(x => wolse ? x.r[4] > 0 : x.r[4] === 0);
+  const sel = pool.filter(pick);
+  const { r: rate, est } = estimateRate(sel.length >= 40 ? sel.map(x => x.r) : pool.map(x => x.r));
+  const val = x => wolse ? x.r[4] + x.r[3] * rate / 12 : x.r[3] / x.r[2];  // 월세: 환산월세(만원), 전세: ㎡당 보증금
+  const my = parseFloat($('#myArea').value);
+  const midArea = q(sel.map(x => x.r[2]), .5);
+  const myVal = wolse ? rent + dep * rate / 12 : dep / (my > 0 ? my : midArea);
+  const vals = sel.map(val);
+  const n = vals.length;
+  const pct = n ? vals.filter(v => v < myVal).length / n + vals.filter(v => v === myVal).length / n / 2 : NaN;
+  last = { sel, pool, rate, est, dep, rent, myVal, wolse, val, midArea };
+
+  // 판정
+  const V = $('#verdict');
+  const p = Math.round(pct * 100);
+  let cls = 'v-none', big = '비교할 거래가 부족해요', desc = '집 종류나 크기를 넓히거나, 동 선택을 풀거나, 옆 동네를 추가해 보세요.';
+  if (n >= 8) {
+    if (pct < .25) { cls = 'v-good'; big = '싼 편이에요 👍'; }
+    else if (pct < .6) { cls = 'v-ok'; big = '적정한 편이에요'; }
+    else if (pct < .8) { cls = 'v-warn'; big = '조금 비싼 편이에요'; }
+    else { cls = 'v-bad'; big = '비싼 편이에요'; }
+    desc = `비슷한 집 ${n.toLocaleString()}건 중 ${p <= 50 ? `싼 쪽 ${Math.max(1, p)}%` : `비싼 쪽 ${Math.max(1, 100 - p)}%`} 위치예요.`;
+    if (n < 30) desc += ' (거래가 적어서 참고만 하세요)';
+  }
+  V.className = 'verdict ' + cls;
+  const where = state.dongs.size ? [...state.dongs].slice(0, 3).join('·') + (state.dongs.size > 3 ? ` 외 ${state.dongs.size - 3}곳` : '') : state.places.map(shortName).join(' + ');
+  V.innerHTML = `<div class="lab">${state.univ ? state.univ.name + ' 근처 · ' : ''}${where} · ${wolse ? `보증금 ${won(dep)} / 월세 ${fmt(rent)}만원` : `전세 ${won(dep)}`}</div><div class="big">${big}</div><div class="desc">${desc}</div>`;
+  $('#pin').style.left = (n >= 8 ? Math.min(98, Math.max(2, pct * 100)) : 50) + '%';
+  $('#pin').classList.toggle('hide', n < 8);
+
+  // 통계
+  const p25 = q(vals, .25), p50 = q(vals, .5), p75 = q(vals, .75);
+  if (wolse) {
+    const atMy = v => v - dep * rate / 12;
+    $('#stats').innerHTML = `
+      <div class="stat"><span>내 보증금이면 적정 월세</span><b>${n >= 8 ? `${fmt(atMy(p25))}~${fmt(atMy(p75))}만원` : '-'}</b></div>
+      <div class="stat"><span>중간값 (내 보증금 기준)</span><b>${n >= 8 ? fmt(atMy(p50)) + '만원' : '-'}</b></div>
+      <div class="stat"><span>비교한 거래</span><b>${n.toLocaleString()}건</b></div>`;
+    $('#method').innerHTML = `보증금이 다른 집끼리 비교하려고 보증금을 월세로 환산했어요 (환산월세 = 월세 + 보증금 × ${(rate * 100).toFixed(1)}% ÷ 12). ${est ? `${(rate * 100).toFixed(1)}%는 이 동네 실제 월세 거래에서 추정한 전환율이에요.` : `거래가 적어 전환율은 일반적인 수준인 ${(DEFAULT_RATE * 100).toFixed(0)}%로 잡았어요.`} 내 환산월세는 ${fmt(myVal)}만원이에요.`;
+  } else {
+    const a = my > 0 ? my : midArea;
+    $('#stats').innerHTML = `
+      <div class="stat"><span>${fmt(a)}㎡ 기준 적정 전세</span><b>${n >= 8 ? `${won(p25 * a)}~${won(p75 * a)}` : '-'}</b></div>
+      <div class="stat"><span>중간값</span><b>${n >= 8 ? won(p50 * a) : '-'}</b></div>
+      <div class="stat"><span>비교한 거래</span><b>${n.toLocaleString()}건</b></div>`;
+    $('#method').innerHTML = `면적이 다른 집끼리 비교하려고 ㎡당 보증금으로 계산했어요. ${my > 0 ? '' : `면적을 안 넣으셔서 비교 거래의 중간 면적(${fmt(midArea)}㎡)으로 봤어요. 면적을 넣으면 더 정확해요.`} <b>전세는 시세보다 '안전한지'가 더 중요해요.</b> 아래 체크리스트를 꼭 보세요.`;
+  }
+  hist(vals, myVal, wolse);
+  calc();
+  dongTable(pool, rate, wolse);
+  deals(sel, wolse);
+  $('#result').classList.remove('hide');
+  $('#calcCard').classList.toggle('hide', !wolse);
+  writeHash();
+  if (!run.scrolled) { $('#result').scrollIntoView({ behavior: 'smooth', block: 'start' }); run.scrolled = true; }
+}
+
+function hist(vals, my, wolse) {
+  const el = $('#hist');
+  if (vals.length < 8) { el.innerHTML = ''; return; }
+  const lo = q(vals, .02), hi = q(vals, .98), B = 24, w = (hi - lo) / B || 1;
+  const bins = Array(B).fill(0); for (const v of vals) { const i = Math.min(B - 1, Math.max(0, Math.floor((v - lo) / w))); bins[i]++; }
+  const mx = Math.max(...bins), W = 680, H = 120;
+  const x = v => Math.min(W, Math.max(0, (v - lo) / (hi - lo) * W));
+  const lab = v => wolse ? fmt(v) + '만' : fmt(v) + '';
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H + 26}" width="100%" role="img" aria-label="비슷한 집 가격 분포">
+    ${bins.map((b, i) => `<rect x="${i * W / B + 1}" y="${H - b / mx * H}" width="${W / B - 2}" height="${b / mx * H}" rx="3" fill="${(lo + (i + .5) * w) < my ? '#fdba74' : '#fed7aa'}"/>`).join('')}
+    <line x1="${x(my)}" x2="${x(my)}" y1="0" y2="${H}" stroke="#1f1a17" stroke-width="3"/>
+    <text x="0" y="${H + 20}" font-size="20" fill="#6d635c">${lab(lo)}</text>
+    <text x="${W}" y="${H + 20}" font-size="20" fill="#6d635c" text-anchor="end">${lab(hi)}</text>
+    <text x="${Math.min(W - 40, Math.max(40, x(my)))}" y="${H + 20}" font-size="20" font-weight="700" text-anchor="middle">나</text>
+  </svg><p class="note" style="margin:4px 0 0">${wolse ? '환산월세' : '㎡당 보증금(만원)'} 분포 · 진한 막대가 나보다 싼 집</p>`;
+}
+
+function calc() {
+  if (!last || !last.wolse) return;
+  const { rate, dep, rent } = last;
+  if (!$('#cDep').value) $('#cDep').value = Math.max(0, dep + (dep < 1000 ? 500 : 1000));
+  const d2 = parseFloat($('#cDep').value) || 0, diff = d2 - dep;
+  const mkt = Math.max(0, rent - diff * rate / 12), legal = Math.max(0, rent - diff * LEGAL_CAP / 12);
+  $('#cOut').innerHTML = `월세 ${fmt(mkt)}만원<small>${diff >= 0 ? '보증금을 올리면 월세는 이만큼 내려가는 게 시세' : '보증금을 내리면 월세가 이만큼 오르는 게 시세'}</small>`;
+  $('#cNote').innerHTML = diff > 0
+    ? `보증금 ${won(diff)}을 더 내면 월세가 약 <b>${fmt(diff * rate / 12)}만원</b> 내려가야 이 동네 시세(전환율 ${(rate * 100).toFixed(1)}%)에 맞아요. 덜 깎아 준다면 보증금을 더 내는 만큼 손해예요. 늘어난 보증금은 돌려받아야 할 돈이니 보증금이 안전한 집인지도 함께 확인하세요.`
+    : diff < 0
+      ? `보증금을 ${won(-diff)} 낮추면 시세로는 월세가 약 <b>${fmt(-diff * rate / 12)}만원</b> 올라요. 살고 있는 집을 갱신하며 전환하는 경우 법정 상한으로는 최대 <b>${fmt(-diff * LEGAL_CAP / 12)}만원</b>까지만 올릴 수 있어요 (월세 ${fmt(legal)}만원).`
+      : '바꿀 보증금을 넣어 보세요.';
+}
+$('#cDep').addEventListener('input', calc);
+
+function dongTable(pool, rate, wolse) {
+  const by = new Map();
+  for (const x of pool) { (by.get(x.dong) || by.set(x.dong, []).get(x.dong)).push(x); }
+  const std = wolse ? (last.dep > 0 ? last.dep : 1000) : null;
+  $('#stdDep').parentElement.classList.toggle('hide', !wolse);
+  if (wolse) $('#stdDep').textContent = fmt(std);
+  const rows = [...by].filter(([, a]) => a.length >= 5).map(([d, a]) => {
+    const v = a.map(x => wolse ? x.r[4] + x.r[3] * rate / 12 - std * rate / 12 : x.r[3] / x.r[2]);
+    return { d, n: a.length, m: q(v, .5) };
+  }).sort((a, b) => b.n - a.n).slice(0, 15);
+  const mx = Math.max(...rows.map(r => r.m), 1);
+  const myRow = wolse ? last.rent : last.myVal;
+  $('#dongTable').innerHTML = `<tr><th>동</th><th>${wolse ? '중간 월세' : '㎡당 전세 중간'}</th><th></th><th>거래</th></tr>` +
+    rows.map(r => `<tr class="${state.dongs.has(r.d) ? 'me' : ''}"><td>${r.d}</td><td>${wolse ? fmt(r.m) + '만원' : fmt(r.m) + '만원'}</td><td style="width:35%"><span class="bar" style="width:${Math.max(4, r.m / mx * 100)}%"></span></td><td>${r.n.toLocaleString()}</td></tr>`).join('') +
+    (rows.length ? '' : '<tr><td colspan="4">동별로 비교할 만큼 거래가 많지 않아요.</td></tr>') +
+    `<tr><td colspan="4" class="note" style="text-align:left;white-space:normal">내가 본 집: ${wolse ? `월세 ${fmt(myRow)}만원 (보증금 ${won(last.dep)})` : `㎡당 ${fmt(myRow)}만원`}</td></tr>`;
+}
+
+function deals(sel, wolse) {
+  const list = [...sel].sort((a, b) => b.r[7] - a.r[7]).slice(0, 25);
+  const dt = n => { const s = String(n).padStart(6, '0'); return `${s.slice(0, 2)}.${s.slice(2, 4)}.${s.slice(4)}`; };
+  $('#deals').innerHTML = `<tr><th>계약일</th><th>동</th><th>종류</th><th>면적</th><th>층</th><th>${wolse ? '보증금/월세' : '보증금'}</th><th>준공</th></tr>` +
+    list.map(({ r, dong }) => `<tr><td>${dt(r[7])}</td><td>${dong}</td><td>${TYPE_NAMES[r[0]]}</td><td>${r[2]}㎡</td><td>${r[5] ?? '-'}</td><td>${wolse ? `${fmt(r[3])}/${fmt(r[4])}` : won(r[3])}</td><td>${r[6] || '-'}</td></tr>`).join('') +
+    (list.length ? '' : '<tr><td colspan="7">해당 조건의 거래가 없어요.</td></tr>');
+}
+
+// ===== 링크 공유용 주소(#) =====
+function writeHash() {
+  const p = new URLSearchParams();
+  if (state.univ) p.set('u', state.univ.name);
+  if (state.places.length) p.set('s', state.places.join(','));
+  if (state.dongs.size) p.set('d', [...state.dongs].join(','));
+  history.replaceState(null, '', p.toString() ? '#' + p.toString() : location.pathname);
+}
+function readHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  const u = p.get('u'), s = p.get('s');
+  if (u) { const x = INDEX.univ.find(v => v.name === u); if (x) { state.univ = x; $('#uq').value = x.name; } }
+  if (s) { state.places = s.split(',').filter(c => INDEX.sgg.some(x => x.code === c)); }
+  if (p.get('d')) p.get('d').split(',').forEach(d => state.dongs.add(d));
+  if (state.places.length) renderPlaces();
+}
+loadIndex();
+</script>
+</body>
+</html>
