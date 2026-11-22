@@ -29,3 +29,11 @@
 - 법정 전환율 상한: 기준금리 + 2%p (`index.html`의 `BASE_RATE`, 현재 3.00% — 2026-10-22 금통위)
 
 관리비는 실거래 신고에 없어 비교하지 못한다. 결과는 참고 추정치.
+
+## 방문 통계
+
+- `/stats/` (`public/stats/index.html`, noindex): 오늘·어제·7일·30일·전체 조회수·방문자, 「매물 검증하기」 횟수, 최근 30일 막대, 많이 검증한 지역. 주소를 아는 사람은 볼 수 있다.
+- 기록: `public/visit.js`(쿠키 없음, 하루 한 브라우저 한 번만 방문자로 계산) → `POST /api/visits`(`functions/api/visits.js`). 검증 횟수는 `run()`이 `wsgEvent(시군구코드, 'wolse'|'jeonse')`로 보낸다(지역 코드와 월세/전세만, 보증금·월세 금액은 보내지 않는다). 날짜는 한국 시간.
+- 내 방문 빼기: 주소 뒤에 `?nocount=1`을 붙여 한 번 열면 그 브라우저는 세지 않는다(`?nocount=0`으로 되돌림).
+- **필요한 설정(한 번)**: Cloudflare Pages 프로젝트 → Settings → Bindings → D1 database, 변수 이름 `STATS_DB`. 표(`wsg_visits`, `wsg_events`)는 함수가 자동으로 만든다. 연결이 없으면 `/stats/`에 안내 문구가 나오고 기록은 건너뛴다.
+- 로컬 확인: `npx wrangler pages dev public --d1 STATS_DB=wsg-local`.
