@@ -252,8 +252,8 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
     <h2>🏠 어떤 방이에요?</h2>
     <details class="paste" id="pasteBox">
       <summary>📋 직방·다방 링크나 매물 글 붙여넣기</summary>
-      <textarea id="ckPaste" rows="3" placeholder="예: 명륜3가 원룸 500/45 전용 19.8㎡ 3층 관리비 7만원"></textarea>
-      <p class="hint" id="ckParsed">붙여넣으면 칸이 자동으로 채워져요. 글은 이 브라우저 안에서만 읽어요.</p>
+      <textarea id="ckPaste" rows="4" placeholder="매물 링크를 붙여 넣어 주세요 (직방·다방 주소)&#10;링크가 안 읽히면 매물 글을 복사해 붙여 넣어도 돼요&#10;예: 명륜3가 원룸 500/45 전용 19.8㎡ 3층 관리비 7만원"></textarea>
+      <p class="hint" id="ckParsed">링크나 매물 글을 붙여 넣으면 칸이 자동으로 채워져요. 글은 이 브라우저 안에서만 읽고, 링크는 제목만 미리 읽어 와요.</p>
     </details>
     <input id="ckAddr" type="hidden">
     <div class="tabs" role="tablist" id="modeTabs">
@@ -1308,7 +1308,7 @@ $('#cmpList').addEventListener('click', e => {
 });
 $('#againBtn').onclick = () => {
   ['dep', 'rent', 'myArea', 'ckFloor', 'ckFee', 'ckPaste'].forEach(id => $('#' + id).value = '');
-  areaHint(); $('#ckParsed').textContent = '붙여넣으면 칸이 자동으로 채워져요. 글은 이 브라우저 안에서만 읽어요.';
+  areaHint(); $('#ckParsed').textContent = '링크나 매물 글을 붙여 넣으면 칸이 자동으로 채워져요. 글은 이 브라우저 안에서만 읽고, 링크는 제목만 미리 읽어 와요.';
   $('#goHint').textContent = '위치는 그대로예요. 다음 방의 가격과 크기를 넣어 주세요.';
   $('#ckCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
   setTimeout(() => $('#dep').focus(), 350);
