@@ -1,6 +1,8 @@
 // 월세각 데이터 빌드
 // 국토교통부 전월세 실거래가 4종(단독/다가구, 연립다세대, 오피스텔, 아파트)을 전국 시군구 × 최근 12개월 받아
 // public/data/sgg/{시군구코드}.json 과 public/data/index.json 을 만든다.
+// 전년 동기 비교용으로 그 앞 12개월은 public/data/prev/{시군구코드}.json 에 둔다. 최근 12개월에서 밀려나는 달은
+// API를 다시 부르지 않고 옮겨 담고, 비어 있는 달만 받는다(처음 한 번은 12개월치를 더 받음).
 // 사용: DATA_GO_KR_KEY=발급받은일반인증키(Decoding) node scripts/build.mjs [--only=11110,11290] [--months=12]
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 
@@ -28,11 +30,13 @@ if (arg.only) { const s = new Set(arg.only.split(',')); targets = leaf.filter(([
 
 // 최근 MONTHS개월 (이번 달 포함, KST 기준)
 const now = new Date(Date.now() + 9 * 36e5);
-const months = [];
-for (let i = 0; i < MONTHS; i++) {
-  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
-  months.push(`${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}`);
-}
+const ymOf = i => { const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1)); return `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}`; };
+const months = Array.from({ length: MONTHS }, (_, i) => ymOf(i));
+// 전년 비교용: 그 앞 12개월 (arg.prev=0 이면 끔)
+const PREV = arg.prev === '0' ? 0 : 12;
+const prevMonths = Array.from({ length: PREV }, (_, i) => ymOf(MONTHS + i));
+const rowYm = r => '20' + String(r[7]).padStart(6, '0').slice(0, 4);
+const monthRange = (from, to) => { const out = []; if (!from || !to) return out; let y = +from.slice(0, 4), m = +from.slice(4); while (y * 100 + m <= +to) { out.push(`${y}${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++; } } return out; };
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const tag = (xml, t) => { const m = xml.match(new RegExp(`<${t}>([\\s\\S]*?)</${t}>`)); return m ? m[1].trim() : ''; };
@@ -83,7 +87,7 @@ function shape(t, x, dongFilter) {
 const skipped = new Set();
 const notRegistered = e => /SERVICE_KEY_IS_NOT_REGISTERED|등록되지 않은 서비스키|SERVICE ACCESS DENIED/.test(String(e.message));
 
-async function buildSgg([code, name]) {
+async function buildSgg([code, name], monthList = months) {
   const rows = [], dongs = [], dIdx = new Map(), perType = [0, 0, 0, 0];
   for (const t of TYPES) {
     if (skipped.has(t.svc)) continue;
@@ -95,7 +99,7 @@ async function buildSgg([code, name]) {
     }
   }
   async function typeRows(t) {
-    for (const ym of months) {
+    for (const ym of monthList) {
       let items = await fetchMonth(t.svc, code, ym), filter = null;
       if (!items.length && alias[code]) {
         for (const [old, f] of alias[code]) {
@@ -117,6 +121,35 @@ async function buildSgg([code, name]) {
 }
 
 await mkdir(new URL('public/data/sgg/', root), { recursive: true });
+await mkdir(new URL('public/data/prev/', root), { recursive: true });
+async function readJson(p) { try { return JSON.parse(await read(p)); } catch { return null; } }
+
+// 전년 동기 비교용 파일: 기존 prev 파일 + 이번에 12개월 창에서 밀려난 달(이전 sgg 파일) + 비어 있는 달만 새로 받기
+async function buildPrev(s, old) {
+  const code = s[0], want = new Set(prevMonths);
+  const prev = await readJson(`public/data/prev/${code}.json`);
+  const have = new Set(), keep = [];
+  const take = (file, covered) => {
+    if (!file) return;
+    for (const m of covered) if (want.has(m)) have.add(m);
+    for (const r of file.rows) if (want.has(rowYm(r))) keep.push([...r.slice(0, 1), file.dongs[r[1]], ...r.slice(2)]);
+  };
+  take(prev, prev?.months || []);
+  if (old) { const cov = monthRange(old.from, old.to).filter(m => !have.has(m)); take({ ...old, rows: old.rows.filter(r => cov.includes(rowYm(r))) }, cov); }
+  const missing = prevMonths.filter(m => !have.has(m));
+  if (missing.length) {
+    const got = await buildSgg(s, missing);
+    for (const r of got.rows) keep.push([r[0], got.dongs[r[1]], ...r.slice(2)]);
+    missing.forEach(m => have.add(m));
+  }
+  const dongs = [], dIdx = new Map();
+  const rows = keep.map(r => { if (!dIdx.has(r[1])) { dIdx.set(r[1], dongs.length); dongs.push(r[1]); } return [r[0], dIdx.get(r[1]), ...r.slice(2)]; }).sort((a, b) => b[7] - a[7]);
+  await writeFile(new URL(`public/data/prev/${code}.json`, root), JSON.stringify({
+    v: 1, code, name: s[1], updated, from: prevMonths.at(-1), to: prevMonths[0], months: [...have].sort(),
+    cols: ['type', 'dong', 'area', 'deposit', 'rent', 'floor', 'built', 'yymmdd', 'contract'], dongs, rows,
+  }));
+  if (missing.length) console.log(`  ${code} 전년 ${missing.length}개월 새로 받음`);
+}
 const updated = new Date(Date.now() + 9 * 36e5).toISOString().slice(0, 10);
 const index = [];
 let failed = 0;
@@ -125,7 +158,9 @@ async function worker() {
   while (queue.length) {
     const s = queue.shift();
     try {
+      const old = await readJson(`public/data/sgg/${s[0]}.json`);
       const r = await buildSgg(s);
+      if (PREV) { try { await buildPrev(s, old); } catch (e) { console.warn(`전년 파일 실패 ${s[0]}: ${e.message}`); } }
       await writeFile(new URL(`public/data/sgg/${r.code}.json`, root), JSON.stringify({
         v: 1, code: r.code, name: r.name, updated, from: months.at(-1), to: months[0],
         cols: ['type', 'dong', 'area', 'deposit', 'rent', 'floor', 'built', 'yymmdd', 'contract'],
@@ -159,6 +194,7 @@ function sggOf(addr) {
 const univ = (await read('data/univ.tsv')).trim().split('\n').map(l => l.split('\t')).map(([name, campus, kind, addr]) => ({
   name, campus, kind, addr, sgg: sggOf(addr),
 }));
+const univAlias = JSON.parse(await read('data/univ_alias.json'));  // 약칭·영문 이름 (검색용)
 const unmapped = univ.filter(u => !u.sgg);
 if (unmapped.length) console.warn('시군구를 못 찾은 학교:', unmapped.map(u => u.name).join(', '));
 
@@ -173,7 +209,7 @@ await writeFile(new URL('public/data/index.json', root), JSON.stringify({
   sgg: [...merged.values()].sort((a, b) => a.code.localeCompare(b.code)),
   // 2026년 개편 지역의 동 목록 (지도에 옛 구 이름이 나올 때 동으로 찾기)
   split: Object.fromEntries(Object.entries(alias).filter(([, v]) => v[0] && v[0][1]).map(([k, v]) => [k, v[0][1]])),
-  univ: univ.filter(u => u.sgg).map(({ name, campus, kind, addr, sgg }) => ({ name, campus, kind, addr, sgg })),
+  univ: univ.filter(u => u.sgg).map(({ name, campus, kind, addr, sgg }) => ({ name, campus, kind, addr, sgg, ...(univAlias[name] ? { a: univAlias[name] } : {}) })),
 }));
 console.log(`완료: 시군구 ${index.length}곳, 실패 ${failed}곳, API 호출 ${calls}회`);
 if (failed && failed === targets.length) process.exit(1);

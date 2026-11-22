@@ -117,7 +117,7 @@ svg text{font-family:inherit}
 .qk{margin-top:8px;gap:6px}.qk .chip{padding:5px 10px;font-size:13px}
 tr.good td:first-child{font-weight:700}
 h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
-.legend{display:flex;gap:14px;font-size:12px;color:var(--sub);margin-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--sub);margin-top:4px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
 @media (max-width:520px){.stats{grid-template-columns:1fr 1fr}.verdict .big{font-size:26px}}
 </style>
@@ -389,9 +389,11 @@ let sIdx = -1, sList = [];
 $('#uq').addEventListener('input', () => {
   const v = norm($('#uq').value);
   if (!v || !INDEX) { $('#ul').classList.add('hide'); return; }
-  sList = INDEX.univ.filter(u => norm(u.name).includes(v) || norm(u.name).startsWith(v)).slice(0, 12);
+  const hit = u => norm(u.name).includes(v) || (u.a || []).some(a => norm(a).includes(v));
+  const exact = u => norm(u.name).startsWith(v) || (u.a || []).some(a => norm(a).startsWith(v));
+  sList = INDEX.univ.filter(hit).sort((x, y) => exact(y) - exact(x)).slice(0, 12);
   sIdx = -1;
-  $('#ul').innerHTML = sList.map((u, i) => `<li role="option" data-i="${i}">${u.name}${u.campus !== '본교' && !u.name.includes('(') ? ' (' + u.campus + ')' : ''}<small>${u.kind} · ${u.addr}</small></li>`).join('') || '<li>찾는 학교가 없어요. 「동네로 찾기」를 써 보세요.</li>';
+  $('#ul').innerHTML = sList.map((u, i) => `<li role="option" data-i="${i}">${u.name}${u.campus !== '본교' && !u.name.includes('(') ? ' (' + u.campus + ')' : ''}${u.a ? ` <span style="color:var(--sub);font-size:13px">${u.a.slice(0, 2).join('·')}</span>` : ''}<small>${u.kind} · ${u.addr}</small></li>`).join('') || '<li>찾는 학교가 없어요. 「동네로 찾기」를 써 보세요.</li>';
   $('#ul').classList.remove('hide');
 });
 $('#uq').addEventListener('keydown', e => {
@@ -415,6 +417,12 @@ async function loadSgg(code) {
   const p = fetch(DATA + `sgg/${code}.json`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
   cache.set(code, p);
   try { return await p; } catch (e) { cache.delete(code); throw e; }
+}
+// 전년 동기 비교용 (그 앞 12개월). 없으면 null
+const prevCache = new Map();
+function loadPrev(code) {
+  if (!prevCache.has(code)) prevCache.set(code, fetch(DATA + `prev/${code}.json`).then(r => r.ok ? r.json() : null).catch(() => null));
+  return prevCache.get(code);
 }
 function setPlaces(codes, dongs = []) { state.places = codes; state.dongs = new Set(dongs); renderPlaces(); }
 function toggleDong(d) {
@@ -444,7 +452,8 @@ async function renderPlaces() {
     $('#dongs').innerHTML = top.slice(0, 30).map(([d, n]) => `<button class="chip" aria-pressed="${state.dongs.has(d)}" data-d="${d}">${d} <small style="opacity:.6">${n.toLocaleString()}</small></button>`).join('') || '<span class="loading">이 지역은 아직 데이터가 없어요.</span>';
     $$('#dongs .chip').forEach(b => b.onclick = () => toggleDong(b.dataset.d));
     showMap(); drawDongs(sets, top.slice(0, 25).map(([d]) => d));
-    statSets = sets; renderStats();
+    statSets = sets; statPrev = []; renderStats();
+    Promise.all(state.places.map(loadPrev)).then(ps => { if (statSets !== sets || ps.some(x => !x)) return; statPrev = ps; renderStats(); });
   } catch (e) {
     $('#dongs').innerHTML = '<span class="loading">이 지역 데이터를 불러오지 못했어요.</span>';
   }
@@ -989,7 +998,7 @@ function renderBudget() {
 }
 
 // ===== 실거래 통계 =====
-let statSets = [];
+let statSets = [], statPrev = [];
 function renderStats() {
   renderBudget();
   const card = $('#statsCard');
@@ -1006,6 +1015,12 @@ function renderStats() {
   const sel = all.filter(r => state.types.has(r[0]) && inArea(r[2]));
   const wol = sel.filter(r => r[4] > 0), jeon = sel.filter(r => r[4] === 0);
   const low = wol.filter(r => r[3] <= 2000);
+  const selPrev = [];
+  for (const s of statPrev) for (const r of s.rows) {
+    if (state.dongs.size && !state.dongs.has(s.dongs[r[1]])) continue;
+    if (onlyNew && r[8] === 2) continue;
+    if (state.types.has(r[0]) && inArea(r[2])) selPrev.push(r);
+  }
   const where = (state.dongs.size ? [...state.dongs].slice(0, 3).join('·') + (state.dongs.size > 3 ? ` 외 ${state.dongs.size - 3}곳` : '') : state.places.map(shortName).join(' + '));
   $('#stTitle').textContent = `${where} 전월세 실거래 통계`;
   const typeTxt = [...state.types].sort().map(t => TYPE_NAMES[t]).join('·');
@@ -1026,7 +1041,28 @@ function renderStats() {
   const by = new Map(months.map(k => [k, { w: [], n: 0, nw: 0 }]));
   for (const r of sel) { const k = String(r[7]).padStart(6, '0').slice(0, 4); const b = by.get(k); if (!b) continue; b.n++; if (r[4] > 0) { b.nw++; if (r[3] <= 2000) b.w.push(r[4]); } }
   const mo = months.map(k => ({ k, n: by.get(k).n, med: by.get(k).w.length >= 3 ? q(by.get(k).w, .5) : null, sh: by.get(k).n ? by.get(k).nw / by.get(k).n : null }));
-  trendChart(mo);
+  // 작년 같은 달 (전년 파일이 있을 때)
+  const pby = new Map();
+  for (const r of selPrev) { const k = ymKey(r); if (!pby.has(k)) pby.set(k, { w: [], n: 0 }); const b = pby.get(k); b.n++; if (r[4] > 0 && r[3] <= 2000) b.w.push(r[4]); }
+  const pm = selPrev.length ? mo.map(m => { const b = pby.get(lastYear(m.k)); return b ? { n: b.n, med: b.w.length >= 3 ? q(b.w, .5) : null } : { n: 0, med: null }; }) : null;
+  trendChart(mo, pm);
+  $('#stTiles').insertAdjacentHTML('beforeend', yoyTiles());
+  function yoyTiles() {
+    if (!statPrev.length || months.length < 4) return '';
+    const win = months.slice(-4, -1), last = new Set(win.map(lastYear)), now = new Set(win);   // 이번 달은 신고가 덜 들어와 뺀다
+    const a = low.filter(r => now.has(ymKey(r))).map(r => r[4]);
+    const b = selPrev.filter(r => r[4] > 0 && r[3] <= 2000 && last.has(ymKey(r))).map(r => r[4]);
+    const na = sel.filter(r => now.has(ymKey(r))).length, nb = selPrev.filter(r => last.has(ymKey(r))).length;
+    const lab = `${+win[0].slice(2)}~${+win[2].slice(2)}월`;
+    const sign = v => (v > 0 ? '+' : v < 0 ? '−' : '±') + fmt(Math.abs(v));
+    let t = '';
+    if (a.length >= 10 && b.length >= 10) {
+      const ma = q(a, .5), mb = q(b, .5), d = ma - mb;
+      t += `<div class="stat"><span>월세 중간값 전년 동기 대비 (${lab})</span><b style="color:${d > 0 ? 'var(--bad)' : d < 0 ? 'var(--good)' : 'inherit'}">${sign(d)}만원 <small style="font-size:13px">(${d >= 0 ? '+' : '−'}${Math.abs(d / mb * 100).toFixed(1)}%)</small></b><span>작년 ${fmt(mb)} → 올해 ${fmt(ma)}만원</span></div>`;
+    } else t += `<div class="stat"><span>월세 중간값 전년 동기 대비 (${lab})</span><b>-</b><span>거래가 적어 비교하지 않았어요</span></div>`;
+    if (nb >= 10) t += `<div class="stat"><span>거래 건수 전년 동기 대비 (${lab})</span><b>${na >= nb ? '+' : '−'}${Math.abs((na - nb) / nb * 100).toFixed(0)}%</b><span>작년 ${nb.toLocaleString()} → 올해 ${na.toLocaleString()}건</span></div>`;
+    return t;
+  }
   // 종류별
   const row = (label, rs) => { const w = rs.filter(r => r[4] > 0), l = w.filter(r => r[3] <= 2000), j = rs.filter(r => r[4] === 0);
     return `<tr><td>${label}</td><td>${rs.length.toLocaleString()}</td><td>${rs.length ? Math.round(w.length / rs.length * 100) + '%' : '-'}</td><td>${l.length >= 3 ? fmt(q(l.map(r => r[4]), .5)) + '만' : '-'}</td><td>${j.length >= 3 ? won(q(j.map(r => r[3]), .5)) : '-'}</td><td>${rs.length ? fmt(q(rs.map(r => r[2]), .5)) + '㎡' : '-'}</td></tr>`; };
@@ -1044,24 +1080,31 @@ function renderStats() {
     $('#stRankMe').innerHTML = me >= 0 ? `<b>${shortName(ranked[me].code)}</b>는 전국 ${ranked.length}개 시·군·구 중 <b>${me + 1}번째로 비싸요</b> (원룸 월세 중간값 ${fmt(ranked[me].m1)}만원).` : '이 지역은 원룸 월세 거래가 적어 순위에서 빠졌어요.';
   }
 }
-function trendChart(mo) {
+const ymKey = r => String(r[7]).padStart(6, '0').slice(0, 4);
+const lastYear = k => String(+k.slice(0, 2) - 1).padStart(2, '0') + k.slice(2);
+function trendChart(mo, pm) {
   const el = $('#stTrend');
   if (!mo.length) { el.innerHTML = ''; return; }
   const W = 680, H = 170, P = 34, bw = (W - P * 2) / mo.length;
   const maxN = Math.max(1, ...mo.map(m => m.n));
   const meds = mo.map(m => m.med).filter(v => v != null);
-  const lo = meds.length ? Math.min(...meds) * 0.9 : 0, hi = meds.length ? Math.max(...meds) * 1.1 : 1;
+  const pmeds = pm ? pm.map(m => m.med).filter(v => v != null) : [];
+  const all = meds.concat(pmeds);
+  const lo = all.length ? Math.min(...all) * 0.9 : 0, hi = all.length ? Math.max(...all) * 1.1 : 1;
   const y = v => H - 22 - (v - lo) / ((hi - lo) || 1) * (H - 50);
   const x = i => P + bw * i + bw / 2;
   const line = mo.map((m, i) => m.med == null ? null : `${x(i)},${y(m.med)}`).filter(Boolean);
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="월별 거래량과 월세 중간값">
+  const pline = pm ? pm.map((m, i) => m.med == null ? null : `${x(i)},${y(m.med)}`).filter(Boolean) : [];
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="월별 거래량과 월세 중간값, 작년 같은 달">
+    ${pline.length > 1 ? `<polyline points="${pline.join(' ')}" fill="none" stroke="#a8a29e" stroke-width="2.5" stroke-dasharray="6 5" stroke-linejoin="round"/>` : ''}
+    ${pm ? pm.map((m, i) => m.med == null ? '' : `<circle cx="${x(i)}" cy="${y(m.med)}" r="3" fill="#a8a29e"><title>작년 ${String(+mo[i].k.slice(0, 2) - 1)}.${mo[i].k.slice(2)} 월세 중간값 ${fmt(m.med)}만원 · 거래 ${m.n}건</title></circle>`).join('') : ''}
     ${mo.map((m, i) => `<rect x="${P + bw * i + 3}" y="${H - 22 - m.n / maxN * (H - 60)}" width="${bw - 6}" height="${m.n / maxN * (H - 60)}" rx="3" fill="#fed7aa"><title>${m.k.slice(0, 2)}.${m.k.slice(2)} 거래 ${m.n}건</title></rect>`).join('')}
     ${line.length > 1 ? `<polyline points="${line.join(' ')}" fill="none" stroke="#c2410c" stroke-width="3" stroke-linejoin="round"/>` : ''}
     ${mo.map((m, i) => m.med == null ? '' : `<circle cx="${x(i)}" cy="${y(m.med)}" r="4" fill="#c2410c"><title>${m.k.slice(0, 2)}.${m.k.slice(2)} 월세 중간값 ${fmt(m.med)}만원</title></circle>`).join('')}
     ${mo.map((m, i) => (i % 2 === 0 || mo.length <= 8) ? `<text x="${x(i)}" y="${H - 6}" font-size="15" fill="#6d635c" text-anchor="middle">${+m.k.slice(2)}월</text>` : '').join('')}
     ${meds.length ? `<text x="${P - 6}" y="${y(Math.max(...meds)) + 5}" font-size="14" fill="#c2410c" text-anchor="end">${fmt(Math.max(...meds))}</text><text x="${P - 6}" y="${y(Math.min(...meds)) + 5}" font-size="14" fill="#c2410c" text-anchor="end">${fmt(Math.min(...meds))}</text>` : ''}
   </svg>
-  <div class="legend"><span><i style="background:#fed7aa"></i>거래 건수</span><span><i style="background:#c2410c"></i>월세 중간값(만원, 보증금 2천↓)</span><span>최근 달은 신고가 덜 들어와 적게 보여요</span></div>`;
+  <div class="legend"><span><i style="background:#fed7aa"></i>거래 건수</span><span><i style="background:#c2410c"></i>월세 중간값(만원, 보증금 2천↓)</span>${pline.length > 1 ? '<span><i style="background:#a8a29e"></i>작년 같은 달</span>' : ''}<span>최근 달은 신고가 덜 들어와 적게 보여요</span></div>`;
 }
 
 // ===== 결과 공유 =====

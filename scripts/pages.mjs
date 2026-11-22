@@ -15,6 +15,8 @@ const won = m => { m = Math.round(m); if (Math.abs(m) >= 10000) { const e = Math
 const med = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y), i = (s.length - 1) / 2; return (s[Math.floor(i)] + s[Math.ceil(i)]) / 2; };
 const q = (a, p) => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y), i = (s.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return s[lo] + (s[hi] - s[lo]) * (i - lo); };
 const ym = s => `20${s.slice(0, 2)}.${s.slice(2, 4)}`;
+const lastYear = k => String(+k.slice(0, 2) - 1).padStart(2, '0') + k.slice(2);
+const yoyText = y => { const d = y.now - y.last, p = d / y.last * 100; return `작년 같은 기간(${y.lab})보다 ${d === 0 ? '그대로' : `${fmt(Math.abs(d))}만원(${Math.abs(p).toFixed(1)}%) ${d > 0 ? '올랐어요' : '내렸어요'}`}`; };
 const period = `${index.from.slice(0, 4)}.${index.from.slice(4)}~${index.to.slice(0, 4)}.${index.to.slice(4)}`;
 const sggName = c => index.sgg.find(s => s.code === c)?.name || c;
 const shortSgg = n => n.split(' ').slice(1).join(' ') || n;
@@ -46,11 +48,24 @@ async function stats(code) {
   for (const r of w) { const k = d.dongs[r[1]]; if (!dmap.has(k)) dmap.set(k, []); dmap.get(k).push(r[4]); }
   const dongs = [...dmap].filter(([, a]) => a.length >= 5).map(([k, a]) => ({ k, n: a.length, m: med(a) })).sort((a, b) => b.n - a.n).slice(0, 12);
   const jeon = R.filter(r => r[0] !== 3 && r[2] <= 33 && r[4] === 0).map(r => r[3]);
+  // 전년 동기 (public/data/prev/ 가 있을 때): 이번 달은 신고가 덜 들어와 빼고 직전 3개월끼리 비교
+  let yoy = null;
+  try {
+    const pv = JSON.parse(await readFile(new URL(`data/prev/${code}.json`, pub), 'utf8'));
+    const pw = pv.rows.filter(r => r[8] !== 2 && r[0] !== 3 && r[2] <= 23 && r[4] > 0 && r[3] <= 2000);
+    const pmon = {};
+    for (const r of pw) { const k = String(r[7]).padStart(6, '0').slice(0, 4); (pmon[k] ||= []).push(r[4]); }
+    for (const m of mo) { const a = pmon[lastYear(m.k)] || []; m.pn = a.length; m.pm = a.length >= 3 ? med(a) : null; }
+    const win = mo.slice(-4, -1).map(m => m.k);
+    const a = w.filter(r => win.includes(String(r[7]).padStart(6, '0').slice(0, 4))).map(r => r[4]);
+    const b = pw.filter(r => win.map(lastYear).includes(String(r[7]).padStart(6, '0').slice(0, 4))).map(r => r[4]);
+    if (win.length === 3 && a.length >= 10 && b.length >= 10) yoy = { lab: `${+win[0].slice(2)}~${+win[2].slice(2)}월`, now: med(a), last: med(b), na: a.length, nb: b.length };
+  } catch {}
   const s = {
     code, name: d.name, total: d.rows.length, n: w.length,
     m: med(w.map(r => r[4])), p25: q(w.map(r => r[4]), .25), p75: q(w.map(r => r[4]), .75),
     dep: med(w.map(r => r[3])), mo, byType, byArea, dongs,
-    jn: jeon.length, jm: med(jeon), rank: rankOf(code),
+    jn: jeon.length, jm: med(jeon), rank: rankOf(code), yoy,
   };
   statCache.set(code, s);
   return s;
@@ -97,19 +112,22 @@ function trendSvg(mo) {
   const pts = mo.filter(m => m.m != null && m.n >= 3);
   if (pts.length < 3) return '';
   const W = 640, H = 200, P = 34, bw = (W - P * 2) / mo.length;
-  const vals = pts.map(m => m.m), lo = Math.min(...vals) * 0.9, hi = Math.max(...vals) * 1.1;
+  const pv = mo.filter(m => m.pm != null && m.pn >= 3).map(m => m.pm);
+  const vals = pts.map(m => m.m), all = vals.concat(pv), lo = Math.min(...all) * 0.9, hi = Math.max(...all) * 1.1;
   const maxN = Math.max(...mo.map(m => m.n));
   const x = i => P + bw * i + bw / 2, y = v => H - 26 - (v - lo) / ((hi - lo) || 1) * (H - 56);
   const line = mo.map((m, i) => m.m != null && m.n >= 3 ? `${x(i).toFixed(1)},${y(m.m).toFixed(1)}` : null).filter(Boolean);
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="월별 원룸 중간 월세">
 ${mo.map((m, i) => `<rect x="${(P + bw * i + 3).toFixed(1)}" y="${(H - 26 - m.n / maxN * (H - 70)).toFixed(1)}" width="${(bw - 6).toFixed(1)}" height="${(m.n / maxN * (H - 70)).toFixed(1)}" rx="3" fill="#fed7aa"><title>${ym(m.k)} 거래 ${m.n}건</title></rect>`).join('')}
+${pv.length > 1 ? `<polyline points="${mo.map((m, i) => m.pm != null && m.pn >= 3 ? `${x(i).toFixed(1)},${y(m.pm).toFixed(1)}` : null).filter(Boolean).join(' ')}" fill="none" stroke="#a8a29e" stroke-width="2.5" stroke-dasharray="6 5" stroke-linejoin="round"/>` : ''}
+${mo.map((m, i) => m.pm != null && m.pn >= 3 ? `<circle cx="${x(i).toFixed(1)}" cy="${y(m.pm).toFixed(1)}" r="3" fill="#a8a29e"><title>작년 ${ym(lastYear(m.k))} 중간 월세 ${fmt(m.pm)}만원</title></circle>` : '').join('')}
 <polyline points="${line.join(' ')}" fill="none" stroke="#c2410c" stroke-width="3" stroke-linejoin="round"/>
 ${mo.map((m, i) => m.m != null && m.n >= 3 ? `<circle cx="${x(i).toFixed(1)}" cy="${y(m.m).toFixed(1)}" r="4" fill="#c2410c"><title>${ym(m.k)} 중간 월세 ${fmt(m.m)}만원</title></circle>` : '').join('')}
 ${mo.map((m, i) => `<text x="${x(i).toFixed(1)}" y="${H - 8}" font-size="13" fill="#6d635c" text-anchor="middle">${+m.k.slice(2)}월</text>`).join('')}
 <text x="${P - 6}" y="${(y(Math.max(...vals)) + 5).toFixed(1)}" font-size="13" fill="#c2410c" text-anchor="end">${fmt(Math.max(...vals))}</text>
 <text x="${P - 6}" y="${(y(Math.min(...vals)) + 5).toFixed(1)}" font-size="13" fill="#c2410c" text-anchor="end">${fmt(Math.min(...vals))}</text>
 </svg>
-<div class="legend"><span><i style="background:#fed7aa"></i>거래 건수</span><span><i style="background:#c2410c"></i>중간 월세(만원)</span><span>최근 달은 신고가 덜 들어와 적게 보여요</span></div>`;
+<div class="legend"><span><i style="background:#fed7aa"></i>거래 건수</span><span><i style="background:#c2410c"></i>중간 월세(만원)</span>${pv.length > 1 ? '<span><i style="background:#a8a29e"></i>작년 같은 달</span>' : ''}<span>최근 달은 신고가 덜 들어와 적게 보여요</span></div>`;
 }
 
 const bar = (v, max) => `<span class="bar"><i style="width:${Math.max(4, Math.round(v / max * 100))}%"></i></span>`;
@@ -120,10 +138,12 @@ async function univPage(u, all) {
   const slug = slugOf(u), path = `/u/${encodeURIComponent(slug)}/`;
   const place = shortSgg(s.name);
   const full = u.name + (u.campus !== '본교' && !/[(（]/.test(u.name) ? ` ${u.campus}` : '');
+  const aka = (u.a || []).slice(0, 2).join('·');            // 예: KAIST·카이스트
+  const fullT = aka ? (/[()]/.test(full) ? `${full} · ${aka}` : `${full}(${aka})`) : full;
   const enough = s.n >= 15;
-  const title = enough ? `${full} 자취방 월세 시세 — 원룸 중간 월세 ${fmt(s.m)}만원 | 월세각` : `${full} 자취방 월세 시세 | 월세각`;
+  const title = enough ? `${fullT} 자취방 월세 시세 — 원룸 중간 월세 ${fmt(s.m)}만원 | 월세각` : `${fullT} 자취방 월세 시세 | 월세각`;
   const desc = enough
-    ? `${full} 근처(${place}) 원룸 실거래 ${s.n.toLocaleString()}건 기준 보증금 2천만원 이하 중간 월세 ${fmt(s.m)}만원, 보통 ${fmt(s.p25)}~${fmt(s.p75)}만원. 국토교통부 실거래가로 본 동네별·크기별 시세와 계약 전 확인사항.`
+    ? `${fullT} 근처(${place}) 원룸 실거래 ${s.n.toLocaleString()}건 기준 보증금 2천만원 이하 중간 월세 ${fmt(s.m)}만원, 보통 ${fmt(s.p25)}~${fmt(s.p75)}만원. 국토교통부 실거래가로 본 동네별·크기별 시세와 계약 전 확인사항.`
     : `${full} 근처(${place}) 전월세 실거래 시세. 국토교통부 실거래가로 같은 동네 비슷한 집과 보증금·월세를 비교해 보세요.`;
   const hash = new URLSearchParams({ u: u.name, s: u.sgg }).toString();
   const same = all.filter(x => x.sgg === u.sgg && x !== u).slice(0, 12);
@@ -133,6 +153,7 @@ async function univPage(u, all) {
   const faq = enough ? [
     [`${full} 근처 원룸 월세는 보통 얼마예요?`, `${place}에서 최근 12개월 신고된 원룸형(전용 23㎡ 이하) 월세 계약 중 보증금 2천만원 이하 ${s.n.toLocaleString()}건의 중간 월세는 ${fmt(s.m)}만원이고, 절반이 ${fmt(s.p25)}~${fmt(s.p75)}만원 사이였어요. 중간 보증금은 ${won(s.dep)}이에요.`],
     [`${place} 월세는 전국에서 비싼 편인가요?`, s.rank ? `원룸 월세 거래가 30건 이상인 전국 ${ranked.length}개 시군구 중 ${s.rank}번째로 비싸요.` : '거래가 적어 전국 순위는 내지 않았어요.'],
+    ...(s.yoy ? [[`${place} 원룸 월세, 작년보다 올랐나요?`, `${yoyText(s.yoy)}. 작년 ${s.yoy.lab} 중간 월세 ${fmt(s.yoy.last)}만원(${s.yoy.nb}건), 올해 같은 기간 ${fmt(s.yoy.now)}만원(${s.yoy.na}건) 기준이에요.`]] : []),
     ['관리비도 포함된 가격인가요?', '아니요. 실거래 신고에는 관리비가 없어서 월세만 비교해요. 관리비가 큰 집은 실제 부담이 더 커요.'],
   ] : [];
   const ld = [
@@ -144,13 +165,14 @@ async function univPage(u, all) {
   ];
   const html = head({ title, desc, path, extra: `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>` }) + `
 <nav class="crumb"><a href="/">월세각</a> › <a href="/u/">학교별 월세 시세</a> › ${esc(full)}</nav>
-<h1>${esc(full)} 자취방 월세 시세</h1>
+<h1>${esc(full)} 자취방 월세 시세</h1>${aka ? `\n<p class="aka">${esc((u.a || []).join(' · '))}</p>` : ''}
 <p class="lead">${esc(u.addr)} · <b>${esc(s.name)}</b> 실거래 기준 · ${period}</p>
 ${enough ? `
 <section class="hero">
   <div class="lab">원룸형 중간 월세 <small>(전용 23㎡ 이하, 보증금 2천만원 이하)</small></div>
   <div class="big">${fmt(s.m)}<small>만원</small></div>
   <div class="desc">절반이 <b>${fmt(s.p25)}~${fmt(s.p75)}만원</b> 사이 · 중간 보증금 ${won(s.dep)} · 거래 ${s.n.toLocaleString()}건${s.rank ? ` · 전국 ${ranked.length}개 시군구 중 <b>${s.rank}번째로 비쌈</b>` : ''}</div>
+  ${s.yoy ? `<div class="yoy">${s.yoy.now > s.yoy.last ? '▲' : s.yoy.now < s.yoy.last ? '▼' : '='} ${esc(yoyText(s.yoy))} <small>(작년 ${fmt(s.yoy.last)} → 올해 ${fmt(s.yoy.now)}만원)</small></div>` : ''}
 </section>
 <a class="cta" href="/#${esc(hash)}">🔍 내가 본 방, ${esc(place)} 실거래와 비교하기</a>
 <p class="hint">보증금·월세·면적을 넣으면 같은 동·같은 종류·비슷한 크기의 실제 계약 사이에서 몇 % 위치인지 알려 드려요.</p>
@@ -206,13 +228,14 @@ const listHtml = head({
 <section class="card"><h2>🪙 원룸 월세 싼 곳 TOP 10</h2><table>${low.map((s, i) => `<tr><td>${i + 1}</td><td>${esc(s.name)}</td><td><b>${fmt(s.m1)}만원</b></td></tr>`).join('')}</table></section>
 </div>
 <p class="hint">원룸형(전용 23㎡ 이하, 아파트 제외), 보증금 2천만원 이하 신규 월세 계약의 중간 월세. 거래 30건 이상인 ${ranked.length}개 시군구 비교.</p>
-${sidoOrder.map(k => `<section class="card sido"><h2>${esc(k)} <small>${bySido.get(k).length}곳</small></h2><div class="links">${bySido.get(k).map(p => `<a href="${p.path}" data-n="${esc(p.full)}">${esc(p.full)}${p.s.n >= 15 ? ` <small>${fmt(p.s.m)}만</small>` : ''}</a>`).join('')}</div></section>`).join('')}
+${sidoOrder.map(k => `<section class="card sido"><h2>${esc(k)} <small>${bySido.get(k).length}곳</small></h2><div class="links">${bySido.get(k).map(p => `<a href="${p.path}" data-n="${esc([p.full, ...(p.u.a || [])].join(' '))}">${esc(p.full)}${p.s.n >= 15 ? ` <small>${fmt(p.s.m)}만</small>` : ''}</a>`).join('')}</div></section>`).join('')}
 <script>
 document.getElementById('f').addEventListener('input', e => {
-  const v = e.target.value.replace(/\\s/g, '');
+  const nz = t => t.replace(/\\s/g, '').replace(/대학교|대학/g, '대').toLowerCase();
+  const v = nz(e.target.value);
   document.querySelectorAll('.sido').forEach(sec => {
     let any = false;
-    sec.querySelectorAll('a').forEach(a => { const ok = !v || a.dataset.n.replace(/\\s/g, '').includes(v); a.style.display = ok ? '' : 'none'; any = any || ok; });
+    sec.querySelectorAll('a').forEach(a => { const ok = !v || nz(a.dataset.n).includes(v); a.style.display = ok ? '' : 'none'; any = any || ok; });
     sec.style.display = any ? '' : 'none';
   });
 });

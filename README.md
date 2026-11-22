@@ -12,6 +12,8 @@
 - `public/u/{학교}/index.html` — 학교별 자취방 월세 시세 페이지(검색 유입용), `public/u/index.html` 목록, `public/sitemap.xml` — `scripts/pages.mjs`가 만든다(데이터 갱신 때 자동)
 - `public/og/*.png` — 링크 미리보기 이미지 (`python3 scripts/og.py`로 다시 만듦)
 - `functions/_middleware.js` — 공유 링크(`/?r=…`)의 미리보기 제목·설명·이미지를 결과에 맞게 바꿈
+- `public/data/prev/{시군구코드}.json` — 전년 동기 비교용 그 앞 12개월. 최근 12개월에서 밀려나는 달을 옮겨 담고 빈 달만 새로 받는다(처음 한 번은 12개월치를 더 받아 갱신이 2배쯤 걸림). 통계의 「전년 동기 대비」 타일·월별 그래프의 「작년 같은 달」 선, 학교 페이지의 전년 대비 문구에 쓴다.
+- `data/univ_alias.json` — 학교 약칭·영문 이름(KAIST·카이스트, 성대 등). 학교 검색과 학교 페이지 제목에 쓴다.
 - `scripts/build.mjs` — 국토교통부 전월세 실거래가 4종 API를 전국 시군구 × 12개월 호출해 위 파일 생성
 - `.github/workflows/data.yml` — 매주 월요일 자동 갱신 (Actions 탭에서 수동 실행 가능)
 - `data/univ.tsv` — 전국 대학·전문대 캠퍼스 (한국대학교육협의회 표준데이터 2026-03 기준, 사이버대·폐교 제외, 성균관대 자연과학캠퍼스·한국외대 글로벌캠퍼스 보완)
