@@ -29,6 +29,16 @@
 
 링크 뒤에 `?from=이름`(영문·숫자)을 붙여 뿌리면 `/stats/`의 「들어온 경로」에 `from:이름`으로 따로 센다. 예: `https://www.wolsegak.com/?from=everytime`. 공유 링크로 온 방문은 `share`, 다른 사이트에서 온 방문은 그 사이트 호스트만 기록한다.
 
+## 로그인 (카카오·이메일)
+
+- 코드: `functions/api/auth/[[path]].js`(로그인), `functions/api/me.js`(내 정보·탈퇴), `functions/api/saved.js`(관심 지역·비교한 방·예산 저장), 공통 `lib/auth.js`. 표는 `STATS_DB`(D1)에 자동으로 만든다.
+- 환경변수(Cloudflare Pages → Settings → Variables and Secrets, Production):
+  - 카카오: `KAKAO_REST_KEY`, `KAKAO_CLIENT_SECRET`(Secret). 카카오디벨로퍼스 리다이렉트 URI: `https://www.wolsegak.com/api/auth/kakao/callback`
+  - 이메일: `RESEND_API_KEY`(Secret), `MAIL_FROM` (예: `월세각 <login@wolsegak.com>`, Resend에서 도메인 인증 필요)
+- 키가 없으면 그 로그인 방식은 화면에 나오지 않는다. 둘 다 없으면 로그인 버튼과 약관 링크가 숨는다.
+- 로컬: `npx wrangler pages dev public --d1 STATS_DB=wsg-local --binding DEV_MAIL=1` → 메일 대신 화면에 로그인 링크가 나온다(localhost에서만).
+- 개인정보처리방침 `/privacy/`, 이용약관 `/terms/` — 노란 칸(보호책임자·연락처·시행일)을 채운 뒤 `noindex`를 지운다.
+
 ## 인증키
 
 공공데이터포털 일반 인증키(Decoding)를 GitHub > Settings > Secrets and variables > Actions > `DATA_GO_KR_KEY` 로 등록. 코드에 넣지 않는다.

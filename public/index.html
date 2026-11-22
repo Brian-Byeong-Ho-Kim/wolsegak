@@ -108,6 +108,21 @@ tr.me td{background:var(--soft);font-weight:700}
 footer{font-size:12px;color:var(--sub);margin-top:30px;line-height:1.7}
 .loading{color:var(--sub);font-size:14px;padding:8px 0}
 .hide{display:none!important}
+.topr{margin-left:auto;display:flex;gap:6px;align-items:center}
+.topr .toplink{margin-left:0;cursor:pointer;font:inherit;font-size:13px;font-weight:600}
+#acctCard .kbtn{display:flex;align-items:center;justify-content:center;gap:8px;background:#FEE500;color:rgba(0,0,0,.85);border-radius:12px;padding:14px;font-weight:700;font-size:16px;text-decoration:none;border:0;width:100%;cursor:pointer;font-family:inherit}
+#acctCard .or{display:flex;align-items:center;gap:10px;color:var(--sub);font-size:13px;margin:14px 0}
+#acctCard .or::before,#acctCard .or::after{content:"";flex:1;height:1px;background:var(--line)}
+#acctCard .erow{display:flex;gap:8px}
+#acctCard .erow button{flex:none;border:0;background:var(--ink);color:#fff;border-radius:12px;padding:0 14px;font:inherit;font-weight:700;cursor:pointer}
+#acctCard .msg{font-size:14px;margin:10px 0 0;color:var(--brand-ink)}
+#acctCard .fine{font-size:12px;color:var(--sub);margin:12px 0 0}
+#acctCard .mrow{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+#acctCard .mrow button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:9px 12px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+#acctCard .mrow button.danger{color:var(--bad);border-color:#fecaca}
+.favs{margin:0 0 10px;gap:6px}
+.favs .chip{padding:7px 12px;font-size:14px;background:var(--soft);border-color:transparent}
+#favBtn{margin-top:8px;padding:7px 12px;font-size:14px}
 .card,.verdict,#result,#ckCard{scroll-margin-top:76px}
 header{position:relative}
 .toplink{margin-left:auto;font-size:13px;font-weight:600;text-decoration:none;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:7px 12px;color:var(--ink);white-space:nowrap}
@@ -167,8 +182,29 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
   <header>
     <div class="logo"><svg width="26" height="26" viewBox="0 0 64 64"><path d="M10 32 32 13l22 19v19a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3z" fill="#fff"/><path d="m22 37 7 7 13-14" stroke="#ff6b3d" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     <div class="brand"><h1>월세각</h1><p>이 월세, 각 나오나?</p></div>
-    <a href="/u/" class="toplink">🎓 학교별 시세</a>
+    <div class="topr"><a href="/u/" class="toplink">🎓 학교별</a><button type="button" class="toplink hide" id="loginBtn">로그인</button></div>
   </header>
+  <section class="card hide" id="acctCard">
+    <div id="loginPane">
+      <h2>👤 로그인</h2>
+      <p class="note" style="margin-top:0">로그인하면 관심 지역과 비교한 방을 다른 기기에서도 이어서 볼 수 있어요.</p>
+      <button type="button" class="kbtn hide" id="kakaoBtn"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#000" d="M12 3C6.5 3 2 6.5 2 10.8c0 2.8 1.9 5.2 4.7 6.6l-1 3.6c-.1.3.3.6.6.4l4.2-2.8c.5.1 1 .1 1.5.1 5.5 0 10-3.5 10-7.9S17.5 3 12 3z"/></svg>카카오 로그인</button>
+      <div class="or hide" id="orLine">또는</div>
+      <div id="emailBox" class="hide">
+        <div class="erow"><input id="loginEmail" type="email" inputmode="email" autocomplete="email" placeholder="이메일 주소"><button type="button" id="emailGo">링크 받기</button></div>
+        <p class="hint">비밀번호 없이, 메일로 받은 링크를 누르면 로그인돼요.</p>
+      </div>
+      <p class="msg" id="acctMsg" role="status"></p>
+      <p class="fine">처음 로그인하면 회원으로 가입되고, <a href="/terms/">이용약관</a>과 <a href="/privacy/">개인정보처리방침</a>에 동의하게 돼요. 만 14세 미만은 가입할 수 없어요.</p>
+    </div>
+    <div id="mePane" class="hide">
+      <h2>👤 <span id="meName">내 정보</span></h2>
+      <p class="note" style="margin-top:0" id="meInfo"></p>
+      <p class="note">관심 지역·비교한 방·예산이 계정에 저장돼요.</p>
+      <div class="mrow"><button type="button" id="logoutBtn">로그아웃</button><button type="button" class="danger" id="delBtn">회원 탈퇴</button></div>
+      <p class="msg" id="meMsg" role="status"></p>
+    </div>
+  </section>
   <p class="hide shared" id="sharedNote">👋 누군가 공유한 비교 결과예요. 아래에서 내가 본 방도 확인해 보세요.</p>
   <div class="tabs vtabs" role="tablist" id="viewTabs">
     <button role="tab" aria-selected="true" data-view="check">🔍 이 방 비싸요?</button>
@@ -176,6 +212,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
   </div>
   <section class="card">
     <h2>📍 어디예요?</h2>
+    <div class="chips favs hide" id="favs"></div>
     <div class="tabs" role="tablist">
       <button role="tab" aria-selected="true" data-tab="univ">검색</button>
       <button role="tab" aria-selected="false" data-tab="area">목록에서</button>
@@ -199,6 +236,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
       <p class="hint" id="mapHint">누르면 그 동네로 찾아요. 숫자는 동별 원룸 월세 중간값이에요.</p>
     </div>
     <div class="place" id="places"></div>
+    <button type="button" class="chip hide" id="favBtn">☆ 관심 지역 저장</button>
     <details id="dongWrap" class="hide more">
       <summary>동 고르기·옆 동네 추가 <span id="dongSum">(선택)</span></summary>
       <div class="chips" id="dongs" style="margin-top:10px"></div>
@@ -383,7 +421,8 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
     <div>전용 85㎡ 이하 계약만 모았어요. 법정 전환율 상한은 한국은행 기준금리 <span id="baseRate"></span>% + 2%p 기준.</div>
     <div>지도 © OpenStreetMap 기여자, 위치 검색 Nominatim.</div>
     <div>월세각은 공공데이터로 만든 비영리 참고 서비스이며, 법률·금융 자문이 아닙니다.</div>
-    <div style="margin-top:10px;font-weight:600;color:var(--ink)">© 2026 이티컴퍼니</div>
+    <div style="margin-top:10px" class="hide" id="legalLinks"><a href="/terms/">이용약관</a> · <a href="/privacy/"><b>개인정보처리방침</b></a></div>
+    <div style="margin-top:6px;font-weight:600;color:var(--ink)">© 2026 이티컴퍼니</div>
   </footer>
 </div>
 
@@ -530,7 +569,7 @@ function setPlaces(codes, dongs = []) { state.places = codes; state.dongs = new 
 function dongSum() { $('#dongSum').textContent = state.dongs.size ? `· ${[...state.dongs].slice(0, 3).join('·')}${state.dongs.size > 3 ? ` 외 ${state.dongs.size - 3}곳` : ''}` : '(선택)'; }
 function toggleDong(d) {
   state.dongs.has(d) ? state.dongs.delete(d) : state.dongs.add(d);
-  dongSum();
+  dongSum(); updFavBtn();
   $$('#dongs .chip').forEach(b => b.setAttribute('aria-pressed', state.dongs.has(b.dataset.d)));
   refreshDongLabels(); renderStats(); writeHash();
   if (!$('#result').classList.contains('hide')) run();
@@ -542,7 +581,7 @@ async function renderPlaces() {
   box.querySelectorAll('.chip.x').forEach(b => b.onclick = () => { state.places = state.places.filter(c => c !== b.dataset.c); renderPlaces(); });
   $('#addWrap').classList.toggle('hide', !state.places.length);
   if (state.places.length) $('#goHint').textContent = '';
-  writeHash();
+  writeHash(); updFavBtn();
   if (!state.places.length) { $('#dongWrap').classList.add('hide'); return; }
   $('#dongs').innerHTML = '<span class="loading">동 목록 불러오는 중…</span>';
   $('#dongWrap').classList.remove('hide');
@@ -554,7 +593,7 @@ async function renderPlaces() {
     for (const d of [...state.dongs]) if (!counts.has(d)) state.dongs.delete(d);
     $('#dongs').innerHTML = top.slice(0, 30).map(([d, n]) => `<button class="chip" aria-pressed="${state.dongs.has(d)}" data-d="${d}">${d} <small style="opacity:.6">${n.toLocaleString()}</small></button>`).join('') || '<span class="loading">이 지역은 아직 데이터가 없어요.</span>';
     $$('#dongs .chip').forEach(b => b.onclick = () => toggleDong(b.dataset.d));
-    dongSum();
+    dongSum(); updFavBtn();
     showMap(); drawDongs(sets, top.slice(0, 25).map(([d]) => d));
     statSets = sets; statPrev = []; renderStats();
     Promise.all(state.places.map(loadPrev)).then(ps => { if (statSets !== sets || ps.some(x => !x)) return; statPrev = ps; renderStats(); });
@@ -1046,6 +1085,7 @@ $$('.qk .chip').forEach(c => c.onclick = () => { const t = $('#' + c.closest('.q
 function onBudget() {
   const B = budget();
   try { B ? localStorage.setItem(BKEY, JSON.stringify(B)) : localStorage.removeItem(BKEY); } catch {}
+  syncLater();
   // 3단계 입력칸이 비어 있으면 예산을 그대로 넣어 둔다
   if (B && !$('#dep').value && !$('#rent').value) { $('#dep').value = B.dep; $('#rent').value = B.rent; }
   renderBudget();
@@ -1241,7 +1281,7 @@ function addCompare(r) {
   cmpList.unshift({ key, st, r, t: Date.now() });
   cmpList = cmpList.slice(0, 8); cmpCur = key;
   try { localStorage.setItem('wsg-cmp', JSON.stringify(cmpList)); } catch (e) {}
-  renderCompare();
+  renderCompare(); syncLater();
 }
 function renderCompare() {
   $('#cmpCard').classList.toggle('hide', cmpList.length < 2);
@@ -1254,7 +1294,7 @@ function renderCompare() {
 }
 $('#cmpList').addEventListener('click', e => {
   const x = e.target.closest('[data-x]');
-  if (x) { cmpList.splice(+x.dataset.x, 1); try { localStorage.setItem('wsg-cmp', JSON.stringify(cmpList)); } catch (er) {} renderCompare(); return; }
+  if (x) { cmpList.splice(+x.dataset.x, 1); try { localStorage.setItem('wsg-cmp', JSON.stringify(cmpList)); } catch (er) {} renderCompare(); syncLater(); return; }
   const row = e.target.closest('.cmp'); if (!row) return;
   const st = cmpList[+row.dataset.i].st;
   if (state.mode !== st.mode) $$(`[data-mode=${st.mode}]`)[0].click();
@@ -1349,6 +1389,122 @@ function readHash() {
   }
 }
 ['#ckAddr', '#ckFloor', '#ckFee'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') run(); }));
+// ===== 관심 지역 =====
+const escH = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let favs = [];
+try { favs = JSON.parse(localStorage.getItem('wsg-fav') || '[]').slice(0, 20); } catch (e) { favs = []; }
+const favKey = f => (f.places || []).join(',') + '|' + (f.dongs || []).join(',');
+function curFav() {
+  const where = state.dongs.size ? [...state.dongs].slice(0, 2).join('·') + (state.dongs.size > 2 ? ' 외' : '') : state.places.map(shortName).join('+');
+  return { places: [...state.places], dongs: [...state.dongs], univ: state.univ ? state.univ.name : '', label: state.univ ? `${state.univ.name.replace(/대학교/, '대')} · ${where}` : where };
+}
+function saveFavs() { try { localStorage.setItem('wsg-fav', JSON.stringify(favs)); } catch (e) {} renderFavs(); syncLater(); }
+function updFavBtn() {
+  const b = $('#favBtn'); if (!b) return;
+  b.classList.toggle('hide', !state.places.length);
+  if (!state.places.length) return;
+  const has = favs.some(f => favKey(f) === favKey(curFav()));
+  b.textContent = has ? '★ 관심 지역에 저장됨' : '☆ 관심 지역 저장';
+  b.setAttribute('aria-pressed', has);
+}
+function renderFavs() {
+  $('#favs').innerHTML = favs.map((f, i) => `<button type="button" class="chip" data-i="${i}">⭐ ${escH(f.label)}</button>`).join('');
+  $('#favs').classList.toggle('hide', !favs.length);
+  updFavBtn();
+}
+$('#favBtn').onclick = () => {
+  const c = curFav(), k = favKey(c);
+  favs = favs.some(f => favKey(f) === k) ? favs.filter(f => favKey(f) !== k) : [c, ...favs].slice(0, 20);
+  saveFavs();
+};
+$('#favs').addEventListener('click', e => {
+  const b = e.target.closest('[data-i]'); if (!b) return;
+  const f = favs[+b.dataset.i];
+  state.univ = f.univ && INDEX ? INDEX.univ.find(u => u.name === f.univ) || null : null;
+  $('#uq').value = state.univ ? state.univ.name : f.label;
+  setPlaces(f.places, f.dongs);
+  if (state.univ) markUniv(state.univ);
+});
+renderFavs();
+
+// ===== 로그인·내 정보 =====
+let ME = null;
+function syncLater() { if (!ME) return; clearTimeout(syncLater.t); syncLater.t = setTimeout(pushSaved, 800); }
+async function pushSaved() {
+  try { await fetch('/api/saved', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data: { fav: favs, cmp: cmpList, budget: budget() } }) }); } catch (e) {}
+}
+async function pullSaved() {
+  let data;
+  try { const r = await fetch('/api/saved', { cache: 'no-store' }); if (!r.ok) return; data = (await r.json()).data; } catch (e) { return; }
+  const fk = new Set(favs.map(favKey));
+  favs = [...favs, ...(data.fav || []).filter(f => !fk.has(favKey(f)))].slice(0, 20);
+  const ck = new Set(cmpList.map(c => c.key));
+  cmpList = [...cmpList, ...(data.cmp || []).filter(c => c && c.key && !ck.has(c.key))].sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 8);
+  try { localStorage.setItem('wsg-fav', JSON.stringify(favs)); localStorage.setItem('wsg-cmp', JSON.stringify(cmpList)); } catch (e) {}
+  if (!budget() && data.budget && data.budget.rent > 0) { $('#bDep').value = data.budget.dep; $('#bRent').value = data.budget.rent; try { localStorage.setItem(BKEY, JSON.stringify(data.budget)); } catch (e) {} renderBudget(); }
+  renderFavs(); renderCompare(); pushSaved();
+}
+function renderMe() {
+  const name = ME ? (ME.nickname || (ME.email ? ME.email.split('@')[0] : '') || '내 정보') : '';
+  $('#loginBtn').textContent = ME ? '👤 ' + name : '로그인';
+  $('#loginPane').classList.toggle('hide', !!ME);
+  $('#mePane').classList.toggle('hide', !ME);
+  if (ME) {
+    $('#meName').textContent = name;
+    $('#meInfo').textContent = [ME.email, ME.providers.map(p => ({ kakao: '카카오', naver: '네이버', email: '이메일' }[p] || p)).join('·') + ' 로그인'].filter(Boolean).join(' · ');
+  }
+}
+function toggleAcct(open) {
+  const c = $('#acctCard'); const on = open == null ? c.classList.contains('hide') : open;
+  c.classList.toggle('hide', !on);
+  if (on) { c.scrollIntoView({ behavior: 'smooth', block: 'start' }); if (!ME && !$('#emailBox').classList.contains('hide')) setTimeout(() => $('#loginEmail').focus(), 300); }
+}
+$('#loginBtn').onclick = () => toggleAcct();
+const nextHere = () => location.pathname + location.hash;
+$('#kakaoBtn').onclick = () => { location.href = '/api/auth/kakao?next=' + encodeURIComponent(nextHere()); };
+async function sendLink() {
+  const email = $('#loginEmail').value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { $('#acctMsg').textContent = '이메일 주소를 확인해 주세요.'; return; }
+  $('#emailGo').disabled = true; $('#acctMsg').textContent = '보내는 중…';
+  try {
+    const r = await fetch('/api/auth/email', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, next: nextHere() }) });
+    const j = await r.json();
+    $('#acctMsg').innerHTML = r.ok ? `<b>${escH(email)}</b>로 로그인 링크를 보냈어요. 15분 안에 메일의 버튼을 눌러 주세요.${j.dev_link ? `<br><a id="devLink" href="${escH(j.dev_link)}">[개발용] 링크 열기</a>` : ''}` : escH(j.error || '보내지 못했어요.');
+  } catch (e) { $('#acctMsg').textContent = '보내지 못했어요. 잠시 뒤 다시 시도해 주세요.'; }
+  $('#emailGo').disabled = false;
+}
+$('#emailGo').onclick = sendLink;
+$('#loginEmail').addEventListener('keydown', e => { if (e.key === 'Enter') sendLink(); });
+$('#logoutBtn').onclick = async () => {
+  try { await fetch('/api/auth/logout', { method: 'POST' }); } catch (e) {}
+  ME = null; renderMe(); $('#acctMsg').textContent = '로그아웃했어요. 이 기기에 저장된 관심 지역·비교 목록은 그대로 있어요.';
+};
+$('#delBtn').onclick = async () => {
+  const b = $('#delBtn');
+  if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = '정말 탈퇴 (계정에 저장된 내용 모두 삭제)'; $('#meMsg').textContent = '한 번 더 누르면 바로 탈퇴되고 되돌릴 수 없어요.'; return; }
+  try { const r = await fetch('/api/me', { method: 'DELETE' }); if (!r.ok) throw 0; } catch (e) { $('#meMsg').textContent = '탈퇴하지 못했어요. 잠시 뒤 다시 시도해 주세요.'; return; }
+  delete b.dataset.sure; b.textContent = '회원 탈퇴'; ME = null; renderMe();
+  $('#acctMsg').textContent = '탈퇴했어요. 계정과 계정에 저장된 내용을 모두 지웠어요.';
+};
+async function initAuth() {
+  let cfg;
+  try { cfg = await (await fetch('/api/auth/config', { cache: 'no-store' })).json(); } catch (e) { return; }
+  if (!cfg || (!cfg.kakao && !cfg.email)) return;   // 로그인 키를 넣기 전에는 버튼을 숨긴다
+  $('#loginBtn').classList.remove('hide'); $('#legalLinks').classList.remove('hide');
+  $('#kakaoBtn').classList.toggle('hide', !cfg.kakao);
+  $('#emailBox').classList.toggle('hide', !cfg.email);
+  $('#orLine').classList.toggle('hide', !(cfg.kakao && cfg.email));
+  const sp = new URLSearchParams(location.search);
+  if (sp.has('login_error')) {
+    const err = sp.get('login_error'); sp.delete('login_error');
+    history.replaceState(null, '', location.pathname + (sp.toString() ? '?' + sp : '') + location.hash);
+    if (err) { toggleAcct(true); $('#acctMsg').textContent = err; }
+  }
+  try { ME = (await (await fetch('/api/me', { cache: 'no-store' })).json()).user; } catch (e) {}
+  renderMe();
+  if (ME) pullSaved();
+}
+initAuth();
 loadIndex();
 </script>
 </body>
