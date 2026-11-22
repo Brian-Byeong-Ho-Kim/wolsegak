@@ -33,7 +33,7 @@
 
 - 코드: `functions/api/auth/[[path]].js`(로그인), `functions/api/me.js`(내 정보·탈퇴), `functions/api/saved.js`(관심 지역·비교한 방·예산 저장), 공통 `lib/auth.js`. 표는 `STATS_DB`(D1)에 자동으로 만든다.
 - 환경변수(Cloudflare Pages → Settings → Variables and Secrets, Production):
-  - 카카오: `KAKAO_REST_KEY`, `KAKAO_CLIENT_SECRET`(Secret). 카카오디벨로퍼스 리다이렉트 URI: `https://www.wolsegak.com/api/auth/kakao/callback`
+  - 카카오: `KAKAO_REST_KEY`, `KAKAO_CLIENT_SECRET`(Secret), `KAKAO_ADMIN_KEY`(Secret, 어드민 키), `KAKAO_APP_ID`(앱 ID 숫자). 리다이렉트 URI: `https://www.wolsegak.com/api/auth/kakao/callback`, 연결 끊기 콜백 URL: `https://www.wolsegak.com/api/auth/kakao/unlink`
   - 이메일: `RESEND_API_KEY`(Secret), `MAIL_FROM` (예: `월세각 <login@wolsegak.com>`, Resend에서 도메인 인증 필요)
 - 키가 없으면 그 로그인 방식은 화면에 나오지 않는다. 둘 다 없으면 로그인 버튼과 약관 링크가 숨는다.
 - 로컬: `npx wrangler pages dev public --d1 STATS_DB=wsg-local --binding DEV_MAIL=1` → 메일 대신 화면에 로그인 링크가 나온다(localhost에서만).

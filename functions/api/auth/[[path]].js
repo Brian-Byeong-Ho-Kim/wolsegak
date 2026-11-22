@@ -5,10 +5,12 @@
 //   POST /api/auth/email {email,next}→ 로그인 링크 메일 발송 (15분 유효, 한 번만)
 //   GET  /api/auth/email/verify?t=   → 링크 확인 → 세션 발급
 //   POST /api/auth/logout
+//   GET|POST /api/auth/kakao/unlink  → 카카오 「연결 끊기」 알림(웹훅). 사용자가 카카오에서 앱 연결을 끊으면 계정을 지운다
 // 필요한 환경변수(Cloudflare Pages → Settings → Variables and Secrets):
 //   KAKAO_REST_KEY, KAKAO_CLIENT_SECRET(비밀)  — 카카오 로그인
+//   KAKAO_ADMIN_KEY(비밀), KAKAO_APP_ID        — 연결 끊기 알림 검증, 탈퇴 시 카카오 연결 끊기
 //   RESEND_API_KEY(비밀), MAIL_FROM("월세각 <login@wolsegak.com>") — 이메일 로그인
-import { json, rand, sha256, cookies, setCookie, isLocal, db, upsertUser, startSession, currentUser, safeNext, sameOrigin, COOKIE } from '../../../lib/auth.js';
+import { json, rand, sha256, cookies, setCookie, isLocal, db, upsertUser, startSession, currentUser, safeNext, sameOrigin, deleteUser, COOKIE } from '../../../lib/auth.js';
 
 const EMAIL = /^[^\s@<>"']{1,64}@[^\s@<>"']{1,190}\.[a-z]{2,}$/i;
 const redirect = (to, cookieList = []) => {
@@ -62,6 +64,25 @@ export async function onRequest(ctx) {
     const userId = await upsertUser(d, { provider: 'kakao', providerId: String(me.id), email, emailVerified: !!email, nickname: ka.profile?.nickname || me.properties?.nickname || null });
     // 카카오 토큰은 저장하지 않는다(로그인 확인에만 쓰고 버림)
     return redirect(back(next), [clear, await startSession(d, userId, request)]);
+  }
+
+  // ---------- 카카오 연결 끊기 알림 (3초 안에 200으로 답해야 함) ----------
+  if (path === 'kakao/unlink') {
+    if (!env.KAKAO_ADMIN_KEY || request.headers.get('authorization') !== `KakaoAK ${env.KAKAO_ADMIN_KEY}`) return new Response('unauthorized', { status: 401 });
+    let p = url.searchParams;
+    if (request.method === 'POST') { const f = await request.formData().catch(() => null); if (f) p = f; }
+    const appId = String(p.get('app_id') || ''), kid = String(p.get('user_id') || '');
+    if (env.KAKAO_APP_ID && appId !== String(env.KAKAO_APP_ID)) return new Response('bad app', { status: 400 });
+    if (kid) {
+      const acc = await d.prepare("SELECT user_id FROM wsg_accounts WHERE provider = 'kakao' AND provider_id = ?").bind(kid).first();
+      if (acc) {
+        await d.prepare("DELETE FROM wsg_accounts WHERE provider = 'kakao' AND provider_id = ?").bind(kid).run();
+        const left = (await d.prepare('SELECT COUNT(*) n FROM wsg_accounts WHERE user_id = ?').bind(acc.user_id).first()).n;
+        if (!left) await deleteUser(d, acc.user_id);   // 다른 로그인 방식이 없으면 회원 전체 삭제
+        else await d.prepare('DELETE FROM wsg_sessions WHERE user_id = ?').bind(acc.user_id).run();
+      }
+    }
+    return new Response('OK', { status: 200 });
   }
 
   // ---------- 이메일 로그인 링크 ----------
