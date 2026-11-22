@@ -46,6 +46,8 @@ li:last-child{border-bottom:0}
     <div class="card"><h2>매물 검증 횟수</h2><div class="kpis" id="ckpis"></div></div>
     <div class="card"><h2>최근 30일</h2><p class="note" style="margin:0">주황 막대 = 조회수(위 숫자 = 방문자), 파랑 막대 = 매물 검증</p><div class="chart" id="chart"></div></div>
     <div class="card"><h2>많이 검증한 지역 <span class="note">(최근 30일)</span></h2><ol id="places"></ol></div>
+    <div class="card"><h2>결과 공유 횟수</h2><div class="kpis" id="skpis"></div></div>
+    <div class="card"><h2>들어온 경로 <span class="note">(최근 30일 · share = 공유 링크, from:이름 = 주소에 ?from=이름을 붙여 뿌린 링크)</span></h2><ol id="refs"></ol></div>
   </div>
 </main>
 <script>
@@ -79,6 +81,14 @@ li:last-child{border-bottom:0}
   var names = {}; (idx.sgg || []).forEach(function (g) { names[g.code] = g.name; });
   $('places').innerHTML = s.topPlaces.length ? s.topPlaces.map(function (r) {
     var p = r.label.split('|'); return '<li><span>' + (names[p[0]] || p[0]) + ' · ' + (p[1] === 'jeonse' ? '전세' : '월세') + '</span><b>' + fmt(r.n) + '회</b></li>';
+  }).join('') : '<li class="empty">아직 기록이 없어요.</li>';
+  var sh = s.shares || { today: 0, d7: 0, d30: 0, all: 0 };
+  $('skpis').innerHTML = [['오늘', sh.today], ['최근 7일', sh.d7], ['최근 30일', sh.d30], ['전체', sh.all]].map(function (c) {
+    return '<div class="kpi"><span>' + c[0] + '</span><b>' + fmt(c[1]) + '</b><em>회</em></div>';
+  }).join('');
+  var refs = s.topRefs || [];
+  $('refs').innerHTML = refs.length ? refs.map(function (r) {
+    return '<li><span>' + String(r.label).replace(/[<>&"]/g, '') + '</span><b>' + fmt(r.n) + '회</b></li>';
   }).join('') : '<li class="empty">아직 기록이 없어요.</li>';
 })();
 </script>

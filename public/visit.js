@@ -11,7 +11,15 @@
     };
     // 매물 검증을 한 번 할 때마다 호출: wsgEvent('11110', 'wolse')
     window.wsgEvent = function (code, mode) { if (!skip) send({ k: 'check', l: code + '|' + mode }); };
+    // 결과 공유: wsgShare('native'|'copy')
+    window.wsgShare = function (how) { if (!skip) send({ k: 'share', l: how }); };
     if (skip) return;
+    // 들어온 경로 (홍보 효과 확인용): 공유 링크(?r=), ?from=이름, 다른 사이트에서 온 경우 그 사이트 호스트만
+    var sp = new URLSearchParams(location.search), ref = '';
+    if (sp.get('r')) ref = 'share';
+    else if (sp.get('from') || sp.get('utm_source')) ref = 'from:' + String(sp.get('from') || sp.get('utm_source')).toLowerCase().replace(/[^a-z0-9_\-]/g, '').slice(0, 30);
+    else if (document.referrer) { try { var h = new URL(document.referrer).hostname; if (h && h !== location.hostname) ref = h.replace(/^www\./, '').slice(0, 80); } catch (e) {} }
+    if (ref && ref !== 'from:') send({ k: 'ref', l: ref });
     var day = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
     var path = location.pathname;
     var seen = {};

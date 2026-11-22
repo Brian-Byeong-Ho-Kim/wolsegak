@@ -25,9 +25,11 @@ jobs:
         run: node scripts/build.mjs ${{ inputs.only && format('--only={0}', inputs.only) || '' }}
         env:
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+      - name: 학교별 페이지·sitemap 만들기
+        run: node scripts/pages.mjs
       - name: 변경 시 커밋
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/data
+          git add public/data public/u public/sitemap.xml
           git diff --cached --quiet || (git commit -m "실거래 데이터 갱신 $(date -u +%F)" && git pull --rebase origin main && git push)

@@ -7,6 +7,15 @@
 <meta name="description" content="대학가·사회초년생 전월세 적정가 체크. 국토교통부 전월세 실거래가로 같은 동네 비슷한 집과 비교해 보증금·월세가 적정한지 알려드려요.">
 <meta property="og:title" content="월세각 — 이 월세, 각 나오나?">
 <meta property="og:description" content="학교 이름이나 동네로 찾고, 보증금·월세만 넣으면 같은 동네 실거래와 비교해 드려요.">
+<link rel="canonical" href="https://www.wolsegak.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="월세각">
+<meta property="og:url" content="https://www.wolsegak.com/">
+<meta property="og:image" content="https://www.wolsegak.com/og/default.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="keywords" content="월세 시세, 전월세 실거래가, 자취방 월세, 원룸 월세, 대학가 월세, 미끼매물, 사회초년생 월세">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"월세각","alternateName":"wolsegak","url":"https://www.wolsegak.com/","description":"대학가·사회초년생 전월세 적정가 체크. 국토교통부 전월세 실거래가로 같은 동네 비슷한 집과 비교해 보증금·월세가 적정한지 알려드려요.","applicationCategory":"UtilitiesApplication","operatingSystem":"Web","inLanguage":"ko","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"KRW"},"publisher":{"@type":"Organization","name":"이티컴퍼니"}}</script>
 <script src="/visit.js" defer></script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23ff6b3d'/><path d='M14 34 32 18l18 16v14a2 2 0 0 1-2 2H16a2 2 0 0 1-2-2z' fill='white'/><path d='m24 38 6 6 11-12' stroke='%23ff6b3d' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -70,6 +79,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--brand);outline:none}
 .v-warn{background:linear-gradient(135deg,#f59e0b,#d97706)}
 .v-bad{background:linear-gradient(135deg,#ef4444,#dc2626)}
 .v-none{background:linear-gradient(135deg,#78716c,#57534e)}
+.share{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.share button{flex:1;min-width:140px;border:0;border-radius:12px;padding:12px;font:inherit;font-weight:700;font-size:15px;cursor:pointer;background:#fff;color:var(--ink)}
+.share button.ghost{background:rgba(255,255,255,.18);color:#fff}
+.verdict .shareNote{display:block;margin-top:8px;font-size:12px;opacity:.85}
+.shared{background:var(--ink);color:#fff;border-radius:12px;padding:10px 14px;font-size:14px;margin:8px 0}
 .meter{position:relative;height:12px;border-radius:999px;background:linear-gradient(90deg,#16a34a 0 25%,#2563eb 25% 60%,#f59e0b 60% 80%,#ef4444 80%);margin:26px 0 8px}
 .meter i{position:absolute;top:-8px;width:4px;height:28px;background:var(--ink);border-radius:2px;transform:translateX(-50%)}
 .meter i::after{content:attr(data-l);position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-style:normal;font-size:12px;font-weight:700;white-space:nowrap}
@@ -115,6 +129,8 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
     <div class="brand"><h1>월세각</h1><p>이 월세, 각 나오나?</p></div>
   </header>
   <p style="margin:0 0 6px"><a href="#" id="ckJump" class="chip" style="text-decoration:none;display:inline-block;background:var(--ink);color:#fff;border-color:var(--ink)">🔍 직방·다방에서 본 방, 여기서 검증하기</a></p>
+  <p class="hide shared" id="sharedNote">👋 누군가 공유한 비교 결과예요. 아래에서 조건을 바꿔 내가 본 방도 확인해 보세요.</p>
+  <p style="margin:0 0 6px"><a href="/u/" class="chip" style="text-decoration:none;display:inline-block">🎓 학교별 자취방 월세 시세 보기</a></p>
   <p class="hero"><b>내 예산</b>으로 어느 동네에서 어떤 집을 구할 수 있는지, 제안받은 집이 <b>같은 동네·비슷한 크기 집의 실제 전월세 계약</b>보다 비싼지 확인해 보세요.</p>
 
   <section class="card">
@@ -658,7 +674,14 @@ async function run() {
   const where = state.dongs.size ? [...state.dongs].slice(0, 3).join('·') + (state.dongs.size > 3 ? ` 외 ${state.dongs.size - 3}곳` : '') : state.places.map(shortName).join(' + ');
   const fee = parseFloat($('#ckFee').value), fl = floorOf($('#ckFloor').value), myA = parseFloat($('#myArea').value);
   const spec = [ckType != null ? TYPE_NAMES[ckType] : null, myA > 0 ? `${myA}㎡` : null, fl != null ? (fl < 0 ? '지하' : fl + '층') : null].filter(Boolean).join(' · ');
+  const shareCode = n < 8 ? null : bait ? 'bait' : ({ 'v-good': 'good', 'v-ok': 'ok', 'v-warn': 'warn', 'v-bad': 'bad' })[cls];
+  last.share = shareCode ? { r: shareCode, p, n, w: (state.univ ? state.univ.name + ' 근처 ' : '') + where, dep, rent, wolse, ckType } : null;
   V.innerHTML = `<div class="lab">${state.univ ? state.univ.name + ' 근처 · ' : ''}${where}${spec ? ' · ' + spec : ''} · ${wolse ? `보증금 ${won(dep)} / 월세 ${fmt(rent)}만원` : `전세 ${won(dep)}`}${fee > 0 ? ` + 관리비 ${fmt(fee)}만원` : ''}</div><div class="big">${big}</div><div class="desc">${desc}</div>`;
+  if (last.share) {
+    V.insertAdjacentHTML('beforeend', `<div class="share"><button type="button" id="shareBtn">📤 이 결과 공유하기</button><button type="button" class="ghost" id="copyBtn">🔗 링크 복사</button></div><small class="shareNote">링크에는 지역과 입력한 조건(보증금·월세·면적 등)이 담겨요. 받는 사람도 같은 비교를 볼 수 있어요.</small>`);
+    $('#shareBtn').onclick = shareResult;
+    $('#copyBtn').onclick = () => copyLink($('#copyBtn'));
+  }
   // 관리비·층 메모
   const notes = [];
   if (fee > 0 && wolse) {
@@ -1041,6 +1064,40 @@ function trendChart(mo) {
   <div class="legend"><span><i style="background:#fed7aa"></i>거래 건수</span><span><i style="background:#c2410c"></i>월세 중간값(만원, 보증금 2천↓)</span><span>최근 달은 신고가 덜 들어와 적게 보여요</span></div>`;
 }
 
+// ===== 결과 공유 =====
+function shareUrl() {
+  const s = last.share, p = new URLSearchParams();
+  p.set('r', s.r); p.set('pc', s.p); p.set('n', s.n); p.set('w', s.w.slice(0, 40));
+  if (state.univ) p.set('u', state.univ.name);
+  p.set('s', state.places.join(','));
+  if (state.dongs.size) p.set('d', [...state.dongs].join(','));
+  p.set('m', state.mode); p.set('dep', s.dep); if (s.wolse) p.set('rent', s.rent);
+  if (s.ckType != null) p.set('t', s.ckType); else p.set('ty', [...state.types].join(','));
+  const a = parseFloat($('#myArea').value); if (a > 0) p.set('a', a); else p.set('ar', [...state.areas].join(','));
+  if ($('#ckFloor').value.trim()) p.set('f', $('#ckFloor').value.trim().slice(0, 10));
+  const fee = parseFloat($('#ckFee').value); if (fee > 0) p.set('fee', fee);
+  if (!$('#onlyNew').checked) p.set('all', '1');
+  return location.origin + '/?' + p.toString();
+}
+function shareText() {
+  const s = last.share;
+  const v = { good: '시세보다 싼 편', ok: '적정한 편', warn: '조금 비싼 편', bad: '시세보다 비싼 편', bait: '시세보다 너무 싸서 미끼매물 주의' }[s.r];
+  return `${s.w} ${s.wolse ? `보증금 ${won(s.dep)}/월세 ${fmt(s.rent)}만원` : `전세 ${won(s.dep)}`}, 실거래로 비교해 보니 ${v}이래요.`;
+}
+async function copyLink(btn) {
+  const url = shareUrl();
+  try { await navigator.clipboard.writeText(url); }
+  catch (e) { const t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e2) {} t.remove(); }
+  try { window.wsgShare && window.wsgShare('copy'); } catch (e) {}
+  if (btn) { const o = btn.textContent; btn.textContent = '✅ 복사했어요'; setTimeout(() => btn.textContent = o, 1800); }
+}
+async function shareResult() {
+  if (navigator.share) {
+    try { await navigator.share({ title: '월세각 — 이 월세, 각 나오나?', text: shareText(), url: shareUrl() }); try { window.wsgShare && window.wsgShare('native'); } catch (e) {} }
+    catch (e) { /* 사용자가 닫음 */ }
+  } else copyLink($('#shareBtn'));
+}
+
 // ===== 링크 공유용 주소(#) =====
 function writeHash() {
   const p = new URLSearchParams();
@@ -1050,13 +1107,31 @@ function writeHash() {
   history.replaceState(null, '', p.toString() ? '#' + p.toString() : location.pathname);
 }
 function readHash() {
-  const p = new URLSearchParams(location.hash.slice(1));
+  const fromShare = new URLSearchParams(location.search).has('s');
+  const p = new URLSearchParams(fromShare ? location.search.slice(1) : location.hash.slice(1));
+  // 공유 링크로 들어온 경우: 집 종류·크기·조건을 먼저 맞춘다
+  const nums = (v, ok) => (v || '').split(',').filter(x => x !== '' && ok(x));
+  const ty = nums(p.get('ty'), x => /^[0-3]$/.test(x)).map(Number);
+  if (ty.length) { state.types.clear(); ty.forEach(t => state.types.add(t)); $$('#types [data-v]').forEach(b => b.setAttribute('aria-pressed', state.types.has(+b.dataset.v))); }
+  const ar = nums(p.get('ar'), x => /^[0-9]+-[0-9]+$/.test(x) && $(`#areas [data-v="${x}"]`));
+  if (ar.length) { state.areas.clear(); ar.forEach(a => state.areas.add(a)); $$('#areas [data-v]').forEach(b => b.setAttribute('aria-pressed', state.areas.has(b.dataset.v))); }
+  const numIn = (k, sel) => { const v = p.get(k); if (v && /^[0-9]+(\.[0-9]+)?$/.test(v)) $(sel).value = v; };
+  if (p.get('m') === 'jeonse') $$('[data-mode=jeonse]')[0].click();
+  numIn('dep', '#dep'); numIn('rent', '#rent'); numIn('a', '#myArea'); numIn('fee', '#ckFee');
+  if (/^[0-3]$/.test(p.get('t') || '')) $('#ckType').value = p.get('t');
+  if (p.get('f')) $('#ckFloor').value = p.get('f').slice(0, 10);
+  if (p.get('all') === '1') $('#onlyNew').checked = false;
   const u = p.get('u'), s = p.get('s');
   if (u) { const x = INDEX.univ.find(v => v.name === u); if (x) { state.univ = x; $('#uq').value = x.name; } }
   if (s) { state.places = s.split(',').filter(c => INDEX.sgg.some(x => x.code === c)); }
   if (p.get('d')) p.get('d').split(',').forEach(d => state.dongs.add(d));
   if (state.places.length) renderPlaces();
   if (state.univ) markUniv(state.univ);
+  if (fromShare && state.places.length && $('#dep').value) {
+    $('#sharedNote').classList.remove('hide');
+    $('#go').disabled = false;
+    setTimeout(run, 0);
+  }
 }
 $('#ckJump').onclick = e => { e.preventDefault(); const c = $('#ckAddr').closest('.card'); c.scrollIntoView({ behavior: 'smooth', block: 'start' }); setTimeout(() => $('#ckAddr').focus(), 400); };
 ['#ckAddr', '#ckFloor', '#ckFee'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') run(); }));

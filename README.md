@@ -9,11 +9,23 @@
 - `public/index.html` — 정적 페이지 하나 (빌드 없음)
 - `public/data/index.json` — 시군구 목록, 대학 캠퍼스 → 시군구 매핑
 - `public/data/sgg/{시군구코드}.json` — 최근 12개월, 전용 85㎡ 이하 전월세 실거래
+- `public/u/{학교}/index.html` — 학교별 자취방 월세 시세 페이지(검색 유입용), `public/u/index.html` 목록, `public/sitemap.xml` — `scripts/pages.mjs`가 만든다(데이터 갱신 때 자동)
+- `public/og/*.png` — 링크 미리보기 이미지 (`python3 scripts/og.py`로 다시 만듦)
+- `functions/_middleware.js` — 공유 링크(`/?r=…`)의 미리보기 제목·설명·이미지를 결과에 맞게 바꿈
 - `scripts/build.mjs` — 국토교통부 전월세 실거래가 4종 API를 전국 시군구 × 12개월 호출해 위 파일 생성
 - `.github/workflows/data.yml` — 매주 월요일 자동 갱신 (Actions 탭에서 수동 실행 가능)
 - `data/univ.tsv` — 전국 대학·전문대 캠퍼스 (한국대학교육협의회 표준데이터 2026-03 기준, 사이버대·폐교 제외, 성균관대 자연과학캠퍼스·한국외대 글로벌캠퍼스 보완)
 - `data/sgg_leaf.tsv` — 법정동코드 기준 시군구 (2026-11 행정표준코드관리시스템)
 - `data/sgg_alias.json` — 2026년 개편 지역(전남광주통합특별시, 인천 제물포·영종·서해·검단구, 화성시 4개 구)의 옛 코드. 새 코드로 거래가 안 나오면 옛 코드로 받아 동 이름으로 나눈다.
+
+## 검색 등록
+
+- `public/robots.txt`, `public/sitemap.xml`(학교 페이지 포함 400여 개 주소), 홈 canonical·OG·구조화 데이터.
+- 네이버 서치어드바이저·구글 서치콘솔에 `https://www.wolsegak.com` 등록 후 사이트맵 `https://www.wolsegak.com/sitemap.xml` 제출.
+
+## 홍보 링크 추적
+
+링크 뒤에 `?from=이름`(영문·숫자)을 붙여 뿌리면 `/stats/`의 「들어온 경로」에 `from:이름`으로 따로 센다. 예: `https://www.wolsegak.com/?from=everytime`. 공유 링크로 온 방문은 `share`, 다른 사이트에서 온 방문은 그 사이트 호스트만 기록한다.
 
 ## 인증키
 
