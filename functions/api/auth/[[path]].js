@@ -41,6 +41,9 @@ export async function onRequest(ctx) {
   // ---------- 카카오 ----------
   if (path === 'kakao' && request.method === 'GET') {
     if (!env.KAKAO_REST_KEY) return redirect(back(url.searchParams.get('next'), '카카오 로그인이 아직 준비 중이에요'));
+    // 카카오에 등록한 리다이렉트 URI는 대표 주소 하나뿐이라, 다른 주소(wolsegak.com, *.pages.dev)로 들어왔으면 대표 주소에서 다시 시작한다
+    const site = env.SITE_ORIGIN || 'https://www.wolsegak.com';
+    if (!isLocal(request) && url.origin !== site) return redirect(`${site}${url.pathname}${url.search}`);
     const state = rand(16);
     const q = new URLSearchParams({ response_type: 'code', client_id: env.KAKAO_REST_KEY, redirect_uri: `${url.origin}/api/auth/kakao/callback`, state });
     return redirect(`https://kauth.kakao.com/oauth/authorize?${q}`, [
