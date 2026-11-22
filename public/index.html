@@ -201,7 +201,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
       <h2>👤 <span id="meName">내 정보</span></h2>
       <p class="note" style="margin-top:0" id="meInfo"></p>
       <p class="note">관심 지역·비교한 방·예산이 계정에 저장돼요.</p>
-      <div class="mrow"><button type="button" id="logoutBtn">로그아웃</button><button type="button" class="danger" id="delBtn">회원 탈퇴</button></div>
+      <div class="mrow"><button type="button" onclick="location.href='/me/'">⚙️ 마이페이지</button><button type="button" id="logoutBtn">로그아웃</button><button type="button" class="danger" id="delBtn">회원 탈퇴</button></div>
       <p class="msg" id="meMsg" role="status"></p>
     </div>
   </section>
@@ -457,6 +457,7 @@ async function loadIndex() {
   fillSido($('#sido'), $('#sgg'));
   fillSido($('#sido2'), $('#sgg2'), true);
   readHash();
+  applyPrefs();
   renderBudget();
 }
 
@@ -1389,6 +1390,19 @@ function readHash() {
   }
 }
 ['#ckAddr', '#ckFloor', '#ckFee'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') run(); }));
+// ===== 내 설정 (마이페이지에서 바꿈) =====
+let prefs = { nick: '', view: 'check', types: [], areas: [], home: '' };
+try { prefs = { ...prefs, ...JSON.parse(localStorage.getItem('wsg-pref') || '{}') }; } catch (e) {}
+function savePrefsLocal() { try { localStorage.setItem('wsg-pref', JSON.stringify(prefs)); } catch (e) {} }
+// 주소(#...)나 공유 링크로 들어오지 않았을 때만 내 설정을 먼저 적용한다
+function applyPrefs() {
+  if (location.hash.length > 1 || new URLSearchParams(location.search).has('s')) return;
+  if (prefs.types.length) { state.types.clear(); prefs.types.forEach(t => state.types.add(+t)); $$('#types [data-v]').forEach(b => b.setAttribute('aria-pressed', state.types.has(+b.dataset.v))); }
+  if (prefs.areas.length) { state.areas.clear(); prefs.areas.forEach(a => state.areas.add(a)); $$('#areas [data-v]').forEach(b => b.setAttribute('aria-pressed', state.areas.has(b.dataset.v))); }
+  if (prefs.view === 'budget') setView('budget', true);
+  const f = prefs.home && favs.find(x => favKey(x) === prefs.home);
+  if (f) openFav(f);
+}
 // ===== 관심 지역 =====
 const escH = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let favs = [];
@@ -1419,34 +1433,43 @@ $('#favBtn').onclick = () => {
 };
 $('#favs').addEventListener('click', e => {
   const b = e.target.closest('[data-i]'); if (!b) return;
-  const f = favs[+b.dataset.i];
+  openFav(favs[+b.dataset.i]);
+});
+function openFav(f) {
   state.univ = f.univ && INDEX ? INDEX.univ.find(u => u.name === f.univ) || null : null;
   $('#uq').value = state.univ ? state.univ.name : f.label;
   setPlaces(f.places, f.dongs);
   if (state.univ) markUniv(state.univ);
-});
+}
 renderFavs();
 
 // ===== 로그인·내 정보 =====
 let ME = null;
 function syncLater() { if (!ME) return; clearTimeout(syncLater.t); syncLater.t = setTimeout(pushSaved, 800); }
 async function pushSaved() {
-  try { await fetch('/api/saved', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data: { fav: favs, cmp: cmpList, budget: budget() } }) }); } catch (e) {}
+  try { await fetch('/api/saved', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data: { fav: favs, cmp: cmpList, budget: budget(), prefs } }) }); } catch (e) {}
 }
 async function pullSaved() {
   let data;
   try { const r = await fetch('/api/saved', { cache: 'no-store' }); if (!r.ok) return; data = (await r.json()).data; } catch (e) { return; }
-  const fk = new Set(favs.map(favKey));
-  favs = [...favs, ...(data.fav || []).filter(f => !fk.has(favKey(f)))].slice(0, 20);
-  const ck = new Set(cmpList.map(c => c.key));
-  cmpList = [...cmpList, ...(data.cmp || []).filter(c => c && c.key && !ck.has(c.key))].sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 8);
+  // 이 기기에서 처음 로그인할 때만 기기 내용과 합치고, 그 뒤로는 계정에 저장된 내용을 그대로 따른다
+  const first = !localStorage.getItem('wsg-synced');
+  if (first) {
+    const fk = new Set(favs.map(favKey));
+    favs = [...favs, ...(data.fav || []).filter(f => !fk.has(favKey(f)))].slice(0, 20);
+    const ck = new Set(cmpList.map(c => c.key));
+    cmpList = [...cmpList, ...(data.cmp || []).filter(c => c && c.key && !ck.has(c.key))].sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 8);
+  } else { favs = data.fav || []; cmpList = (data.cmp || []).slice(0, 8); }
+  try { localStorage.setItem('wsg-synced', '1'); } catch (e) {}
+  if (data.prefs) { prefs = { ...prefs, ...data.prefs }; savePrefsLocal(); renderMe(); }
   try { localStorage.setItem('wsg-fav', JSON.stringify(favs)); localStorage.setItem('wsg-cmp', JSON.stringify(cmpList)); } catch (e) {}
   if (!budget() && data.budget && data.budget.rent > 0) { $('#bDep').value = data.budget.dep; $('#bRent').value = data.budget.rent; try { localStorage.setItem(BKEY, JSON.stringify(data.budget)); } catch (e) {} renderBudget(); }
   renderFavs(); renderCompare(); pushSaved();
 }
 function renderMe() {
-  const name = ME ? (ME.nickname || (ME.email ? ME.email.split('@')[0] : '') || '내 정보') : '';
+  const name = ME ? (prefs.nick || ME.nickname || (ME.email ? ME.email.split('@')[0] : '') || '내 정보') : '';
   $('#loginBtn').textContent = ME ? '👤 ' + name : '로그인';
+  $('#loginBtn').title = ME ? '마이페이지' : '';
   $('#loginPane').classList.toggle('hide', !!ME);
   $('#mePane').classList.toggle('hide', !ME);
   if (ME) {
@@ -1459,7 +1482,7 @@ function toggleAcct(open) {
   c.classList.toggle('hide', !on);
   if (on) { c.scrollIntoView({ behavior: 'smooth', block: 'start' }); if (!ME && !$('#emailBox').classList.contains('hide')) setTimeout(() => $('#loginEmail').focus(), 300); }
 }
-$('#loginBtn').onclick = () => toggleAcct();
+$('#loginBtn').onclick = () => { if (ME) location.href = '/me/'; else toggleAcct(); };
 const nextHere = () => location.pathname + location.hash;
 $('#kakaoBtn').onclick = () => { location.href = '/api/auth/kakao?next=' + encodeURIComponent(nextHere()); };
 async function sendLink() {
@@ -1477,13 +1500,13 @@ $('#emailGo').onclick = sendLink;
 $('#loginEmail').addEventListener('keydown', e => { if (e.key === 'Enter') sendLink(); });
 $('#logoutBtn').onclick = async () => {
   try { await fetch('/api/auth/logout', { method: 'POST' }); } catch (e) {}
-  ME = null; renderMe(); $('#acctMsg').textContent = '로그아웃했어요. 이 기기에 저장된 관심 지역·비교 목록은 그대로 있어요.';
+  ME = null; try { localStorage.removeItem('wsg-synced'); } catch (e) {} renderMe(); $('#acctMsg').textContent = '로그아웃했어요. 이 기기에 저장된 관심 지역·비교 목록은 그대로 있어요.';
 };
 $('#delBtn').onclick = async () => {
   const b = $('#delBtn');
   if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = '정말 탈퇴 (계정에 저장된 내용 모두 삭제)'; $('#meMsg').textContent = '한 번 더 누르면 바로 탈퇴되고 되돌릴 수 없어요.'; return; }
   try { const r = await fetch('/api/me', { method: 'DELETE' }); if (!r.ok) throw 0; } catch (e) { $('#meMsg').textContent = '탈퇴하지 못했어요. 잠시 뒤 다시 시도해 주세요.'; return; }
-  delete b.dataset.sure; b.textContent = '회원 탈퇴'; ME = null; renderMe();
+  delete b.dataset.sure; b.textContent = '회원 탈퇴'; ME = null; try { localStorage.removeItem('wsg-synced'); localStorage.removeItem('wsg-pref'); } catch (e) {} renderMe();
   $('#acctMsg').textContent = '탈퇴했어요. 계정과 계정에 저장된 내용을 모두 지웠어요.';
 };
 async function initAuth() {

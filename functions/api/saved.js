@@ -3,12 +3,25 @@
 //   PUT /api/saved {data} → 저장 (최대 64KB)
 import { json, db, currentUser, sameOrigin } from '../../lib/auth.js';
 
+const AREAS = ['0-23', '23-36', '36-60', '60-85'];
+const cleanPrefs = x => {
+  const o = x && typeof x === 'object' ? x : {};
+  return {
+    nick: typeof o.nick === 'string' ? o.nick.replace(/[<>]/g, '').trim().slice(0, 20) : '',
+    view: o.view === 'budget' ? 'budget' : 'check',
+    types: Array.isArray(o.types) ? [...new Set(o.types.map(Number).filter(t => t >= 0 && t <= 3))] : [],
+    areas: Array.isArray(o.areas) ? [...new Set(o.areas.filter(a => AREAS.includes(a)))] : [],
+    home: typeof o.home === 'string' ? o.home.slice(0, 200) : '',   // 열 때 바로 보여줄 관심 지역 (favKey)
+  };
+};
+
 const clean = x => {
   const o = x && typeof x === 'object' ? x : {};
   return {
     fav: Array.isArray(o.fav) ? o.fav.slice(0, 20) : [],
     cmp: Array.isArray(o.cmp) ? o.cmp.slice(0, 20) : [],
     budget: o.budget && typeof o.budget === 'object' ? { dep: +o.budget.dep || 0, rent: +o.budget.rent || 0 } : null,
+    prefs: cleanPrefs(o.prefs),
   };
 };
 

@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /stats/
 Disallow: /api/
+Disallow: /me/
 
 Sitemap: https://www.wolsegak.com/sitemap.xml

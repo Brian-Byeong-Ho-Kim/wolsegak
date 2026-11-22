@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>마이페이지 | 월세각</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{--bg:#fff8f3;--card:#fff;--ink:#1f1a17;--sub:#6d635c;--line:#efe3da;--soft:#fff1e8;--brand:#ff6b3d;--brand-ink:#c2410c;--bad:#dc2626;--r:18px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased}
+body{line-height:1.55}
+a{color:var(--brand-ink)}
+.wrap{max-width:760px;margin:0 auto;padding:0 18px 80px}
+header{padding:28px 0 8px;display:flex;align-items:center;gap:12px}
+header .logo{width:42px;height:42px;border-radius:12px;background:var(--brand);display:grid;place-items:center;flex:none}
+header h1{font-size:22px;margin:0;letter-spacing:-.02em}
+header p{margin:0;color:var(--sub);font-size:14px}
+header .back{margin-left:auto;font-size:14px;font-weight:600;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 14px;color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin:14px 0}
+.card h2{font-size:17px;margin:0 0 4px;letter-spacing:-.01em}
+.card .desc{font-size:13px;color:var(--sub);margin:0 0 12px}
+label.f{display:block;font-size:13px;color:var(--sub);margin:14px 0 6px;font-weight:600}
+input,select{width:100%;font:inherit;font-size:16px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none}
+input:focus,select:focus{border-color:var(--brand)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font:inherit;font-size:14px;cursor:pointer;color:var(--ink)}
+.chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.seg{display:flex;background:var(--soft);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:transparent;padding:10px;border-radius:9px;font:inherit;font-weight:600;color:var(--sub);cursor:pointer}
+.seg button[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
+.unit{position:relative}.unit input{padding-right:52px}
+.unit span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--sub);font-size:14px}
+.list{margin:0;padding:0;list-style:none}
+.list li{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.list li:last-child{border-bottom:0}
+.list .t{flex:1;min-width:0}.list .t b{display:block;font-size:15px}.list .t small{color:var(--sub);font-size:12px}
+.list a{font-size:13px;font-weight:600;text-decoration:none}
+.list button{border:0;background:transparent;color:var(--sub);font-size:16px;cursor:pointer;padding:4px 6px}
+.empty{color:var(--sub);font-size:14px;padding:6px 0}
+.btn{border:0;background:var(--brand);color:#fff;font:inherit;font-weight:700;font-size:16px;padding:13px 18px;border-radius:12px;cursor:pointer}
+.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.btn.danger{background:#fff;color:var(--bad);border:1.5px solid #fecaca}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.msg{font-size:14px;margin:10px 0 0;color:var(--brand-ink);min-height:1.2em}
+.who{display:flex;align-items:center;gap:14px}
+.avatar{width:52px;height:52px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-size:24px;flex:none}
+.who b{font-size:18px;display:block}.who small{color:var(--sub);font-size:13px}
+.hide{display:none!important}
+.saved{position:sticky;bottom:12px;margin-top:14px}
+.saved .btn{width:100%;box-shadow:0 8px 20px -8px rgba(255,107,61,.6)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="logo"><svg width="24" height="24" viewBox="0 0 64 64"><path d="M10 32 32 13l22 19v19a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3z" fill="#fff"/><path d="m22 37 7 7 13-14" stroke="#ff6b3d" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+  <div><h1>마이페이지</h1><p>내 정보와 맞춤 설정</p></div>
+  <a class="back" href="/">← 월세각</a>
+</header>
+
+<div id="loading" class="card"><span class="empty">불러오는 중…</span></div>
+
+<div id="guest" class="card hide">
+  <h2>로그인이 필요해요</h2>
+  <p class="desc">로그인하면 관심 지역과 맞춤 설정이 계정에 저장돼서 다른 기기에서도 이어져요.</p>
+  <div class="actions"><a class="btn" href="/" style="text-decoration:none">월세각에서 로그인하기</a></div>
+</div>
+
+<div id="mine" class="hide">
+  <section class="card">
+    <div class="who"><div class="avatar">👤</div><div><b id="name">내 정보</b><small id="info"></small></div></div>
+    <label class="f" for="nick">표시 이름 <span style="font-weight:400">(상단 버튼에 보이는 이름, 최대 20자)</span></label>
+    <input id="nick" maxlength="20" placeholder="카카오 닉네임을 그대로 쓰려면 비워 두세요" autocomplete="nickname">
+  </section>
+
+  <section class="card">
+    <h2>⚙️ 내 설정</h2>
+    <p class="desc">월세각을 열 때 이 설정으로 바로 시작해요. 공유 링크로 들어오면 그 링크의 조건이 먼저예요.</p>
+
+    <label class="f">처음 보여줄 화면</label>
+    <div class="seg" id="view">
+      <button type="button" data-v="check" aria-pressed="true">🔍 이 방 비싸요?</button>
+      <button type="button" data-v="budget" aria-pressed="false">💰 내 돈으로 어디?</button>
+    </div>
+
+    <label class="f">자주 보는 집 종류 <span style="font-weight:400">(고르지 않으면 기본값)</span></label>
+    <div class="chips" id="types">
+      <button type="button" class="chip" aria-pressed="false" data-v="0">원룸·다가구</button>
+      <button type="button" class="chip" aria-pressed="false" data-v="1">빌라(연립·다세대)</button>
+      <button type="button" class="chip" aria-pressed="false" data-v="2">오피스텔</button>
+      <button type="button" class="chip" aria-pressed="false" data-v="3">아파트</button>
+    </div>
+
+    <label class="f">자주 보는 크기</label>
+    <div class="chips" id="areas">
+      <button type="button" class="chip" aria-pressed="false" data-v="0-23">~23㎡ (원룸)</button>
+      <button type="button" class="chip" aria-pressed="false" data-v="23-36">23~36㎡</button>
+      <button type="button" class="chip" aria-pressed="false" data-v="36-60">36~60㎡</button>
+      <button type="button" class="chip" aria-pressed="false" data-v="60-85">60~85㎡</button>
+    </div>
+
+    <label class="f" for="home">열자마자 보여줄 지역</label>
+    <select id="home"><option value="">선택 안 함</option></select>
+    <p class="desc" style="margin-top:6px">아래 「관심 지역」에 저장한 곳 중에서 고를 수 있어요.</p>
+
+    <label class="f">내 예산 <span style="font-weight:400">(「내 돈으로 어디?」에 미리 채워져요)</span></label>
+    <div class="row">
+      <div class="unit"><input id="bDep" inputmode="numeric" placeholder="보증금"><span>만원</span></div>
+      <div class="unit"><input id="bRent" inputmode="numeric" placeholder="월세"><span>만원</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⭐ 관심 지역</h2>
+    <p class="desc">월세각에서 「☆ 관심 지역 저장」으로 담은 곳이에요.</p>
+    <ul class="list" id="favs"></ul>
+  </section>
+
+  <section class="card">
+    <h2>📋 비교한 방</h2>
+    <p class="desc">「다른 방 비교」에 담아 둔 방이에요.</p>
+    <ul class="list" id="cmps"></ul>
+  </section>
+
+  <div class="saved"><button class="btn" id="save" type="button">설정 저장</button><p class="msg" id="msg" role="status" style="text-align:center"></p></div>
+
+  <section class="card">
+    <h2>계정</h2>
+    <div class="actions" style="margin-top:8px">
+      <button class="btn ghost" id="logout" type="button">로그아웃</button>
+      <button class="btn danger" id="del" type="button">회원 탈퇴</button>
+    </div>
+    <p class="msg" id="acctMsg" role="status"></p>
+    <p class="desc" style="margin-top:12px"><a href="/terms/">이용약관</a> · <a href="/privacy/">개인정보처리방침</a></p>
+  </section>
+</div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const favKey = f => (f.places || []).join(',') + '|' + (f.dongs || []).join(',');
+const TYPE_NAMES = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
+let data = { fav: [], cmp: [], budget: null, prefs: { nick: '', view: 'check', types: [], areas: [], home: '' } };
+let ME = null, dirty = false;
+
+function setLocal() {
+  try {
+    localStorage.setItem('wsg-fav', JSON.stringify(data.fav));
+    localStorage.setItem('wsg-cmp', JSON.stringify(data.cmp));
+    localStorage.setItem('wsg-pref', JSON.stringify(data.prefs));
+    data.budget ? localStorage.setItem('wsg:budget', JSON.stringify(data.budget)) : localStorage.removeItem('wsg:budget');
+  } catch (e) {}
+}
+async function put() {
+  const r = await fetch('/api/saved', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data }) });
+  if (!r.ok) throw 0;
+  setLocal();
+}
+function flash(t) { $('#msg').textContent = t; clearTimeout(flash.t); flash.t = setTimeout(() => $('#msg').textContent = '', 3000); }
+
+function render() {
+  const p = data.prefs;
+  const name = p.nick || ME.nickname || (ME.email ? ME.email.split('@')[0] : '') || '내 정보';
+  $('#name').textContent = name;
+  $('#info').textContent = [ME.email, (ME.providers || []).map(x => ({ kakao: '카카오', naver: '네이버', email: '이메일' }[x] || x)).join('·') + ' 로그인'].filter(Boolean).join(' · ');
+  $('#nick').value = p.nick;
+  $$('#view [data-v]').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === p.view));
+  $$('#types [data-v]').forEach(b => b.setAttribute('aria-pressed', p.types.includes(+b.dataset.v)));
+  $$('#areas [data-v]').forEach(b => b.setAttribute('aria-pressed', p.areas.includes(b.dataset.v)));
+  $('#home').innerHTML = '<option value="">선택 안 함</option>' + data.fav.map(f => `<option value="${esc(favKey(f))}">${esc(f.label)}</option>`).join('');
+  $('#home').value = data.fav.some(f => favKey(f) === p.home) ? p.home : '';
+  $('#bDep').value = data.budget ? data.budget.dep : '';
+  $('#bRent').value = data.budget ? data.budget.rent : '';
+  $('#favs').innerHTML = data.fav.length ? data.fav.map((f, i) => `<li><span>⭐</span><div class="t"><b>${esc(f.label)}</b></div><a href="${favLink(f)}">열기</a><button type="button" data-fav="${i}" aria-label="삭제">✕</button></li>`).join('') : '<li class="empty">아직 없어요. 월세각에서 지역을 고르고 「☆ 관심 지역 저장」을 눌러 보세요.</li>';
+  $('#cmps').innerHTML = data.cmp.length ? data.cmp.map((c, i) => `<li><span>📋</span><div class="t"><b>${esc(cmpTitle(c))}</b><small>${esc(cmpSub(c))}</small></div><button type="button" data-cmp="${i}" aria-label="삭제">✕</button></li>`).join('') : '<li class="empty">아직 없어요.</li>';
+}
+const fmt = n => (+n).toLocaleString('ko-KR');
+function cmpTitle(c) {
+  const r = c.r || {}; if (!r.dep && r.dep !== 0) return '비교한 방';
+  return (r.wolse ? `${fmt(r.dep)}/${fmt(r.rent)}` : `전세 ${fmt(r.dep)}`) + (r.big ? ' · ' + r.big : '');
+}
+function cmpSub(c) { const r = c.r || {}; return [r.where, r.spec].filter(Boolean).join(' · '); }
+function favLink(f) {
+  const p = new URLSearchParams();
+  if (f.univ) p.set('u', f.univ);
+  if ((f.places || []).length) p.set('s', f.places.join(','));
+  if ((f.dongs || []).length) p.set('d', f.dongs.join(','));
+  return '/#' + esc(p.toString());
+}
+
+// 입력 → data.prefs
+function collect() {
+  const p = data.prefs;
+  p.nick = $('#nick').value.replace(/[<>]/g, '').trim().slice(0, 20);
+  p.view = ($('#view [aria-pressed=true]') || {}).dataset ? $('#view [aria-pressed=true]').dataset.v : 'check';
+  p.types = $$('#types [aria-pressed=true]').map(b => +b.dataset.v);
+  p.areas = $$('#areas [aria-pressed=true]').map(b => b.dataset.v);
+  p.home = $('#home').value;
+  const d = parseFloat($('#bDep').value.replace(/,/g, '')), r = parseFloat($('#bRent').value.replace(/,/g, ''));
+  data.budget = d >= 0 && r > 0 ? { dep: d, rent: r } : null;
+}
+$$('#view [data-v]').forEach(b => b.onclick = () => $$('#view [data-v]').forEach(x => x.setAttribute('aria-pressed', x === b)));
+$$('#types .chip, #areas .chip').forEach(b => b.onclick = () => b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true'));
+
+$('#save').onclick = async () => {
+  collect();
+  $('#save').disabled = true;
+  try { await put(); render(); flash('저장했어요. 월세각을 열면 이 설정으로 시작해요.'); }
+  catch (e) { flash('저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.'); }
+  $('#save').disabled = false;
+};
+$('#favs').addEventListener('click', async e => {
+  const b = e.target.closest('[data-fav]'); if (!b) return;
+  const gone = data.fav.splice(+b.dataset.fav, 1)[0];
+  if (gone && data.prefs.home === favKey(gone)) data.prefs.home = '';
+  try { await put(); } catch (er) { flash('삭제하지 못했어요.'); }
+  render();
+});
+$('#cmps').addEventListener('click', async e => {
+  const b = e.target.closest('[data-cmp]'); if (!b) return;
+  data.cmp.splice(+b.dataset.cmp, 1);
+  try { await put(); } catch (er) { flash('삭제하지 못했어요.'); }
+  render();
+});
+$('#logout').onclick = async () => {
+  try { await fetch('/api/auth/logout', { method: 'POST' }); } catch (e) {}
+  try { localStorage.removeItem('wsg-synced'); } catch (e) {}
+  location.href = '/';
+};
+$('#del').onclick = async () => {
+  const b = $('#del');
+  if (!b.dataset.sure) { b.dataset.sure = '1'; b.textContent = '정말 탈퇴 (저장된 내용 모두 삭제)'; $('#acctMsg').textContent = '한 번 더 누르면 바로 탈퇴되고 되돌릴 수 없어요.'; return; }
+  try { const r = await fetch('/api/me', { method: 'DELETE' }); if (!r.ok) throw 0; } catch (e) { $('#acctMsg').textContent = '탈퇴하지 못했어요. 잠시 뒤 다시 시도해 주세요.'; return; }
+  try { ['wsg-synced', 'wsg-pref', 'wsg-fav', 'wsg-cmp', 'wsg:budget'].forEach(k => localStorage.removeItem(k)); } catch (e) {}
+  location.href = '/';
+};
+
+(async () => {
+  try {
+    ME = (await (await fetch('/api/me', { cache: 'no-store' })).json()).user;
+    if (ME) {
+      const r = await fetch('/api/saved', { cache: 'no-store' });
+      if (r.ok) { const d = (await r.json()).data; data = { fav: d.fav || [], cmp: d.cmp || [], budget: d.budget || null, prefs: { ...data.prefs, ...(d.prefs || {}) } }; }
+    }
+  } catch (e) {}
+  $('#loading').classList.add('hide');
+  if (!ME) { $('#guest').classList.remove('hide'); return; }
+  $('#mine').classList.remove('hide');
+  render();
+})();
+</script>
+</body>
+</html>
