@@ -43,6 +43,6 @@ for name, (color, title, sub) in VARIANTS.items():
     d.text((80, 268), title, font=f, fill=color if name != 'default' else INK)
     d.text((82, 400), sub, font=font('Medium', 40), fill=(109, 99, 92))
     d.rounded_rectangle([80, 500, 1120, 560], radius=14, fill=(255, 241, 232))
-    d.text((104, 511), '국토교통부 전월세 실거래가 · 비영리 무료 서비스', font=font('Medium', 28), fill=(194, 65, 12))
+    d.text((104, 511), '국토교통부 전월세 실거래가 · 무료 서비스', font=font('Medium', 28), fill=(194, 65, 12))
     im.save(os.path.join(OUT, f'{name}.png'), optimize=True)
     print(name)
