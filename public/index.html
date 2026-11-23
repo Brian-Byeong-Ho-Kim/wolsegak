@@ -186,7 +186,12 @@ body.mapfs{overflow:hidden}
 #mapDeals{position:absolute;top:22px;right:118px;z-index:500;background:#fff;color:var(--ink);border:1.5px solid var(--ink);border-radius:10px;padding:7px 12px;font:600 14px/1 "Pretendard Variable",sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2)}
 #mapDeals[aria-pressed=true]{background:var(--ink);color:#fff}
 #mapWrap.fs #mapDeals{top:max(12px,env(safe-area-inset-top));right:104px}
-#dealMsg{position:absolute;left:10px;top:56px;z-index:500;background:rgba(255,255,255,.95);border:1px solid #d6d3d1;border-radius:8px;padding:6px 10px;font:500 12.5px/1.4 "Pretendard Variable",sans-serif;max-width:80%}
+#dealTypes{position:absolute;left:10px;top:56px;z-index:500;display:flex;background:#fff;border:1.5px solid var(--ink);border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.2)}
+#dealTypes.hide{display:none}
+#dealTypes button{border:0;background:#fff;color:var(--ink);font:600 13px/1 "Pretendard Variable",sans-serif;padding:8px 10px;cursor:pointer}
+#dealTypes button+button{border-left:1px solid #d6d3d1}
+#dealTypes button[aria-pressed=true]{background:var(--ink);color:#fff}
+#dealMsg{position:absolute;left:10px;top:100px;z-index:500;background:rgba(255,255,255,.95);border:1px solid #d6d3d1;border-radius:8px;padding:6px 10px;font:500 12.5px/1.4 "Pretendard Variable",sans-serif;max-width:80%}
 .kdeal{cursor:pointer;background:#fff;border:2px solid #2563eb;border-radius:8px;padding:1px 6px;font:700 12px/1.5 "Pretendard Variable",sans-serif;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);transform:translateY(-4px)}
 .kdeal small{font-weight:500;opacity:.7}
 .kdeal.jn{border-style:dashed}
@@ -231,9 +236,12 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
   #mapWrap:not(.fs) #mapLoc{top:94px;right:10px}
   #dealKinds{top:10px;left:10px}
   #dealKinds button{font-size:13px;padding:8px 11px}
-  #mapWrap:not(.fs) #dealMsg{top:54px;max-width:calc(100% - 150px)}
+  #dealTypes{top:52px;left:10px}
+  #dealTypes button{font-size:12px;padding:8px 8px}
+  #mapWrap:not(.fs) #dealMsg{top:96px;max-width:calc(100% - 150px)}
   #mapWrap.fs #dealKinds{top:calc(max(12px,env(safe-area-inset-top)) + 46px)}
-  #mapWrap.fs #dealMsg{top:calc(max(12px,env(safe-area-inset-top)) + 90px);max-width:calc(100% - 24px)}
+  #mapWrap.fs #dealTypes{top:calc(max(12px,env(safe-area-inset-top)) + 92px)}
+  #mapWrap.fs #dealMsg{top:calc(max(12px,env(safe-area-inset-top)) + 136px);max-width:calc(100% - 24px)}
 }
 @media (max-width:700px){
   .topr .goHome{display:none}
@@ -314,6 +322,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
       <button type="button" id="mapDeals" aria-pressed="true" aria-label="실거래 핀 보기">📍 실거래 끄기</button>
       <button type="button" id="mapLoc" aria-label="내 위치 찾기">📍 내 위치</button>
       <div id="dealKinds" role="group" aria-label="거래 종류"><button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button></div>
+      <div id="dealTypes" role="group" aria-label="집 종류"><button type="button" data-t="0" aria-pressed="true" title="원룸·다가구 (지번 없어 핀은 거의 없어요)">원룸</button><button type="button" data-t="1" aria-pressed="true">빌라</button><button type="button" data-t="2" aria-pressed="true">오피스텔</button><button type="button" data-t="3" aria-pressed="true">아파트</button></div>
       <div id="dealMsg" class="hide"></div>
       <div class="mlegend" aria-label="학교 점 색 설명"><span><i style="background:#16a34a"></i>35만 미만</span><span><i style="background:#2563eb"></i>35~45만</span><span><i style="background:#d97706"></i>45~55만</span><span><i style="background:#dc2626"></i>55만 이상</span><span><i style="background:#78716c"></i>거래 적음</span></div>
       <p class="hint" id="mapHint">점은 대학교예요(색 = 원룸 중간 월세). 눌러서 그 학교 근처 월세를 볼 수 있어요.</p>
@@ -1314,6 +1323,7 @@ $('#mapLoc').addEventListener('click', async () => {
 // ===== 지도 실거래 핀 (주소 기반) =====
 // 카카오 좌표는 저장·캐시하지 않고 화면에 그릴 때만 실시간 조회한다 (카카오 정책).
 const dealKinds = new Set(['w', 'b']);   // 전세는 기본 꺼짐 (누르면 나옴)
+const pinTypes = new Set([0, 1, 2, 3]);   // 지도 핀의 집 종류 (원룸·빌라·오피스텔·아파트)
 const kindOf = r => r[4] <= 0 ? 'j' : r[3] > 5000 ? 'b' : 'w';
 let dealOn = true, dealOv = [], dealGen = 0, dealPop = null;
 const addrCache = new Map();
@@ -1357,7 +1367,7 @@ async function drawDeals() {
   const okDong = new Set([...dongPos].filter(([, c]) => inView(c, 2)).map(([i]) => i));
   const B = budget(), groups = new Map(); let total = 0;
   for (const r of d.rows) {
-    if (!okDong.has(r[1]) || !r[9] || !state.types.has(r[0]) || r[2] > 60) continue;
+    if (!okDong.has(r[1]) || !r[9] || !pinTypes.has(r[0]) || r[2] > 60) continue;
     if (!dealKinds.has(kindOf(r))) continue;
     total++;
     const key = r[1] + '|' + r[9];
@@ -1404,9 +1414,17 @@ $('#dealKinds').addEventListener('click', e => {
   b.setAttribute('aria-pressed', dealKinds.has(k));
   drawDeals();
 });
+$('#dealTypes').addEventListener('click', e => {
+  const b = e.target.closest('button[data-t]'); if (!b) return;
+  const t = +b.dataset.t;
+  if (pinTypes.has(t)) { if (pinTypes.size === 1) return; pinTypes.delete(t); } else pinTypes.add(t);
+  b.setAttribute('aria-pressed', pinTypes.has(t));
+  drawDeals();
+});
 $('#mapDeals').addEventListener('click', async () => {
   dealOn = !dealOn;
   $('#dealKinds').classList.toggle('hide', !dealOn);
+  $('#dealTypes').classList.toggle('hide', !dealOn);
   $('#mapDeals').setAttribute('aria-pressed', dealOn);
   $('#mapDeals').textContent = dealOn ? '📍 실거래 끄기' : '📍 실거래 보기';
   if (dealOn) { try { await initMap(); } catch { return; } }
