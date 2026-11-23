@@ -227,6 +227,11 @@ body.mapfs{overflow:hidden}
 .spop button.fv[aria-pressed=true]{background:var(--ink);color:#fff}
 .dlab{background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:2px 8px;font:600 12px/1.4 "Pretendard Variable",sans-serif;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.15)}
 .dlab.on{background:var(--ink);color:#fff}
+.dcirc{width:64px;height:64px;border-radius:50%;background:#fff;border:4px solid var(--c,#78716c);box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;text-align:center;box-sizing:border-box}
+.dcirc b{font:800 19px/1 "Pretendard Variable",sans-serif;color:var(--c,#78716c);letter-spacing:-.03em}
+.dcirc span{font:600 10.5px/1.1 "Pretendard Variable",sans-serif;color:#44403c;margin-top:3px;max-width:54px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dcirc.on{background:var(--c,#1f1a17)}
+.dcirc.on b,.dcirc.on span{color:#fff}
 .kov{cursor:pointer;transform:translateY(-6px)}
 .kuniv{font-size:26px;line-height:1;transform:translateY(-4px)}
 .qk{margin-top:8px;gap:6px}.qk .chip{padding:5px 10px;font-size:13px}
@@ -1197,7 +1202,7 @@ function labelHtml(d) {
     const a = budgetDong.get(d);
     const pct = a && a.n >= 5 ? Math.round(a.ok / a.n * 100) : null;
     const col = pct == null ? '#78716c' : pct >= 50 ? '#16a34a' : pct >= 25 ? '#2563eb' : pct >= 10 ? '#d97706' : '#dc2626';
-    return `<div class="dlab ${state.dongs.has(d) ? 'on' : ''}" style="border-color:${col}">${d.split(' ').pop()} <b style="color:${state.dongs.has(d) ? '#fff' : col}">${pct == null ? '-' : '가능 ' + pct + '%'}</b></div>`;
+    return `<div class="dcirc ${state.dongs.has(d) ? 'on' : ''}" style="--c:${col}" title="${d.split(' ').pop()} · 내 예산으로 구할 수 있는 거래 ${pct == null ? '(거래가 적어 계산 안 함)' : pct + '%'}"><b>${pct == null ? '-' : pct + '%'}</b><span>${d.split(' ').pop()}</span></div>`;
   }
   const m = dongMedian(d);
   return `<div class="dlab ${state.dongs.has(d) ? 'on' : ''}">${d.split(' ').pop()} ${m == null ? '-' : fmt(m) + '만'}</div>`;
