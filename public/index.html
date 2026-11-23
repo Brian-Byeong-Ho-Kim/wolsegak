@@ -227,6 +227,9 @@ body.mapfs{overflow:hidden}
 .spop button.fv[aria-pressed=true]{background:var(--ink);color:#fff}
 .dlab{background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:2px 8px;font:600 12px/1.4 "Pretendard Variable",sans-serif;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.15)}
 .dlab.on{background:var(--ink);color:#fff}
+#bDeals tr.dealrow{cursor:pointer}
+#bDeals tr.dealrow:hover td,#bDeals tr.dealrow.pick td{background:var(--soft)}
+.dealflag{font-size:30px;line-height:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
 .dcirc{width:64px;height:64px;border-radius:50%;background:#fff;border:4px solid var(--c,#78716c);box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;text-align:center;box-sizing:border-box}
 .dcirc b{font:800 19px/1 "Pretendard Variable",sans-serif;color:var(--c,#78716c);letter-spacing:-.03em}
 .dcirc span{font:600 10.5px/1.1 "Pretendard Variable",sans-serif;color:#44403c;margin-top:3px;max-width:54px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1052,7 +1055,7 @@ function deals(sel, wolse) {
   const list = [...sel].sort((a, b) => b.r[7] - a.r[7]).slice(0, 25);
   const dt = n => { const s = String(n).padStart(6, '0'); return `${s.slice(0, 2)}.${s.slice(2, 4)}.${s.slice(4)}`; };
   $('#deals').innerHTML = `<tr><th>계약일</th><th>동</th><th>종류</th><th>면적</th><th>층</th><th>${wolse ? '보증금/월세' : '보증금'}</th><th>준공</th></tr>` +
-    list.map(({ r, dong }) => `<tr><td>${dt(r[7])}</td><td>${dong}</td><td>${TYPE_NAMES[r[0]]}</td><td>${r[2]}㎡</td><td>${fl(r[5])}</td><td>${wolse ? `${fmt(r[3])}/${fmt(r[4])}` : won(r[3])}</td><td>${r[6] || '-'}</td></tr>`).join('') +
+    list.map(({ r, dong }, i) => `<tr class="dealrow" data-i="${i}" title="누르면 지도에 표시해요"><td>${dt(r[7])}</td><td>${dong}</td><td>${TYPE_NAMES[r[0]]}</td><td>${r[2]}㎡</td><td>${fl(r[5])}</td><td>${wolse ? `${fmt(r[3])}/${fmt(r[4])}` : won(r[3])}</td><td>${r[6] || '-'}</td></tr>`).join('') +
     (list.length ? '' : '<tr><td colspan="7">해당 조건의 거래가 없어요.</td></tr>');
 }
 
@@ -1481,7 +1484,7 @@ function renderBudget() {
   const base = [];  // 집 종류·신규 조건만 (크기·동은 아래에서 따로)
   for (const s of statSets) for (const r of s.rows) {
     if (!state.types.has(r[0]) || (onlyNew && r[8] === 2)) continue;
-    base.push({ r, dong: s.dongs[r[1]] });
+    base.push({ r, dong: s.dongs[r[1]], s });
   }
   const inDong = x => !state.dongs.size || state.dongs.has(x.dong);
   const pool = base.filter(x => inDong(x) && inArea(x.r[2]));
@@ -1529,9 +1532,39 @@ function renderBudget() {
   $('#bDeals').innerHTML = `<tr><th>계약일</th><th>동</th><th>종류</th><th>면적</th><th>층</th><th>보증금/월세</th><th>준공</th></tr>` +
     list.map(({ r, dong }) => `<tr><td>${dt(r[7])}</td><td>${dong}</td><td>${TYPE_NAMES[r[0]]}</td><td>${r[2]}㎡</td><td>${fl(r[5])}</td><td>${r[4] > 0 ? `${fmt(r[3])}/${fmt(r[4])}` : '전세 ' + won(r[3])}</td><td>${r[6] || '-'}</td></tr>`).join('') +
     (list.length ? '' : '<tr><td colspan="7">예산 안에 들어온 거래가 없어요. 위 표에서 예산을 늘렸을 때를 확인해 보세요.</td></tr>');
+  bDealList = list;
   refreshDongLabels();
 }
+let bDealList = [], bDealMk = null, bDealPop = null;
 
+// 「예산 안에 들어왔던 최근 거래」 표에서 거래를 누르면 지도에 그 집(지번)을 표시한다
+$('#bDeals').addEventListener('click', async e => {
+  const tr = e.target.closest('tr.dealrow'); if (!tr) return;
+  const it = bDealList[+tr.dataset.i]; if (!it) return;
+  const { r, dong, s } = it;
+  $$('#bDeals tr.dealrow').forEach(x => x.classList.toggle('pick', x === tr));
+  try { await showMap(); } catch { return; }
+  if (!map) return;
+  const hint = $('#mapHint');
+  $('#mapWrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  hint.textContent = '지도에서 그 거래를 찾는 중…';
+  const d = await loadAddr(s.code);
+  const row = d && d.rows.find(x => x[0] === r[0] && x[1] === r[1] && x[2] === r[2] && x[3] === r[3] && x[4] === r[4] && x[7] === r[7] && x[5] === r[5]);
+  let c = null, exact = false;
+  if (row && row[9]) { c = (await kFind(`${s.name} ${dong} ${row[9]}`)) || (row[10] >= 0 && d.names[row[10]] ? await kFind(`${s.name} ${dong} ${d.names[row[10]]}`, 'kw') : null); exact = !!c; }
+  if (!c) c = (await kFind(`${s.name} ${dong}`)) || (await kFind(`${s.name} ${dong}`, 'kw'));
+  if (!c) { hint.textContent = '이 거래의 위치를 지도에서 찾지 못했어요.'; return; }
+  const pos = LL(c.lat, c.lng);
+  if (bDealMk) bDealMk.setMap(null); if (bDealPop) bDealPop.setMap(null);
+  bDealMk = new kakao.maps.CustomOverlay({ position: pos, content: '<div class="dealflag">📍</div>', xAnchor: .5, yAnchor: 1, zIndex: 35, map });
+  const nm = row && row[10] >= 0 && d.names[row[10]] ? d.names[row[10]] : '';
+  const pop = document.createElement('div'); pop.className = 'kpop';
+  pop.innerHTML = `<span class="x" aria-label="닫기">✕</span><b>${escH(nm || (dong + (row && row[9] ? ' ' + row[9] : '')))}</b><div style="opacity:.65">${escH(dong)} · ${TYPE_NAMES[r[0]]}</div><div>${dealDate(r[7])} · ${r[4] > 0 ? `${r[3].toLocaleString()}/${r[4]}만` : '전세 ' + won(r[3])} · ${Math.round(r[2])}㎡ · ${fl(r[5])}층</div>${exact ? '' : '<div style="opacity:.6;white-space:normal">지번이 없어 동네 위치로 보여요</div>'}`;
+  pop.querySelector('.x').onclick = () => { bDealPop.setMap(null); bDealPop = null; };
+  bDealPop = new kakao.maps.CustomOverlay({ position: pos, content: pop, yAnchor: 1, clickable: true, zIndex: 40, map });
+  map.setLevel(exact ? 3 : 5); map.setCenter(pos);
+  hint.textContent = exact ? '선택한 거래의 위치예요.' : '원룸·다가구 등 지번이 공개되지 않은 거래는 동네 위치로 보여 드려요.';
+});
 // ===== 실거래 통계 =====
 let statSets = [], statPrev = [];
 function renderStats() {
