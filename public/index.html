@@ -196,7 +196,7 @@ body.mapfs{overflow:hidden}
 .sdot:hover{transform:scale(1.35)}
 .sdot{position:relative}
 .sdot .sl{display:none;position:absolute;left:17px;top:50%;transform:translateY(-50%);white-space:nowrap;font:700 12px/1 "Pretendard Variable",sans-serif;color:#1f1a17;text-shadow:-1px 0 #fff,1px 0 #fff,0 -1px #fff,0 1px #fff,-1px -1px #fff,1px 1px #fff,-1px 1px #fff,1px -1px #fff;pointer-events:none}
-#map.zl .sdot .sl{display:block}
+#map .sdot .sl.show{display:block}
 .spop{background:#fff;border:1.5px solid var(--ink);border-radius:10px;padding:8px 10px;font:500 13px/1.5 "Pretendard Variable",sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);white-space:nowrap;transform:translateY(-26px)}
 .spop b{display:block;font-size:14px}.spop button{margin-top:6px;background:#ff6b3d;color:#fff;border:0;border-radius:8px;padding:6px 10px;font:700 13px/1 inherit;cursor:pointer}
 .spop .x{float:right;cursor:pointer;margin-left:12px}
@@ -1168,7 +1168,26 @@ async function drawDongs(sets, dongs) {
 }
 
 // ===== 첫 화면 지도: 전국 대학교 점 (좌표는 우리 데이터 public/data/univ_geo.json) =====
-let schoolMk = [], schoolPop = null, schoolsDrawn = false;
+let schoolMk = [], schoolLb = [], schoolPop = null, schoolsDrawn = false;
+// 확대하면, 서로 안 겹치는 학교부터 이름을 보여 준다 (화면 픽셀 기준으로 겹침 검사)
+function layoutSchoolLabels() {
+  if (!map || !schoolLb.length) return;
+  const proj = map.getProjection(), W = $('#map').clientWidth, H = $('#map').clientHeight;
+  const taken = []; let n = 0;
+  const vis = [];
+  for (const o of schoolLb) {
+    const p = proj.containerPointFromCoords(o.pos);
+    if (p.x < -20 || p.y < -10 || p.x > W + 20 || p.y > H + 10) { o.sl.classList.remove('show'); continue; }
+    vis.push({ o, x: p.x, y: p.y });
+  }
+  vis.sort((a, b) => a.o.pr - b.o.pr);
+  for (const { o, x, y } of vis) {
+    const box = [x - 8, y - 9, x + 10 + o.w, y + 9];
+    const hit = map.getLevel() > 11 || taken.some(t => box[0] < t[2] && box[2] > t[0] && box[1] < t[3] && box[3] > t[1]);
+    o.sl.classList.toggle('show', !hit);
+    if (!hit) taken.push(box); else taken.push([x - 8, y - 8, x + 8, y + 8]);   // 이름은 못 보여도 점 자리는 비워 둔다
+  }
+}
 async function drawSchools() {
   if (schoolsDrawn || !map) return;
   schoolsDrawn = true;
@@ -1179,12 +1198,12 @@ async function drawSchools() {
       const c = geo[u.name + '|' + u.campus]; if (!c) continue;
       const el = document.createElement('div'); el.className = 'sdot'; el.title = u.name;
       const sl = document.createElement('span'); sl.className = 'sl'; sl.textContent = u.name.replace(/\(.*\)/, ''); el.appendChild(sl);
+      schoolLb.push({ pos: LL(c[0], c[1]), sl, w: sl.textContent.length * 12.5 + 8, pr: (u.kind === '대학' || /대학교$/.test(u.name) ? 0 : 1) });
       const pos = LL(c[0], c[1]);
       el.onclick = ev => { ev.stopPropagation(); lastOv = Date.now(); showSchoolPop(u, pos); };
       schoolMk.push(new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: .5, xAnchor: .5, clickable: true, map }));
     }
-    const zl = () => $('#map').classList.toggle('zl', map.getLevel() <= 6);
-    kakao.maps.event.addListener(map, 'zoom_changed', zl); zl();
+    kakao.maps.event.addListener(map, 'idle', layoutSchoolLabels); layoutSchoolLabels();
     kakao.maps.event.addListener(map, 'click', () => { if (Date.now() - lastOv < 400) return; if (schoolPop) { schoolPop.setMap(null); schoolPop = null; } });
   } catch (e) { schoolsDrawn = false; }
 }
