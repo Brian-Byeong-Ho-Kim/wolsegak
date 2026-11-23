@@ -37,17 +37,18 @@
   const bDeals = mk('button', 'mapDeals', '📍 실거래 끄기', { type: 'button', 'aria-pressed': 'true', 'aria-label': '실거래 핀 보기' });
   const bLoc = mk('button', 'mapLoc', '📍 내 위치', { type: 'button', 'aria-label': '내 위치 찾기' });
   const kinds = mk('div', 'dealKinds', '<button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button>', { role: 'group', 'aria-label': '거래 종류' });
-  const typesEl = mk('div', 'dealTypes', '<button type="button" data-t="0" aria-pressed="true" title="단독·다가구 (원룸이 많은 유형 · 지번 없어 핀은 거의 없어요)">다가구</button><button type="button" data-t="1" aria-pressed="true">빌라</button><button type="button" data-t="2" aria-pressed="true">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button>', { role: 'group', 'aria-label': '집 종류' });
+  const typesEl = mk('div', 'dealTypes', '<button type="button" data-t="0" aria-pressed="true" title="원룸 (단독·다가구 23㎡ 이하 · 지번 없어 핀은 거의 없어요)">원룸</button><button type="button" data-t="4" aria-pressed="true" title="투룸 (단독·다가구 23㎡ 초과 · 지번 없어 핀은 거의 없어요)">투룸</button><button type="button" data-t="1" aria-pressed="true">빌라</button><button type="button" data-t="2" aria-pressed="true">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button>', { role: 'group', 'aria-label': '집 종류' });
   const msgEl = mk('div', 'dealMsg', '', {}); msgEl.classList.add('hide');
   const dealMsg = t => { msgEl.textContent = t || ''; msgEl.classList.toggle('hide', !t); };
 
-  const dealKinds = new Set(['w', 'b']), pinTypes = new Set([0, 1, 2]);
+  const dealKinds = new Set(['w', 'b']), pinTypes = new Set([0, 4, 1, 2]);
   const kindOf = r => r[4] <= 0 ? 'j' : r[3] > 5000 ? 'b' : 'w';
   let dealOn = true;
   const eok = m => m >= 10000 ? Math.floor(m / 10000) + '억' + (m % 10000 ? ' ' + (m % 10000).toLocaleString() : '') : m.toLocaleString() + '만';
   const dd = v => { v = String(v).padStart(6, '0'); return v.slice(0, 2) + '.' + v.slice(2, 4) + '.' + v.slice(4); };
   const fl = f => f == null ? '-' : f < 0 ? '지하' : f;
-  const TN = ['단독·다가구', '빌라', '오피스텔', '아파트'];
+  const TN = ['원룸', '빌라', '오피스텔', '아파트', '투룸'];
+  const catOf = r => r[0] === 0 ? (r[2] <= 23 ? 0 : 4) : r[0];
   const escH = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let B = null; try { const b = JSON.parse(localStorage.getItem('wsg:budget') || 'null'); if (b && b.rent > 0) B = b; } catch (e) {}
 
@@ -79,7 +80,7 @@
     if (dealPop) dealPop.setMap(null);
     const el = document.createElement('div'); el.className = 'kpop';
     const rows = g.deals.map(r => '<div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('');
-    el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.nm || (g.dong + ' ' + g.jb)) + '</b><div style="opacity:.65">' + escH(g.dong + ' ' + g.jb) + ' · ' + TN[g.deals[0][0]] + '</div>' + rows;
+    el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.nm || (g.dong + ' ' + g.jb)) + '</b><div style="opacity:.65">' + escH(g.dong + ' ' + g.jb) + ' · ' + TN[catOf(g.deals[0])] + '</div>' + rows;
     el.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
     dealPop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 10, map });
   }
@@ -111,7 +112,7 @@
     [...dk].sort((x, y) => x[1] - y[1]).slice(0, 3).forEach(([i]) => okDong.add(i));   // 많이 확대해도 가까운 동 3곳은 포함
     const groups = new Map(); let total = 0;
     for (const r of d.rows) {
-      if (!okDong.has(r[1]) || !r[9] || !pinTypes.has(r[0]) || r[2] > 60 || !dealKinds.has(kindOf(r))) continue;
+      if (!okDong.has(r[1]) || !r[9] || !pinTypes.has(catOf(r)) || r[2] > 60 || !dealKinds.has(kindOf(r))) continue;
       total++;
       const key = r[1] + '|' + r[9]; let g = groups.get(key);
       if (!g) groups.set(key, g = { key, dong: d.dongs[r[1]], jb: r[9], nm: r[10] >= 0 ? d.names[r[10]] : '', sgg: d.name, dk: dk.get(r[1]) || 0, deals: [] });

@@ -79,11 +79,13 @@ input:focus{border-color:var(--brand)}
   </form>
   <label class="f">집 종류</label>
   <div class="chips" id="types">
-    <button type="button" class="chip" aria-pressed="true" data-v="0">단독·다가구</button>
+    <button type="button" class="chip" aria-pressed="true" data-v="0">원룸</button>
+    <button type="button" class="chip" aria-pressed="true" data-v="4">투룸</button>
     <button type="button" class="chip" aria-pressed="true" data-v="1">빌라</button>
     <button type="button" class="chip" aria-pressed="true" data-v="2">오피스텔</button>
     <button type="button" class="chip" aria-pressed="false" data-v="3">아파트</button>
   </div>
+  <p style="font-size:12px;color:var(--sub);margin:6px 2px 0">원룸·투룸 = 국토부 「단독/다가구」를 전용면적으로 나눈 구분 · <a href="/guide/types/">구분 기준 →</a></p>
   <label class="f">최대 금액</label>
   <div class="row3">
     <div class="unit"><input id="dep" inputmode="numeric" placeholder="보증금"><span>만원</span></div>
@@ -108,7 +110,8 @@ input:focus{border-color:var(--brand)}
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const KEY = '6c67906fb926c31e6e09524a74d819c6';
 const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const TN = ['단독·다가구', '빌라', '오피스텔', '아파트'];
+const TN = ['원룸', '빌라', '오피스텔', '아파트', '투룸'];
+const catOf = r => r[0] === 0 ? (r[2] <= 23 ? 0 : 4) : r[0];
 const SIDO_SHORT = { 서울특별시: '서울', 부산광역시: '부산', 대구광역시: '대구', 인천광역시: '인천', 대전광역시: '대전', 울산광역시: '울산', 세종특별자치시: '세종', 경기도: '경기', 충청북도: '충북', 충청남도: '충남', 경상북도: '경북', 경상남도: '경남', 제주특별자치도: '제주', 강원특별자치도: '강원', 전북특별자치도: '전북', 전남광주통합특별시: '전남광주' };
 const SIDO_LONG = Object.fromEntries(Object.entries(SIDO_SHORT).map(([l, sh]) => [sh, l]));
 Object.assign(SIDO_LONG, { 광주: '전남광주통합특별시', 전남: '전남광주통합특별시', 광주광역시: '전남광주통합특별시', 전라남도: '전남광주통합특별시', 강원도: '강원특별자치도', 전라북도: '전북특별자치도', 제주도: '제주특별자치도' });
@@ -120,7 +123,7 @@ const num = s => { const v = parseFloat(String(s).replace(/,/g, '')); return isF
 const dist = (a, b) => { const d = Math.PI / 180, x = (b.lng - a.lng) * d * Math.cos((a.lat + b.lat) / 2 * d), y = (b.lat - a.lat) * d; return 6371 * Math.hypot(x, y); };
 let INDEX, GEO = {}, ME = null, SAVED = null, map, kGeo, kPlaces, overlays = [], pop = null, runGen = 0, lastPin = 0;
 
-const types = new Set([0, 1, 2]);
+const types = new Set([0, 4, 1, 2]);
 $('#types').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; const t = +b.dataset.v; if (types.has(t)) { if (types.size === 1) return; types.delete(t); } else types.add(t); b.setAttribute('aria-pressed', types.has(t)); if (last) apply(); });
 $('#jn').onclick = () => { const on = $('#jn').getAttribute('aria-pressed') !== 'true'; $('#jn').setAttribute('aria-pressed', on); if (last) apply(); };
 ['#dep', '#rent', '#fee'].forEach(s => $(s).addEventListener('change', () => { if (last) apply(); }));
@@ -204,7 +207,7 @@ async function apply() {
   }
   if (isUniv) overlays.push(new kakao.maps.CustomOverlay({ position: LL(center.lat, center.lng), content: '<div class="univ" title="' + esc(label) + '">🎓</div>', yAnchor: 1, map }));
   else overlays.push(new kakao.maps.CustomOverlay({ position: LL(center.lat, center.lng), content: '<div class="ctr"></div>', xAnchor: .5, yAnchor: .5, map }));
-  const rows = d.rows.filter(r => near.has(r[1]) && types.has(r[0]) && r[2] <= 60 && (!depMax || r[3] <= depMax) && (r[4] > 0 ? (!rentMax || r[4] + fee <= rentMax) : jn));
+  const rows = d.rows.filter(r => near.has(r[1]) && types.has(catOf(r)) && r[2] <= 60 && (!depMax || r[3] <= depMax) && (r[4] > 0 ? (!rentMax || r[4] + fee <= rentMax) : jn));
   const wRows = rows.filter(r => r[4] > 0).map(r => r[4]).sort((a, b) => a - b);
   const med = wRows.length ? wRows[Math.floor(wRows.length / 2)] : null;
   $('#sum').textContent = rows.length ? label + ' 주변 조건에 맞는 거래 ' + rows.length + '건' + (med ? ' · 월세 중간값 ' + med + '만원' : '') : '';
@@ -232,7 +235,7 @@ function dealLine(r, fee) { return r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLo
 function showPop(g, fee) {
   closePop();
   const el = document.createElement('div'); el.className = 'kpop';
-  el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + esc(g.nm || g.dong + ' ' + g.jb) + '</b><div style="opacity:.65">' + esc(g.dong + ' ' + g.jb) + ' · ' + TN[g.deals[0][0]] + '</div>' + g.deals.map(r => '<div>' + dd(r[7]) + ' · ' + dealLine(r, fee) + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층</div>').join('');
+  el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + esc(g.nm || g.dong + ' ' + g.jb) + '</b><div style="opacity:.65">' + esc(g.dong + ' ' + g.jb) + ' · ' + TN[catOf(g.deals[0])] + '</div>' + g.deals.map(r => '<div>' + dd(r[7]) + ' · ' + dealLine(r, fee) + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층</div>').join('');
   el.querySelector('.x').onclick = closePop;
   pop = new kakao.maps.CustomOverlay({ position: g.pos, content: el, yAnchor: 1, clickable: true, zIndex: 30, map });
 }
@@ -240,7 +243,7 @@ function renderList(rows, byRow, fee) {
   const show = rows.slice(0, 120);
   $('#list').innerHTML = show.length ? show.map((r, i) => {
     const g = byRow.get(r), nm = r[10] >= 0 ? last.d.names[r[10]] : '';
-    return '<li class="' + (g ? 'pin' : '') + '" data-i="' + i + '"><div class="p">' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4]) + '</div><div class="t"><b>' + esc(TN[r[0]]) + ' · ' + esc(last.d.dongs[r[1]]) + (nm ? ' · ' + esc(nm) : '') + '</b><small>' + dd(r[7]) + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[4] > 0 && fee ? ' · 관리비 포함 월 ' + (r[4] + fee) + '만' : '') + (r[8] === 2 ? ' · 갱신' : '') + '</small></div>' + (g ? '<span class="tag">📍 지도</span>' : '') + '</li>';
+    return '<li class="' + (g ? 'pin' : '') + '" data-i="' + i + '"><div class="p">' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4]) + '</div><div class="t"><b>' + esc(TN[catOf(r)]) + ' · ' + esc(last.d.dongs[r[1]]) + (nm ? ' · ' + esc(nm) : '') + '</b><small>' + dd(r[7]) + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[4] > 0 && fee ? ' · 관리비 포함 월 ' + (r[4] + fee) + '만' : '') + (r[8] === 2 ? ' · 갱신' : '') + '</small></div>' + (g ? '<span class="tag">📍 지도</span>' : '') + '</li>';
   }).join('') + (rows.length > 120 ? '<li class="empty">최근 거래 120건까지만 보여 드려요. 조건을 좁혀 보세요.</li>' : '') : '';
 }
 

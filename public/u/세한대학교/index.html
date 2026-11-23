@@ -28,7 +28,7 @@
 a.href='/api/auth/kakao?next='+encodeURIComponent(location.pathname);
 fetch('/api/me',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){if(j&&j.user){a.textContent='마이페이지';a.href='/me/'}}).catch(function(){});})();
 </script>
-<div id="umapWrap" data-name="세한대학교" data-s="12800" data-addr="전라남도 영암군 삼호읍 녹색로 1113" data-lat="34.745" data-lng="126.4825"><div id="umap" role="application" aria-label="세한대학교 주변 실거래 지도"></div><p class="hint" id="umapHint">🎓 학교 주변 최근 12개월 실거래예요. 숫자를 누르면 건물별 거래가 보여요.</p><script src="/u/smap.js?v=0e8cc96a" defer></script></div>
+<div id="umapWrap" data-name="세한대학교" data-s="12800" data-addr="전라남도 영암군 삼호읍 녹색로 1113" data-lat="34.745" data-lng="126.4825"><div id="umap" role="application" aria-label="세한대학교 주변 실거래 지도"></div><p class="hint" id="umapHint">🎓 학교 주변 최근 12개월 실거래예요. 숫자를 누르면 건물별 거래가 보여요.</p><script src="/u/smap.js?v=705494e6" defer></script></div>
 <nav class="crumb"><a href="/">월세각</a> › <a href="/u/">학교별 월세 시세</a> › 세한대학교</nav>
 <h1>세한대학교 자취방 월세 시세</h1>
 <p class="lead">전라남도 영암군 삼호읍 녹색로 1113 · <b>전남광주통합특별시 영암군</b> 실거래 기준 · 2025.12~2026.11</p>
@@ -67,6 +67,7 @@ b.onclick=function(){
 <p class="more"><a href="/u/">전국 학교별 월세 시세 보기 →</a></p>
 <footer>
 <div>데이터: 국토교통부 전월세 실거래가 자료(단독/다가구·연립다세대·오피스텔·아파트), 한국대학교육협의회 전국대학및전문대학정보표준데이터 (공공데이터포털). 최근 12개월(2025.12~2026.11), 전용 85㎡ 이하, 갱신 계약 제외. 2026-11-23 갱신.</div>
+<div>집 종류(원룸·투룸·빌라·오피스텔·아파트)는 국토교통부 실거래 구분과 전용면적으로 나눴어요. <a href="/guide/types/">구분 기준 보기</a></div>
 <div>실거래 신고에는 관리비가 없어요. 같은 건물이라도 층·방향·옵션에 따라 가격이 달라요. 월세각은 공공데이터로 만든 참고 서비스이며, 법률·금융 자문이 아닙니다.</div>
 <div style="margin-top:10px;font-weight:600;color:var(--ink)">© 2026 이티컴퍼니</div>
 </footer>

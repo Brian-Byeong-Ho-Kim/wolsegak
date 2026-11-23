@@ -110,6 +110,7 @@ fetch('/api/me',{cache:'no-store'}).then(function(r){return r.json()}).then(func
 
 const foot = `<footer>
 <div>데이터: 국토교통부 전월세 실거래가 자료(단독/다가구·연립다세대·오피스텔·아파트), 한국대학교육협의회 전국대학및전문대학정보표준데이터 (공공데이터포털). 최근 12개월(${period}), 전용 85㎡ 이하, 갱신 계약 제외. ${esc(index.updated)} 갱신.</div>
+<div>집 종류(원룸·투룸·빌라·오피스텔·아파트)는 국토교통부 실거래 구분과 전용면적으로 나눴어요. <a href="/guide/types/">구분 기준 보기</a></div>
 <div>실거래 신고에는 관리비가 없어요. 같은 건물이라도 층·방향·옵션에 따라 가격이 달라요. 월세각은 공공데이터로 만든 참고 서비스이며, 법률·금융 자문이 아닙니다.</div>
 <div style="margin-top:10px;font-weight:600;color:var(--ink)">© 2026 이티컴퍼니</div>
 </footer>
@@ -288,7 +289,7 @@ await writeFile(new URL('u/index.html', pub), listHtml);
 
 // sitemap
 const today = index.updated;
-const urls = [['/', '1.0', 'weekly'], ['/u/', '0.9', 'weekly'], ...pages.map(p => [p.path, '0.7', 'weekly'])];
+const urls = [['/', '1.0', 'weekly'], ['/u/', '0.9', 'weekly'], ['/guide/types/', '0.5', 'monthly'], ...pages.map(p => [p.path, '0.7', 'weekly'])];
 await writeFile(new URL('sitemap.xml', pub), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(([p, pr, cf]) => `<url><loc>${SITE}${p}</loc><lastmod>${today}</lastmod><changefreq>${cf}</changefreq><priority>${pr}</priority></url>`).join('\n')}

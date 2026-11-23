@@ -42,7 +42,7 @@ fetch('/api/me',{cache:'no-store'}).then(function(r){return r.json()}).then(func
 <section class="card"><h2>🪙 원룸 월세 싼 곳 TOP 10</h2><table><tr><td>1</td><td>경상북도 포항시 북구</td><td><b>26만원</b></td></tr><tr><td>2</td><td>충청북도 증평군</td><td><b>26만원</b></td></tr><tr><td>3</td><td>경상남도 양산시</td><td><b>28만원</b></td></tr><tr><td>4</td><td>경상북도 구미시</td><td><b>28만원</b></td></tr><tr><td>5</td><td>대구광역시 서구</td><td><b>28만원</b></td></tr><tr><td>6</td><td>전북특별자치도 군산시</td><td><b>29만원</b></td></tr><tr><td>7</td><td>경상북도 경산시</td><td><b>29만원</b></td></tr><tr><td>8</td><td>대구광역시 북구</td><td><b>29만원</b></td></tr><tr><td>9</td><td>전북특별자치도 전주시 덕진구</td><td><b>30만원</b></td></tr><tr><td>10</td><td>전북특별자치도 전주시 완산구</td><td><b>30만원</b></td></tr></table></section>
 </div>
 <p class="hint">원룸형(전용 23㎡ 이하, 아파트 제외), 보증금 2천만원 이하 신규 월세 계약의 중간 월세. 거래 30건 이상인 173개 시군구 비교.</p>
-<script src="/u/map.js?v=9bd64d8b" defer></script>
+<script src="/u/map.js?v=cf29385b" defer></script>
 <script>
 document.getElementById('f').addEventListener('input', e => {
   const nz = t => t.replace(/\s/g, '').replace(/대학교|대학/g, '대').toLowerCase();
@@ -56,6 +56,7 @@ document.getElementById('f').addEventListener('input', e => {
 </script>
 <footer>
 <div>데이터: 국토교통부 전월세 실거래가 자료(단독/다가구·연립다세대·오피스텔·아파트), 한국대학교육협의회 전국대학및전문대학정보표준데이터 (공공데이터포털). 최근 12개월(2025.12~2026.11), 전용 85㎡ 이하, 갱신 계약 제외. 2026-11-23 갱신.</div>
+<div>집 종류(원룸·투룸·빌라·오피스텔·아파트)는 국토교통부 실거래 구분과 전용면적으로 나눴어요. <a href="/guide/types/">구분 기준 보기</a></div>
 <div>실거래 신고에는 관리비가 없어요. 같은 건물이라도 층·방향·옵션에 따라 가격이 달라요. 월세각은 공공데이터로 만든 참고 서비스이며, 법률·금융 자문이 아닙니다.</div>
 <div style="margin-top:10px;font-weight:600;color:var(--ink)">© 2026 이티컴퍼니</div>
 </footer>

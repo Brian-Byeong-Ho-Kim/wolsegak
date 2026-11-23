@@ -9,7 +9,7 @@ const cleanPrefs = x => {
   return {
     nick: typeof o.nick === 'string' ? o.nick.replace(/[<>]/g, '').trim().slice(0, 20) : '',
     view: o.view === 'budget' ? 'budget' : 'check',
-    types: Array.isArray(o.types) ? [...new Set(o.types.map(Number).filter(t => t >= 0 && t <= 3))] : [],
+    types: Array.isArray(o.types) ? [...new Set(o.types.map(Number).filter(t => t >= 0 && t <= 4))] : [],
     areas: Array.isArray(o.areas) ? [...new Set(o.areas.filter(a => AREAS.includes(a)))] : [],
     home: typeof o.home === 'string' ? o.home.slice(0, 200) : '',
     school: typeof o.school === 'string' ? o.school.replace(/[<>]/g, '').trim().slice(0, 60) : '',   // 내 학교 (이름)
