@@ -599,7 +599,7 @@ function toggleDong(d) {
   state.dongs.has(d) ? state.dongs.delete(d) : state.dongs.add(d);
   dongSum(); updFavBtn();
   $$('#dongs .chip').forEach(b => b.setAttribute('aria-pressed', state.dongs.has(b.dataset.d)));
-  refreshDongLabels(); renderStats(); writeHash();
+  refreshDongLabels(); renderStats(); writeHash(); fitSelected();
   if (!$('#result').classList.contains('hide')) run();
 }
 function addPlace(code) { if (!state.places.includes(code)) state.places.push(code); renderPlaces(); }
@@ -1021,11 +1021,18 @@ function initMap() {
   }).catch(e => { $('#mapHint').textContent = '지도를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.'; mapP = null; throw e; }));
 }
 function wantMap() { return isWide() || ($$('[data-tab=map]')[0].getAttribute('aria-selected') === 'true') || (state.view === 'budget' && state.places.length > 0); }
-function fitMap() {
-  if (!map) return;
+function fitMap() { if (!map) return; map.relayout(); if (dongOv.length || (univMk && state.univ)) fitSelected(); }
+function fitSelected() {
+  if (!map || $('#mapWrap').classList.contains('hide')) return;
+  const sel = [...dongMk].filter(([d]) => state.dongs.has(d)).map(([, o]) => o);
+  const ovs = sel.length ? sel : dongOv;
+  const pts = ovs.map(o => o.getPosition());
+  if (univMk && state.univ) pts.push(univMk.getPosition());
+  if (!pts.length) return;
   map.relayout();
-  if (univMk && state.univ) { map.setCenter(univMk.getPosition()); map.setLevel(4); }
-  else if (dongOv.length) { const b = new kakao.maps.LatLngBounds(); dongOv.forEach(o => b.extend(o.getPosition())); map.setBounds(b, 40, 40, 40, 40); }
+  if (pts.length === 1) { map.setCenter(pts[0]); map.setLevel(4); return; }
+  const b = new kakao.maps.LatLngBounds(); pts.forEach(p => b.extend(p));
+  map.setBounds(b, 70, 50, 50, 50);   // 위쪽은 라벨이 위로 솟아 있어 더 넉넉히
 }
 function syncMapVis() {
   const on = wantMap(), was = !$('#mapWrap').classList.contains('hide');
@@ -1084,7 +1091,7 @@ async function markUniv(u) {
   if (r) {
     if (univMk) univMk.setMap(null);
     univMk = new kakao.maps.CustomOverlay({ position: LL(r.lat, r.lng), content: `<div class="kuniv" title="${u.name}">🎓</div>`, yAnchor: 1, map });
-    map.setCenter(LL(r.lat, r.lng)); map.setLevel(4);
+    if (dongOv.length) fitSelected(); else { map.setCenter(LL(r.lat, r.lng)); map.setLevel(4); }
   }
 }
 let dongSets = [];
@@ -1130,7 +1137,7 @@ async function drawDongs(sets, dongs) {
     const ov = new kakao.maps.CustomOverlay({ position: LL(r.lat, r.lng), content: el, yAnchor: 1, clickable: true, map });
     dongOv.push(ov); dongMk.set(d, ov); b.extend(LL(r.lat, r.lng)); n++;
   }
-  if (n > 1 && !state.univ) map.setBounds(b, 40, 40, 40, 40);
+  fitSelected();
 }
 
 // ===== 내 예산 (개인화) =====
