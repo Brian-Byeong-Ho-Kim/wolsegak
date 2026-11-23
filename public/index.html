@@ -195,6 +195,11 @@ body.mapfs{overflow:hidden}
 .sdot{width:14px;height:14px;border-radius:50%;background:#78716c;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer}
 .mlegend{position:absolute;left:12px;bottom:56px;z-index:500;background:rgba(255,255,255,.96);padding:6px 10px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.2);font:500 12px/1.4 "Pretendard Variable",sans-serif;display:flex;flex-wrap:wrap;gap:4px 12px;max-width:calc(100% - 24px)}
 .mlegend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}.mlegend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+#mapLoc{position:absolute;top:62px;right:10px;z-index:500;background:#fff;color:var(--ink);border:1.5px solid var(--ink);border-radius:10px;padding:7px 12px;font:600 14px/1 "Pretendard Variable",sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2)}
+#mapLoc:disabled{opacity:.6}
+#mapWrap.fs #mapLoc{top:calc(max(12px,env(safe-area-inset-top)) + 46px);right:12px}
+@media (min-width:1024px){#mapWrap:not(.fs) #mapLoc{top:52px;right:12px}}
+.medot{width:16px;height:16px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 6px rgba(37,99,235,.25),0 1px 4px rgba(0,0,0,.4)}
 .sdot:hover{transform:scale(1.35)}
 .sdot{position:relative}
 .sdot .sl{display:none;position:absolute;left:17px;top:50%;transform:translateY(-50%);white-space:nowrap;font:700 12px/1 "Pretendard Variable",sans-serif;color:#1f1a17;text-shadow:-1px 0 #fff,1px 0 #fff,0 -1px #fff,0 1px #fff,-1px -1px #fff,1px 1px #fff,-1px 1px #fff,1px -1px #fff;pointer-events:none}
@@ -275,6 +280,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
       <div id="map" role="application" aria-label="지도"></div>
       <button type="button" id="mapFs" aria-label="지도 전체화면">⛶ 크게 보기</button>
       <button type="button" id="mapDeals" aria-pressed="true" aria-label="실거래 핀 보기">📍 실거래 끄기</button>
+      <button type="button" id="mapLoc" aria-label="내 위치 찾기">📍 내 위치</button>
       <div id="dealMsg" class="hide"></div>
       <div class="mlegend" aria-label="학교 점 색 설명"><span><i style="background:#16a34a"></i>35만 미만</span><span><i style="background:#2563eb"></i>35~45만</span><span><i style="background:#d97706"></i>45~55만</span><span><i style="background:#dc2626"></i>55만 이상</span><span><i style="background:#78716c"></i>거래 적음</span></div>
       <p class="hint" id="mapHint">점은 대학교예요(색 = 원룸 중간 월세). 눌러서 그 학교 근처 월세를 볼 수 있어요.</p>
@@ -1228,6 +1234,26 @@ function showSchoolPop(u, pos) {
     if (dx || dy) map.panBy(dx, dy);
   } catch (e) {}
 }
+
+// 내 위치 찾기: 브라우저 위치 권한으로 현재 위치를 지도에 표시 (위치는 서버로 보내거나 저장하지 않는다)
+let meMk = null;
+$('#mapLoc').addEventListener('click', async () => {
+  try { await initMap(); } catch { return; }
+  const b = $('#mapLoc'), hint = $('#mapHint');
+  if (!navigator.geolocation) { hint.textContent = '이 브라우저는 위치 찾기를 지원하지 않아요.'; return; }
+  b.disabled = true; b.textContent = '📍 찾는 중…';
+  navigator.geolocation.getCurrentPosition(p => {
+    b.disabled = false; b.textContent = '📍 내 위치';
+    const pos = LL(p.coords.latitude, p.coords.longitude);
+    if (meMk) meMk.setMap(null);
+    meMk = new kakao.maps.CustomOverlay({ position: pos, content: '<div class="medot" title="내 위치"></div>', xAnchor: .5, yAnchor: .5, zIndex: 8, map });
+    map.setLevel(4); map.panTo(pos);
+    hint.textContent = '내 위치예요. 근처 동네를 눌러 시세를 볼 수 있어요.';
+  }, e => {
+    b.disabled = false; b.textContent = '📍 내 위치';
+    hint.textContent = e && e.code === 1 ? '위치 권한이 꺼져 있어요. 브라우저 주소창의 위치 설정에서 허용해 주세요.' : '내 위치를 찾지 못했어요. 잠시 뒤 다시 눌러 보세요.';
+  }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+});
 
 // ===== 지도 실거래 핀 (주소 기반) =====
 // 카카오 좌표는 저장·캐시하지 않고 화면에 그릴 때만 실시간 조회한다 (카카오 정책).

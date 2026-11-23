@@ -156,5 +156,23 @@
   });
   kakao.maps.event.addListener(map, 'idle', layout); layout();
   matchMedia('(min-width:1024px)').addEventListener('change', () => setTimeout(() => map.relayout(), 80));
+
+  // 내 위치 찾기 (위치는 서버로 보내거나 저장하지 않는다)
+  {
+    const wrapEl = document.getElementById('umapWrap'), b = document.createElement('button');
+    b.type = 'button'; b.id = 'uLoc'; b.textContent = '📍 내 위치'; wrapEl.appendChild(b);
+    let me = null;
+    b.onclick = () => {
+      if (!navigator.geolocation) { hint.textContent = '이 브라우저는 위치 찾기를 지원하지 않아요.'; return; }
+      b.disabled = true; b.textContent = '📍 찾는 중…';
+      navigator.geolocation.getCurrentPosition(p => {
+        b.disabled = false; b.textContent = '📍 내 위치';
+        const pos = new kakao.maps.LatLng(p.coords.latitude, p.coords.longitude);
+        if (me) me.setMap(null);
+        me = new kakao.maps.CustomOverlay({ position: pos, content: '<div class="medot" title="내 위치"></div>', xAnchor: .5, yAnchor: .5, zIndex: 8, map });
+        map.setLevel(5); map.panTo(pos);
+      }, e => { b.disabled = false; b.textContent = '📍 내 위치'; hint.textContent = e && e.code === 1 ? '위치 권한이 꺼져 있어요. 브라우저 주소창의 위치 설정에서 허용해 주세요.' : '내 위치를 찾지 못했어요.'; }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+    };
+  }
   setTimeout(() => map.relayout(), 100);
 })();

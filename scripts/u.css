@@ -81,3 +81,6 @@ footer{margin-top:28px;font-size:12px;color:var(--sub);display:grid;gap:6px}
 .ud{position:relative}
 .ud .sl{display:none;position:absolute;left:19px;top:50%;transform:translateY(-50%);white-space:nowrap;font:700 12px/1 "Pretendard Variable",sans-serif;color:#1f1a17;text-shadow:-1px 0 #fff,1px 0 #fff,0 -1px #fff,0 1px #fff,-1px -1px #fff,1px 1px #fff,-1px 1px #fff,1px -1px #fff;pointer-events:none}
 .ud .sl.show{display:block}
+#uLoc{position:absolute;top:12px;right:12px;z-index:500;background:#fff;color:var(--ink);border:1.5px solid var(--ink);border-radius:10px;padding:7px 12px;font:600 14px/1 "Pretendard Variable",sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2)}
+#uLoc:disabled{opacity:.6}
+.medot{width:16px;height:16px;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 0 0 6px rgba(37,99,235,.25),0 1px 4px rgba(0,0,0,.4)}
