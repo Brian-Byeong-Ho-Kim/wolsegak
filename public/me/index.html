@@ -106,6 +106,7 @@ input:focus,select:focus{border-color:var(--brand)}
     <label class="f" for="school">내 학교</label>
     <input id="school" list="schoolList" placeholder="학교 이름 (예: 성균관대학교)" autocomplete="off">
     <datalist id="schoolList"></datalist>
+    <div class="actions" style="margin-top:8px"><button type="button" class="btn ghost" id="favSchool" style="font-size:14px;padding:9px 14px">☆ 이 학교를 관심 지역에 추가</button></div>
     <label class="f" for="region">내 지역 <span style="font-weight:400">(학교 대신 동네·주소로 찾을 때)</span></label>
     <input id="region" maxlength="60" placeholder="예: 명륜3가, 서울 종로구" autocomplete="off">
     <label class="f" for="home">열자마자 보여줄 지역</label>
@@ -160,7 +161,8 @@ const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 const favKey = f => (f.places || []).join(',') + '|' + (f.dongs || []).join(',');
 const TYPE_NAMES = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
 let data = { fav: [], cmp: [], budget: null, prefs: { nick: '', view: 'check', types: [], areas: [], home: '', school: '', region: '', fee: 0 } };
-let ME = null, dirty = false;
+let ME = null, dirty = false, IDX = null;
+const SIDO_S = { 서울특별시: '서울', 부산광역시: '부산', 대구광역시: '대구', 인천광역시: '인천', 대전광역시: '대전', 울산광역시: '울산', 세종특별자치시: '세종', 경기도: '경기', 충청북도: '충북', 충청남도: '충남', 경상북도: '경북', 경상남도: '경남', 제주특별자치도: '제주', 강원특별자치도: '강원', 전북특별자치도: '전북', 전남광주통합특별시: '전남광주' };
 
 function setLocal() {
   try {
@@ -227,6 +229,17 @@ function collect() {
 $$('#view [data-v]').forEach(b => b.onclick = () => $$('#view [data-v]').forEach(x => x.setAttribute('aria-pressed', x === b)));
 $$('#types .chip, #areas .chip').forEach(b => b.onclick = () => b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true'));
 
+$('#favSchool').onclick = async () => {
+  const q = $('#school').value.trim();
+  if (!IDX || !q) { flash('위 「내 학교」에 학교 이름을 먼저 입력해 주세요.'); return; }
+  const u = IDX.univ.find(x => x.name === q) || (() => { const m = IDX.univ.filter(x => x.name.includes(q)); return m.length === 1 ? m[0] : null; })();
+  if (!u) { flash('학교를 찾지 못했어요. 목록에 나오는 이름으로 입력해 주세요.'); return; }
+  const s = IDX.sgg.find(x => x.code === u.sgg), [sd, ...rest] = (s ? s.name : '').split(' ');
+  const f = { places: [u.sgg], dongs: [], univ: u.name, label: u.name.replace(/대학교/, '대') + ' · ' + (SIDO_S[sd] || sd || '') + ' ' + rest.join(' ') };
+  if (data.fav.some(x => favKey(x) === favKey(f))) { flash('이미 관심 지역에 있어요.'); return; }
+  data.fav = [f, ...data.fav].slice(0, 20);
+  try { await put(); render(); flash('관심 지역에 추가했어요.'); } catch (e) { data.fav.shift(); flash('저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.'); }
+};
 $('#save').onclick = async () => {
   collect();
   $('#save').disabled = true;
@@ -260,7 +273,7 @@ $('#del').onclick = async () => {
   location.href = '/';
 };
 
-fetch('/data/index.json').then(r => r.json()).then(j => { $('#schoolList').innerHTML = [...new Set((j.univ || []).map(u => u.name))].sort().map(n => `<option value="${esc(n)}">`).join(''); }).catch(() => {});
+fetch('/data/index.json').then(r => r.json()).then(j => { IDX = j; $('#schoolList').innerHTML = [...new Set((j.univ || []).map(u => u.name))].sort().map(n => `<option value="${esc(n)}">`).join(''); }).catch(() => {});
 (async () => {
   try {
     ME = (await (await fetch('/api/me', { cache: 'no-store' })).json()).user;

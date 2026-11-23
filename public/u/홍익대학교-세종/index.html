@@ -16,7 +16,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="/u/u.css?v=40e3b0fd">
+<link rel="stylesheet" href="/u/u.css?v=015b6c44">
 <script src="/visit.js" defer></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"월세각","item":"https://www.wolsegak.com/"},{"@type":"ListItem","position":2,"name":"학교별 월세 시세","item":"https://www.wolsegak.com/u/"},{"@type":"ListItem","position":3,"name":"홍익대학교(세종)","item":"https://www.wolsegak.com/u/%ED%99%8D%EC%9D%B5%EB%8C%80%ED%95%99%EA%B5%90-%EC%84%B8%EC%A2%85/"}]},{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"홍익대학교(세종) 근처 원룸 월세는 보통 얼마예요?","acceptedAnswer":{"@type":"Answer","text":"세종특별자치시에서 최근 12개월 신고된 원룸형(전용 23㎡ 이하) 월세 계약 중 보증금 2천만원 이하 1,247건의 중간 월세는 39만원이고, 절반이 34~50만원 사이였어요. 중간 보증금은 200만원이에요."}},{"@type":"Question","name":"세종특별자치시 월세는 전국에서 비싼 편인가요?","acceptedAnswer":{"@type":"Answer","text":"원룸 월세 거래가 30건 이상인 전국 173개 시군구 중 89번째로 비싸요."}},{"@type":"Question","name":"세종특별자치시 원룸 월세, 작년보다 올랐나요?","acceptedAnswer":{"@type":"Answer","text":"작년 같은 기간(8~10월)보다 2만원(5.3%) 올랐어요. 작년 8~10월 중간 월세 38만원(265건), 올해 같은 기간 40만원(273건) 기준이에요."}},{"@type":"Question","name":"관리비도 포함된 가격인가요?","acceptedAnswer":{"@type":"Answer","text":"아니요. 실거래 신고에는 관리비가 없어서 월세만 비교해요. 관리비가 큰 집은 실제 부담이 더 커요."}}]}]</script>
 </head>
@@ -33,6 +33,26 @@ fetch('/api/me',{cache:'no-store'}).then(function(r){return r.json()}).then(func
 <h1>홍익대학교(세종) 자취방 월세 시세</h1>
 <p class="lead">세종특별자치시 조치원읍 세종로 2639 · <b>세종특별자치시</b> 실거래 기준 · 2025.12~2026.11</p>
 <a class="cta" href="/#u=%ED%99%8D%EC%9D%B5%EB%8C%80%ED%95%99%EA%B5%90%28%EC%84%B8%EC%A2%85%29&amp;s=36110">📊 시세 보기 · 내 월세 비교하기 →</a>
+<button type="button" class="favbtn" id="favSchool" data-u="홍익대학교(세종)" data-s="36110" data-l="홍익대(세종) · 세종특별자치시">☆ 관심 지역에 저장</button><span class="favmsg" id="favMsg" role="status"></span>
+<script>
+(function(){var b=document.getElementById('favSchool'),m=document.getElementById('favMsg');if(!b)return;
+var f={places:[b.dataset.s],dongs:[],univ:b.dataset.u,label:b.dataset.l},k=function(x){return (x.places||[]).join(',')+'|'+(x.dongs||[]).join(',')};
+function loc(){try{return JSON.parse(localStorage.getItem('wsg-fav')||'[]')}catch(e){return []}}
+function has(a){return a.some(function(x){return k(x)===k(f)})}
+function paint(a){var h=has(a);b.textContent=h?'★ 관심 지역에 저장됨':'☆ 관심 지역에 저장';b.setAttribute('aria-pressed',h)}
+var me=null;
+paint(loc());
+fetch('/api/me',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){me=j&&j.user;if(me)return fetch('/api/saved',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(d){if(d&&d.data)paint(d.data.fav||[])})}).catch(function(){});
+b.onclick=function(){
+ b.disabled=true;m.textContent='';
+ var done=function(a,msg){try{localStorage.setItem('wsg-fav',JSON.stringify(a))}catch(e){}paint(a);m.innerHTML=msg;b.disabled=false};
+ if(!me){var a=loc(),h=has(a);a=h?a.filter(function(x){return k(x)!==k(f)}):[f].concat(a).slice(0,20);done(a,h?'':'이 기기에 저장했어요. <a href="/?login=1">로그인</a>하면 계정에 저장돼 다른 기기에서도 볼 수 있어요.');return}
+ fetch('/api/saved',{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){var data=d.data||{},a=data.fav||[],h=has(a);
+  a=h?a.filter(function(x){return k(x)!==k(f)}):[f].concat(a).slice(0,20);data.fav=a;
+  return fetch('/api/saved',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({data:data})}).then(function(r){if(!r.ok)throw 0;done(a,h?'':'관심 지역에 저장했어요. <a href="/me/">마이페이지</a>에서 볼 수 있어요.')})
+ }).catch(function(){m.textContent='저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.';b.disabled=false});
+};})();
+</script>
 <p class="mytip">💡 <a href="/?login=1">가입(로그인)</a>하고 <a href="/me/">마이페이지</a>에 <b>내 예산·지역</b>을 저장해 두면, <a href="/me/map/">내 조건 지도</a>에서 조건에 맞는 월세를 한 번에 찾을 수 있어요.</p>
 
 <section class="hero">

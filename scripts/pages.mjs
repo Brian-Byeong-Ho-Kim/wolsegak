@@ -179,6 +179,26 @@ async function univPage(u, all) {
 <h1>${esc(full)} 자취방 월세 시세</h1>${aka ? `\n<p class="aka">${esc((u.a || []).join(' · '))}</p>` : ''}
 <p class="lead">${esc(u.addr)} · <b>${esc(s.name)}</b> 실거래 기준 · ${period}</p>
 <a class="cta" href="/#${esc(hash)}">📊 시세 보기 · 내 월세 비교하기 →</a>
+<button type="button" class="favbtn" id="favSchool" data-u="${esc(u.name)}" data-s="${esc(u.sgg)}" data-l="${esc(u.name.replace(/대학교/, '대') + ' · ' + place)}">☆ 관심 지역에 저장</button><span class="favmsg" id="favMsg" role="status"></span>
+<script>
+(function(){var b=document.getElementById('favSchool'),m=document.getElementById('favMsg');if(!b)return;
+var f={places:[b.dataset.s],dongs:[],univ:b.dataset.u,label:b.dataset.l},k=function(x){return (x.places||[]).join(',')+'|'+(x.dongs||[]).join(',')};
+function loc(){try{return JSON.parse(localStorage.getItem('wsg-fav')||'[]')}catch(e){return []}}
+function has(a){return a.some(function(x){return k(x)===k(f)})}
+function paint(a){var h=has(a);b.textContent=h?'★ 관심 지역에 저장됨':'☆ 관심 지역에 저장';b.setAttribute('aria-pressed',h)}
+var me=null;
+paint(loc());
+fetch('/api/me',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){me=j&&j.user;if(me)return fetch('/api/saved',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(d){if(d&&d.data)paint(d.data.fav||[])})}).catch(function(){});
+b.onclick=function(){
+ b.disabled=true;m.textContent='';
+ var done=function(a,msg){try{localStorage.setItem('wsg-fav',JSON.stringify(a))}catch(e){}paint(a);m.innerHTML=msg;b.disabled=false};
+ if(!me){var a=loc(),h=has(a);a=h?a.filter(function(x){return k(x)!==k(f)}):[f].concat(a).slice(0,20);done(a,h?'':'이 기기에 저장했어요. <a href="/?login=1">로그인</a>하면 계정에 저장돼 다른 기기에서도 볼 수 있어요.');return}
+ fetch('/api/saved',{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){var data=d.data||{},a=data.fav||[],h=has(a);
+  a=h?a.filter(function(x){return k(x)!==k(f)}):[f].concat(a).slice(0,20);data.fav=a;
+  return fetch('/api/saved',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({data:data})}).then(function(r){if(!r.ok)throw 0;done(a,h?'':'관심 지역에 저장했어요. <a href="/me/">마이페이지</a>에서 볼 수 있어요.')})
+ }).catch(function(){m.textContent='저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.';b.disabled=false});
+};})();
+</script>
 <p class="mytip">💡 <a href="/?login=1">가입(로그인)</a>하고 <a href="/me/">마이페이지</a>에 <b>내 예산·지역</b>을 저장해 두면, <a href="/me/map/">내 조건 지도</a>에서 조건에 맞는 월세를 한 번에 찾을 수 있어요.</p>
 ${enough ? `
 <section class="hero">
