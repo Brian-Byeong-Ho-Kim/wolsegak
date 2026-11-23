@@ -1225,7 +1225,7 @@ async function drawDongs(sets, dongs) {
     if (!r) continue;
     const el = document.createElement('div'); el.className = 'kov'; el.innerHTML = labelHtml(d);
     el.onclick = () => { lastOv = Date.now(); toggleDong(d); };
-    const ov = new kakao.maps.CustomOverlay({ position: LL(r.lat, r.lng), content: el, yAnchor: 1, clickable: true, map });
+    const ov = new kakao.maps.CustomOverlay({ position: LL(r.lat, r.lng), content: el, yAnchor: 1, clickable: true, zIndex: 20, map });
     dongOv.push(ov); dongMk.set(d, ov); b.extend(LL(r.lat, r.lng)); n++;
   }
   fitSelected();
@@ -1286,7 +1286,7 @@ function showSchoolPop(u, pos) {
   const paintFv = () => { const h = favs.some(f => favKey(f) === favKey(schoolFav())); fv.textContent = h ? '★ 관심 지역에 저장됨' : '☆ 관심 지역에 저장'; fv.setAttribute('aria-pressed', h); };
   paintFv();
   fv.onclick = () => { const f = schoolFav(), k = favKey(f); favs = favs.some(x => favKey(x) === k) ? favs.filter(x => favKey(x) !== k) : [f, ...favs].slice(0, 20); saveFavs(); paintFv(); };
-  schoolPop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 12, map });
+  schoolPop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 40, map });
   try {
     const pt = map.getProjection().containerPointFromCoords(pos), h = $('#map').clientHeight, w = $('#map').clientWidth;
     const dy = pt.y < 110 ? 110 - pt.y : 0, dx = pt.x < 110 ? 110 - pt.x : pt.x > w - 110 ? w - 110 - pt.x : 0;
@@ -1421,7 +1421,7 @@ function showDealPop(g, pos) {
   const rows = g.deals.slice(0, 6).map(r => `<div>${dealDate(r[7])} · ${r[4] <= 0 ? '전세 ' + won(r[3]) : `${r[3].toLocaleString()}/${r[4]}만`} · ${Math.round(r[2])}㎡ · ${fl(r[5])}층${r[8] === 2 ? ' · 갱신' : ''}</div>`).join('');
   el.innerHTML = `<span class="x" aria-label="닫기">✕</span><b>${escH(g.nm || (g.dong + ' ' + g.jb))}</b><div style="opacity:.65">${escH(g.dong + ' ' + g.jb)} · ${TYPE_NAMES[g.deals[0][0]]}</div>${rows}${g.deals.length > 6 ? `<div style="opacity:.6">외 ${g.deals.length - 6}건</div>` : ''}`;
   el.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
-  dealPop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 10, map });
+  dealPop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 40, map });
 }
 $('#dealKinds').addEventListener('click', e => {
   const b = e.target.closest('button[data-k]'); if (!b) return;
