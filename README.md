@@ -37,7 +37,7 @@
   - 이메일: `RESEND_API_KEY`(Secret), `MAIL_FROM` (예: `월세각 <login@wolsegak.com>`, Resend에서 도메인 인증 필요)
 - 키가 없으면 그 로그인 방식은 화면에 나오지 않는다. 둘 다 없으면 로그인 버튼과 약관 링크가 숨는다.
 - 로컬: `npx wrangler pages dev public --d1 STATS_DB=wsg-local --binding DEV_MAIL=1` → 메일 대신 화면에 로그인 링크가 나온다(localhost에서만).
-- 개인정보처리방침 `/privacy/`, 이용약관 `/terms/` — 노란 칸(보호책임자·연락처·시행일)을 채운 뒤 `noindex`를 지운다.
+- 개인정보처리방침 `/privacy/`, 이용약관 `/terms/` — 사업자 정보(상호·대표·사업자등록번호·문의 메일)는 모든 페이지 하단에도 표시. 주소는 통신판매업 신고(유료 기능) 전까지 넣지 않는다.
 
 ## 인증키
 
