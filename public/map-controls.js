@@ -1,0 +1,66 @@
+function setupMapView(map, wrap, onReset) {
+  const bar = document.createElement('div'); bar.className = 'mview';
+  bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><button type="button" data-v="reset" title="지도 설정(필터·스카이뷰·로드뷰·창 크기)을 처음 상태로">↺ 초기화</button><span class="mvmsg hide"></span>';
+  const panel = document.createElement('div'); panel.className = 'rvpanel hide';
+  panel.innerHTML = '<div class="rvgrip" title="위아래로 끌어서 로드뷰 크기 조절"></div><button type="button" class="rvx">✕ 닫기</button><div class="rvbox"></div>';
+  wrap.appendChild(bar); wrap.appendChild(panel);
+
+  // 로드뷰 창 높이 조절 (위쪽 손잡이를 위아래로 끌기)
+  const grip = panel.querySelector('.rvgrip'), RK = 'wsg-rvh';
+  const setH = r => { r = Math.min(.85, Math.max(.2, r)); panel.style.height = (r * 100) + '%'; return r; };
+  try { const v = +localStorage.getItem(RK); if (v) setH(v); } catch {}
+  grip.addEventListener('pointerdown', e => { grip.setPointerCapture(e.pointerId); grip.dataset.on = 1; e.preventDefault(); });
+  grip.addEventListener('pointermove', e => {
+    if (!grip.dataset.on) return; const r = wrap.getBoundingClientRect();
+    setH((r.bottom - e.clientY) / r.height); if (rv) rv.relayout();
+  });
+  const gEnd = () => { if (!grip.dataset.on) return; delete grip.dataset.on; try { localStorage.setItem(RK, parseFloat(panel.style.height) / 100); } catch {} if (rv) rv.relayout(); };
+  grip.addEventListener('pointerup', gEnd); grip.addEventListener('pointercancel', gEnd);
+  const msg = bar.querySelector('.mvmsg'); let rv = null, rvc = null, mk = null, mkEl = null;
+  const say = t => { msg.textContent = t || ''; msg.classList.toggle('hide', !t); };
+  const openRv = (ll, face) => {
+    if (!rvc) rvc = new kakao.maps.RoadviewClient();
+    rvc.getNearestPanoId(ll, 80, id => {
+      if (!id) { say('이 근처에는 로드뷰가 없어요. 다른 곳을 눌러 보세요.'); return; }
+      say(''); panel.classList.remove('hide');
+      if (!rv) rv = new kakao.maps.Roadview(panel.querySelector('.rvbox'));
+      if (!mk) {
+        mkEl = document.createElement('div'); mkEl.className = 'rvmk'; mkEl.innerHTML = '<i></i><b>🚶</b>';
+        mk = new kakao.maps.CustomOverlay({ content: mkEl, xAnchor: .5, yAnchor: .5, zIndex: 50 });
+        kakao.maps.event.addListener(rv, 'position_changed', () => { const p = rv.getPosition(); mk.setPosition(p); mk.setMap(map); });
+        kakao.maps.event.addListener(rv, 'viewpoint_changed', () => { mkEl.firstChild.style.transform = 'rotate(' + rv.getViewpoint().pan + 'deg)'; });
+      }
+      mk.setPosition(ll); mk.setMap(map);
+      rv.setPanoId(id, ll); setTimeout(() => rv.relayout(), 50);
+      if (face) setTimeout(() => {   // 건물(실거래 핀) 쪽을 바라보도록 방향을 맞춘다
+        try {
+          const pp = rv.getPosition(), dx = (ll.getLng() - pp.getLng()) * Math.cos(pp.getLat() * Math.PI / 180), dy = ll.getLat() - pp.getLat();
+          if (Math.abs(dx) + Math.abs(dy) > 1e-7) rv.setViewpoint({ pan: (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360, tilt: 0, zoom: 0 });
+        } catch {}
+      }, 700);
+    });
+  };
+  bar.addEventListener('click', e => {
+    const b = e.target.closest('button[data-v]'); if (!b) return;
+    if (b.dataset.v === 'reset') {
+      bar.querySelectorAll('button[aria-pressed]').forEach(x => x.setAttribute('aria-pressed', 'false'));
+      map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP); map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW);
+      window.__rvOn = false; say(''); panel.classList.add('hide'); panel.style.height = ''; if (mk) mk.setMap(null);
+      try { localStorage.removeItem('wsg-rvh'); localStorage.removeItem('wsg-lw'); } catch {}
+      document.documentElement.style.removeProperty('--lw');
+      if (onReset) onReset();
+      setTimeout(() => map.relayout(), 60); say('설정을 처음 상태로 돌렸어요.'); setTimeout(() => say(''), 2500);
+      return;
+    }
+    const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on);
+    if (b.dataset.v === 'sky') map.setMapTypeId(on ? kakao.maps.MapTypeId.HYBRID : kakao.maps.MapTypeId.ROADMAP);
+    else {
+      window.__rvOn = on;
+      if (on) { map.addOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW); say('지도의 파란 길을 눌러 보세요.'); }
+      else { map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW); say(''); panel.classList.add('hide'); if (mk) mk.setMap(null); }
+    }
+  });
+  window.__rvOpen = ll => openRv(ll, true);
+  kakao.maps.event.addListener(map, 'click', e => { if (window.__rvOn) openRv(e.latLng); });
+  panel.querySelector('.rvx').onclick = () => { panel.classList.add('hide'); if (mk) mk.setMap(null); };
+}

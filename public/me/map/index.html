@@ -38,7 +38,7 @@ input:focus{border-color:var(--brand)}
 .unit span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--sub);font-size:14px}
 .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .msg{font-size:13.5px;color:var(--brand-ink);margin:8px 2px 0;min-height:1.3em}
-#mapBox{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin:12px 0;background:#e7e5e4}
+#mapWrap{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin:12px 0;background:#e7e5e4}
 #map{width:100%;height:clamp(340px,55vh,560px);z-index:0}
 .kdeal{cursor:pointer;background:#fff;border:2px solid #2563eb;border-radius:8px;padding:1px 6px;font:700 12px/1.5 "Pretendard Variable",sans-serif;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);transform:translateY(-4px)}
 .kdeal small{font-weight:500;opacity:.7}.kdeal.jn{border-style:dashed}
@@ -61,7 +61,7 @@ input:focus{border-color:var(--brand)}
 @media(min-width:1024px){
   :root{--lw:clamp(520px,44vw,700px)}
   .wrap{max-width:none;margin:0;width:var(--lw);padding:0 22px 80px}
-  #mapBox{position:fixed;top:0;right:0;bottom:0;left:var(--lw);margin:0;border-radius:0;border:0;z-index:1}
+  #mapWrap{position:fixed;top:0;right:0;bottom:0;left:var(--lw);margin:0;border-radius:0;border:0;z-index:1}
   #map{height:100%}
 }
 .hide{display:none!important}
@@ -78,7 +78,10 @@ input:focus{border-color:var(--brand)}
 #dealKinds button{font-size:14px;padding:8px 12px}
 #dealKinds button+button,#dealTypes button+button{border-left:1px solid #d6d3d1}
 #dealKinds button[aria-pressed=true],#dealTypes button[aria-pressed=true]{background:var(--ink);color:#fff}
+#mapWrap{border:0;background:transparent;overflow:visible}
 </style>
+<link rel="stylesheet" href="/map-controls.css?v=20261123">
+<script src="/map-controls.js?v=20261123"></script>
 </head>
 <body>
 <div class="wrap">
@@ -124,13 +127,18 @@ input:focus{border-color:var(--brand)}
   <p style="font-size:12px;color:var(--sub);margin:6px 2px 0">월세는 <b>관리비를 더한 한 달 부담</b>이 입력한 월세 이하인 거래만 보여요. 관리비는 실거래 자료에 없어서 입력한 예상 금액을 더해 계산해요. 최근 12개월, 전용 60㎡ 이하 거래예요.</p>
 </section>
 
-<div id="mapBox"><div id="map" role="application" aria-label="조건에 맞는 실거래 지도"></div>
+<div id="mapWrap"><div id="map" role="application" aria-label="조건에 맞는 실거래 지도"></div>
+      <button type="button" id="mapFs" aria-label="지도 전체화면">⛶ 크게 보기</button>
+      <button type="button" id="mapDeals" aria-pressed="true" aria-label="실거래 핀 보기">📍 실거래 끄기</button>
+      <button type="button" id="mapLoc" aria-label="내 위치 찾기">📍 내 위치</button>
+
 <div id="dealKinds" role="group" aria-label="거래 종류"><button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button></div>
 <div id="dealTypes" role="group" aria-label="집 종류"><button type="button" data-t="0" aria-pressed="true" title="원룸 (단독·다가구 23㎡ 이하)">원룸</button><button type="button" data-t="4" aria-pressed="true" title="투룸 (단독·다가구 23㎡ 초과)">투룸</button><button type="button" data-t="1" aria-pressed="false" title="빌라 = 연립·다세대 건물 (원룸·투룸 포함)">빌라</button><button type="button" data-t="2" aria-pressed="false">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button></div>
+<p class="hint" id="mapHint">저장된 조건에 맞는 실거래를 표시해요. 핀을 누르면 거래 내역을 볼 수 있어요.</p>
 </div>
 <div class="sum" id="sum"></div>
 <section class="card"><h2>📋 조건에 맞는 실거래</h2><ul class="list" id="list"><li class="empty">학교나 지역을 검색해 보세요.</li></ul></section>
-<p style="font-size:12px;color:var(--sub)">출처: 국토교통부 전월세 실거래가(공공데이터포털). 지도 좌표는 저장하지 않고 화면에 그릴 때만 카카오에서 조회해요. 단독·다가구는 지번이 공개되지 않아 목록에만 나와요.</p>
+<p style="font-size:12px;color:var(--sub)">출처: 국토교통부 전월세 실거래가(공공데이터포털). 지도 좌표는 저장하지 않고 화면에 그릴 때만 카카오에서 조회해요. 단독·다가구는 지번이 공개되지 않아 동네 단위로 묶어 표시해요. 해당 표시는 건물의 정확한 위치가 아니에요.</p>
 </div>
 
 <script>
@@ -154,18 +162,12 @@ const types = new Set([0, 4]);
 const dealKinds = new Set(['w', 'b']);
 const kindOf = r => r[4] <= 0 ? 'j' : r[3] > 5000 ? 'b' : 'w';
 $('#types').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; const t = +b.dataset.v; if (types.has(t)) { if (types.size === 1) return; types.delete(t); } else types.add(t); setTypesUI(); if (last) apply(); });
-(function () {
-  const r = document.createElement('button'); r.type = 'button'; r.id = 'mapReset'; r.textContent = '↺ 초기화'; r.title = '지도 필터·창 너비를 처음 상태로 (예산 입력은 그대로)';
-  $('#mapBox').appendChild(r);
-  r.onclick = () => {
-    types.clear(); [0, 4].forEach(t => types.add(t)); setTypesUI();
-    dealKinds.clear(); dealKinds.add('w'); dealKinds.add('b'); setKindsUI();
-    try { localStorage.removeItem('wsg-lw'); } catch {}
-    document.documentElement.style.removeProperty('--lw');
-    if (typeof last !== 'undefined' && last) apply();
-    if (map) setTimeout(() => map.relayout(), 60);
-  };
-})();
+function resetPersonalMap() {
+  types.clear(); [0, 4].forEach(t => types.add(t)); setTypesUI();
+  dealKinds.clear(); dealKinds.add('w'); dealKinds.add('b'); setKindsUI();
+  dealOn = true; syncDealToggle();
+  if (last) apply();
+}
 $('#dealKinds').addEventListener('click', e => {
   const b = e.target.closest('button[data-k]'); if (!b) return;
   const k = b.dataset.k;
@@ -211,18 +213,68 @@ function matchSgg(parts) {
 }
 async function pool(items, fn, n) { let i = 0; await Promise.all(Array.from({ length: n }, async () => { while (i < items.length) await fn(items[i++]); })); }
 
+let mapP = null, meMk = null, dealOn = true, dealPins = [];
+function syncDealToggle() {
+  $('#mapDeals').setAttribute('aria-pressed', dealOn);
+  $('#mapDeals').textContent = dealOn ? '📍 실거래 끄기' : '📍 실거래 보기';
+  $('#dealKinds').classList.toggle('hide', !dealOn);
+  $('#dealTypes').classList.toggle('hide', !dealOn);
+  dealPins.forEach(o => o.setMap(dealOn ? map : null));
+  if (!dealOn) closePop();
+}
+function initMap() {
+  return mapP || (mapP = loadKakao().then(() => {
+    kGeo = new kakao.maps.services.Geocoder(); kPlaces = new kakao.maps.services.Places();
+    map = new kakao.maps.Map($('#map'), { center: LL(36.4, 127.8), level: 13 });
+    map.setMaxLevel(14);
+    setupMapView(map, $('#mapWrap'), resetPersonalMap);
+    kakao.maps.event.addListener(map, 'click', () => { if (window.__rvOn || Date.now() - lastPin < 400) return; closePop(); });
+    return map;
+  }).catch(e => { mapP = null; throw e; }));
+}
+function setMapFs(on) {
+  $('#mapWrap').classList.toggle('fs', on);
+  document.body.classList.toggle('mapfs', on);
+  $('#mapFs').textContent = on ? '✕ 닫기' : '⛶ 크게 보기';
+  $('#mapFs').setAttribute('aria-label', on ? '전체화면 닫기' : '지도 전체화면');
+  if (map) setTimeout(() => map.relayout(), 60);
+  if (!on) $('#mapWrap').scrollIntoView({ block: 'nearest' });
+}
+
+$('#mapFs').onclick = () => setMapFs(!$('#mapWrap').classList.contains('fs'));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#mapWrap').classList.contains('fs')) setMapFs(false); });
+$('#mapDeals').onclick = () => { dealOn = !dealOn; syncDealToggle(); };
+$('#mapLoc').onclick = async () => {
+  try { await initMap(); } catch { flash('지도를 불러오지 못했어요.'); return; }
+  const b = $('#mapLoc'), hint = $('#mapHint');
+  if (!navigator.geolocation) { hint.textContent = '이 브라우저는 위치 찾기를 지원하지 않아요.'; return; }
+  b.disabled = true; b.textContent = '📍 찾는 중…';
+  navigator.geolocation.getCurrentPosition(async p => {
+    b.disabled = false; b.textContent = '📍 내 위치';
+    const center = { lat: p.coords.latitude, lng: p.coords.longitude }, pos = LL(center.lat, center.lng);
+    if (meMk) meMk.setMap(null);
+    meMk = new kakao.maps.CustomOverlay({ position: pos, content: '<div class="medot" title="내 위치"></div>', xAnchor: .5, yAnchor: .5, zIndex: 8, map });
+    map.setLevel(4); map.setCenter(pos);
+    const parts = await kRegion(center.lat, center.lng);
+    if (parts && parts.length) { const q = [...new Set(parts)].join(' '); $('#q').value = q; await search(q, center); }
+    hint.textContent = '내 위치 주변의 저장된 조건에 맞는 거래를 표시해요.';
+  }, e => {
+    b.disabled = false; b.textContent = '📍 내 위치';
+    hint.textContent = e && e.code === 1 ? '위치 권한이 꺼져 있어요. 브라우저 주소창의 위치 설정에서 허용해 주세요.' : '내 위치를 찾지 못했어요. 잠시 뒤 다시 눌러 보세요.';
+  }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+};
+
 // ===== 검색 =====
 let last = null;   // {code, center, label, d, near:Set(dongIdx)}
 $('#f').addEventListener('submit', e => { e.preventDefault(); search($('#q').value.trim()); });
-async function search(q) {
+async function search(q, centerOverride) {
   if (!q) { flash('학교 이름이나 지역을 입력해 주세요.'); return; }
   const gen = ++runGen; $('#go').disabled = true; flash('찾는 중…');
   try {
-    await loadKakao();
-    if (!map) { kGeo = new kakao.maps.services.Geocoder(); kPlaces = new kakao.maps.services.Places(); map = new kakao.maps.Map($('#map'), { center: LL(36.4, 127.8), level: 12 }); kakao.maps.event.addListener(map, 'click', () => { if (Date.now() - lastPin < 400) return; closePop(); }); }
+    await initMap();
     const u = INDEX.univ.find(x => x.name === q) || INDEX.univ.find(x => x.name.replace(/\(.*\)/, '') === q) || (() => { const m = INDEX.univ.filter(x => x.name.includes(q)); return m.length === 1 ? m[0] : null; })();
-    let center = null, code = null, label = q, isUniv = false;
-    if (u) {
+    let center = centerOverride || null, code = null, label = q, isUniv = false;
+    if (u && !centerOverride) {
       const g = GEO[u.name + '|' + u.campus]; center = g ? { lat: g[0], lng: g[1] } : await kFind(u.addr.replace(/\s*\(.*\)$/, ''));
       code = u.sgg; label = u.name; isUniv = true;
     }
@@ -251,7 +303,7 @@ async function search(q) {
 }
 
 // ===== 조건 적용 → 목록 + 핀 =====
-function clearMap() { overlays.forEach(o => o.setMap(null)); overlays = []; closePop(); }
+function clearMap() { overlays.forEach(o => o.setMap(null)); overlays = []; dealPins = []; closePop(); }
 function closePop() { if (pop) { pop.setMap(null); pop = null; } }
 async function apply() {
   if (!last) return;
@@ -270,7 +322,12 @@ async function apply() {
   $('#sum').textContent = rows.length ? label + ' 주변 조건에 맞는 거래 ' + rows.length + '건' + (med ? ' · 월세 중간값 ' + med + '만원' : '') : '';
   // 핀 (지번 있는 것만)
   const groups = new Map();
-  for (const r of rows) { if (!r[9]) continue; const k = r[1] + '|' + r[9]; let g = groups.get(k); if (!g) groups.set(k, g = { dong: d.dongs[r[1]], jb: r[9], nm: r[10] >= 0 ? d.names[r[10]] : '', deals: [], pos: null }); g.deals.push(r); }
+  for (const r of rows) {
+    const approximate = !r[9], k = r[1] + '|' + (approximate ? 'dong-' + catOf(r) : r[9]);
+    let g = groups.get(k);
+    if (!g) groups.set(k, g = { dong: d.dongs[r[1]], jb: r[9] || '', nm: approximate ? d.dongs[r[1]] + ' ' + TN[catOf(r)] + ' 실거래' : (r[10] >= 0 ? d.names[r[10]] : ''), approximate, deals: [], pos: null });
+    g.deals.push(r);
+  }
   const gl = [...groups.values()].slice(0, 100);
   const byRow = new Map(); gl.forEach(g => g.deals.forEach(r => byRow.set(r, g)));
   renderList(rows, byRow, fee);
@@ -279,13 +336,15 @@ async function apply() {
     const c = (await kFind(d.name + ' ' + g.dong + ' ' + g.jb)) || (g.nm ? await kFind(d.name + ' ' + g.dong + ' ' + g.nm, 'kw') : null);
     if (!c || gen !== runGen) return;
     g.pos = LL(c.lat, c.lng); const d0 = g.deals[0];
-    const el = document.createElement('div'); el.className = 'kdeal' + (d0[4] <= 0 ? ' jn' : '');
+    const el = document.createElement('div'); el.className = g.approximate ? 'kdong t' + catOf(d0) : 'kdeal' + (d0[4] <= 0 ? ' jn' : kindOf(d0) === 'b' ? ' bj' : '');
     el.innerHTML = (d0[4] <= 0 ? '전세 ' + eok(d0[3]) : d0[4] + '만') + (g.deals.length > 1 ? ' <small>외 ' + (g.deals.length - 1) + '</small>' : '');
-    el.onclick = ev => { ev.stopPropagation(); lastPin = Date.now(); showPop(g, fee); };
-    overlays.push(new kakao.maps.CustomOverlay({ position: g.pos, content: el, yAnchor: 1, clickable: true, map }));
+    if (g.approximate) el.innerHTML = '<div>' + esc(TN[catOf(d0)]) + ' · ' + g.deals.length + '건</div><small>동네 단위 · 건물 위치 아님</small>';
+    el.onclick = ev => { ev.stopPropagation(); lastPin = Date.now(); if (window.__rvOn && window.__rvOpen) window.__rvOpen(g.pos); else showPop(g, fee); };
+    const pin = new kakao.maps.CustomOverlay({ position: g.pos, content: el, yAnchor: 1, clickable: true, map: dealOn ? map : null });
+    overlays.push(pin); dealPins.push(pin);
   }, 6);
   if (gen !== runGen) return;
-  $('#list').querySelectorAll('li.pin').forEach(li => { li.onclick = () => { const g = byRow.get(rows[+li.dataset.i]); if (g && g.pos) { map.panTo(g.pos); lastPin = Date.now(); showPop(g, fee); $('#mapBox').scrollIntoView({ behavior: 'smooth', block: 'center' }); } }; });
+  $('#list').querySelectorAll('li.pin').forEach(li => { li.onclick = () => { const g = byRow.get(rows[+li.dataset.i]); if (g && g.pos) { dealOn = true; syncDealToggle(); map.panTo(g.pos); lastPin = Date.now(); showPop(g, fee); $('#mapWrap').scrollIntoView({ behavior: 'smooth', block: 'center' }); } }; });
   $('#list').querySelectorAll('li.pin').forEach(li => { const g = byRow.get(rows[+li.dataset.i]); if (!g || !g.pos) { li.classList.remove('pin'); } });
 }
 function dealLine(r, fee) { return r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만' + (fee ? ' (관리비 포함 월 ' + (r[4] + fee) + '만)' : ''); }
@@ -351,6 +410,7 @@ $('#saveMine').onclick = saveMine;
   sp.addEventListener('dblclick', () => { root.style.removeProperty('--lw'); try { localStorage.removeItem(KEY); } catch {} relay(); });
   addEventListener('resize', () => { const v = parseInt(root.style.getPropertyValue('--lw')); if (v) apply(v); });
 })();
+initMap().catch(() => flash('지도를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.'));
 </script>
 </body>
 </html>
