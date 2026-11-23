@@ -38,7 +38,7 @@
   let sel = null, lastDot = 0;
   const addrOf = k => links.find(a => a.dataset.k === k);
   const show = o => {
-    bubble.innerHTML = `<div class="upop"><b>${o.name}</b><small>${o.m ? '원룸 중간 월세 ' + o.m + '만원' : '거래가 적어 시군구 기준으로 봐요'}</small><br><a href="${o.a.getAttribute('href')}" onclick="location.href=this.href;return false">시세 보기 →</a></div>`;
+    bubble.innerHTML = `<div class="upop"><b>${o.name}</b><small>${o.m ? '원룸 중간 월세 ' + o.m + '만원' : '거래가 적어 시군구 기준으로 봐요'}</small><br><a href="${o.a.getAttribute('href')}" onclick="location.href=this.href;return false">더 자세히 시세 보기 →</a></div>`;
     bov.setPosition(o.pos); bov.setMap(map);
   };
   // 말풍선이 지도 밖으로 잘려 링크를 못 누르는 일이 없도록, 점이 가장자리에 있으면 지도를 살짝 밀어 준다
