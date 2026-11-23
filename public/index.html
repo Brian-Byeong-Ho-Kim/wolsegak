@@ -1973,6 +1973,19 @@ function applyPrefs() {
   const f = prefs.home && favs.find(x => favKey(x) === prefs.home);
   if (f) openFav(f);
 }
+async function openPersonalMapShortcut() {
+  if (!personalMapShortcut || !INDEX) return;
+  if (prefs.types && prefs.types.length) { state.types.clear(); prefs.types.forEach(t => state.types.add(+t)); $('#types [data-v]').forEach(b => b.setAttribute('aria-pressed', state.types.has(+b.dataset.v))); }
+  if (prefs.areas && prefs.areas.length) { state.areas.clear(); prefs.areas.forEach(a => state.areas.add(a)); $('#areas [data-v]').forEach(b => b.setAttribute('aria-pressed', state.areas.has(b.dataset.v))); }
+  const school = prefs.school && INDEX.univ.find(u => u.name === prefs.school);
+  if (school) { state.univ = school; $('#uq').value = school.name; setPlaces([school.sgg]); }
+  else if (prefs.region) { const place = await parseAddr(prefs.region); if (place) { state.univ = null; $('#aq').value = prefs.region; setPlaces([place.code], place.dong ? [place.dong] : []); } }
+  else { const f = prefs.home && favs.find(x => favKey(x) === prefs.home); if (f) openFav(f); }
+  const b = budget();
+  if (b && b.rent > 0) { $('#bDep').value = b.dep; $('#bRent').value = b.rent; renderBudget(); setView('budget', true); }
+  document.querySelector('[data-go="map"]')?.click();
+  if (school) markUniv(school);
+}
 // ===== 관심 지역 =====
 const escH = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let favs = [];
@@ -2040,7 +2053,7 @@ function renderMyTip() {
   const t = $('#myTip'); if (!t) return;
   if (!ME) { t.href = '/?login=1'; t.innerHTML = '💡 <b>가입(로그인)</b>하고 마이페이지에 <b>내 예산·지역</b>을 저장해 두면, 다음부터 조건에 맞는 월세를 지도에서 한 번에 찾을 수 있어요. <u>로그인하기 →</u>'; }
   else if (!(prefs.school || prefs.region)) { t.href = '/me/'; t.innerHTML = '💡 마이페이지에 <b>내 학교·지역과 예산(보증금·월세·관리비)</b>을 설정해 두면 조건에 맞는 월세를 지도에서 바로 볼 수 있어요. <u>설정하러 가기 →</u>'; }
-  else { t.href = '/me/map/'; t.innerHTML = '🗺 <b>내 조건 지도</b>로 ' + (prefs.school || prefs.region) + ' 주변 내 예산에 맞는 실거래를 바로 볼 수 있어요. <u>열기 →</u>'; }
+  else { t.href = '/?myMap=1'; t.innerHTML = '🗺 <b>내 조건 지도</b>로 ' + (prefs.school || prefs.region) + ' 주변 내 예산에 맞는 실거래를 첫 화면 지도에서 바로 볼 수 있어요. <u>지도 보기 →</u>'; }
   t.hidden = false;
 }
 function renderMe() {
@@ -2109,8 +2122,8 @@ async function initAuth() {
   // /?login=1&next=/admin/ → 로그인 창을 바로 연다 (로그인 뒤 next로 돌아감)
   if (!ME && sp.get('login') === '1') toggleAcct(true);
 }
-initAuth();
-loadIndex();
+const personalMapShortcut = new URLSearchParams(location.search).get('myMap') === '1';
+Promise.all([initAuth(), loadIndex()]).then(openPersonalMapShortcut);
 if (isWide()) showMap();
 </script>
 </body>
