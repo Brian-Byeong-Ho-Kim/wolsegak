@@ -2118,7 +2118,7 @@ async function initAuth() {
   }
   try { ME = (await (await fetch('/api/me', { cache: 'no-store' })).json()).user; } catch (e) {}
   renderMe();
-  if (ME) pullSaved();
+  if (ME) await pullSaved();
   // /?login=1&next=/admin/ → 로그인 창을 바로 연다 (로그인 뒤 next로 돌아감)
   if (!ME && sp.get('login') === '1') toggleAcct(true);
 }
