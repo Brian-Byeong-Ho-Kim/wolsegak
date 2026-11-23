@@ -91,3 +91,6 @@ footer{margin-top:28px;font-size:12px;color:var(--sub);display:grid;gap:6px}
 #dealKinds button+button{border-left:1px solid #d6d3d1}
 #dealKinds button[aria-pressed=true]{background:var(--ink);color:#fff}
 @media (max-width:700px){#dealKinds{left:10px;top:10px}#dealKinds button{font-size:13px;padding:8px 11px}}
+
+.mytip{font-size:13.5px;line-height:1.55;background:#fff1e8;border:1px solid #ffd9c2;color:#7c2d12;border-radius:12px;padding:10px 13px;margin:10px 0}
+.mytip a{font-weight:700}

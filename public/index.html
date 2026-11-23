@@ -102,6 +102,10 @@ tr.me td{background:var(--soft);font-weight:700}
 .out{background:var(--soft);border-radius:12px;padding:12px 14px;font-weight:700;font-size:18px}
 .out small{display:block;font-weight:500;font-size:12px;color:var(--sub)}
 .note{font-size:13px;color:var(--sub)}
+.myTip{display:block;margin:10px 0 0;padding:12px 14px;border-radius:14px;background:#fff1e8;border:1px solid #ffd9c2;color:#7c2d12;font-size:14px;line-height:1.5;text-decoration:none}
+.myTip b{color:var(--brand-ink)}
+.myTip[hidden]{display:none}
+
 .note li{margin:4px 0}
 footer{font-size:12px;color:var(--sub);margin-top:30px;line-height:1.7}
 .loading{color:var(--sub);font-size:14px;padding:8px 0}
@@ -293,6 +297,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
     <button type="button" class="go" data-go="stats">📊 실거래 통계</button>
     <button type="button" class="go" data-go="map">🗺 지도 크게</button>
   </div>
+  <a class="myTip" id="myTip" href="/me/" hidden></a>
   <section class="card">
     <h2>📍 어디예요?</h2>
     <div class="chips favs hide" id="favs"></div>
@@ -1823,7 +1828,15 @@ async function pullSaved() {
   if (!budget() && data.budget && data.budget.rent > 0) { $('#bDep').value = data.budget.dep; $('#bRent').value = data.budget.rent; try { localStorage.setItem(BKEY, JSON.stringify(data.budget)); } catch (e) {} renderBudget(); }
   renderFavs(); renderCompare(); pushSaved();
 }
+function renderMyTip() {
+  const t = $('#myTip'); if (!t) return;
+  if (!ME) { t.href = '/?login=1'; t.innerHTML = '💡 <b>가입(로그인)</b>하고 마이페이지에 <b>내 예산·지역</b>을 저장해 두면, 다음부터 조건에 맞는 월세를 지도에서 한 번에 찾을 수 있어요. <u>로그인하기 →</u>'; }
+  else if (!(prefs.school || prefs.region)) { t.href = '/me/'; t.innerHTML = '💡 마이페이지에 <b>내 학교·지역과 예산(보증금·월세·관리비)</b>을 설정해 두면 조건에 맞는 월세를 지도에서 바로 볼 수 있어요. <u>설정하러 가기 →</u>'; }
+  else { t.href = '/me/map/'; t.innerHTML = '🗺 <b>내 조건 지도</b>로 ' + (prefs.school || prefs.region) + ' 주변 내 예산에 맞는 실거래를 바로 볼 수 있어요. <u>열기 →</u>'; }
+  t.hidden = false;
+}
 function renderMe() {
+  renderMyTip();
   const name = ME ? (prefs.nick || ME.nickname || (ME.email ? ME.email.split('@')[0] : '') || '내 정보') : '';
   $('#loginBtn').textContent = ME ? '👤 ' + name : '로그인';
   $('#loginBtn').title = ME ? '마이페이지' : '';

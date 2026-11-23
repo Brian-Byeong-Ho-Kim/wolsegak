@@ -179,6 +179,7 @@ async function univPage(u, all) {
 <h1>${esc(full)} 자취방 월세 시세</h1>${aka ? `\n<p class="aka">${esc((u.a || []).join(' · '))}</p>` : ''}
 <p class="lead">${esc(u.addr)} · <b>${esc(s.name)}</b> 실거래 기준 · ${period}</p>
 <a class="cta" href="/#${esc(hash)}">📊 시세 보기 · 내 월세 비교하기 →</a>
+<p class="mytip">💡 <a href="/?login=1">가입(로그인)</a>하고 <a href="/me/">마이페이지</a>에 <b>내 예산·지역</b>을 저장해 두면, <a href="/me/map/">내 조건 지도</a>에서 조건에 맞는 월세를 한 번에 찾을 수 있어요.</p>
 ${enough ? `
 <section class="hero">
   <div class="lab">원룸형 중간 월세 <small>(전용 23㎡ 이하, 보증금 2천만원 이하)</small></div>
@@ -240,6 +241,7 @@ const listHtml = head({
 <h1>전국 대학가 자취방 월세 시세</h1>
 <p class="lead">학교를 고르면 그 학교가 있는 시군구의 원룸 실거래 시세를 볼 수 있어요. ${period} 국토교통부 실거래가 기준.</p>
 <input id="f" class="find" placeholder="학교 이름 검색 (예: 성균관대)" autocomplete="off">
+<p class="mytip">💡 <a href="/?login=1">가입(로그인)</a>하고 <a href="/me/">마이페이지</a>에 <b>내 예산·지역</b>을 저장해 두면, <a href="/me/map/">내 조건 지도</a>에서 조건에 맞는 월세를 한 번에 찾을 수 있어요.</p>
 <div id="umapWrap"><div id="umap" role="application" aria-label="전국 대학 지도"></div>
 <div class="legend ulegend"><span><i style="background:#16a34a"></i>35만 미만</span><span><i style="background:#2563eb"></i>35~45만</span><span><i style="background:#d97706"></i>45~55만</span><span><i style="background:#dc2626"></i>55만 이상</span><span><i style="background:#78716c"></i>거래 적음</span></div>
 <p class="hint" id="umapHint">지도의 동그라미를 누르면 학교 정보가 뜨고, 아래 목록에 마우스를 올리면 지도가 그 학교로 이동해요. 동그라미 색은 원룸 중간 월세예요.</p></div>

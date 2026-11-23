@@ -16,7 +16,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="/u/u.css?v=3ac95123">
+<link rel="stylesheet" href="/u/u.css?v=40e3b0fd">
 <script src="/visit.js" defer></script>
 
 </head>
@@ -32,6 +32,7 @@ fetch('/api/me',{cache:'no-store'}).then(function(r){return r.json()}).then(func
 <h1>전국 대학가 자취방 월세 시세</h1>
 <p class="lead">학교를 고르면 그 학교가 있는 시군구의 원룸 실거래 시세를 볼 수 있어요. 2025.12~2026.11 국토교통부 실거래가 기준.</p>
 <input id="f" class="find" placeholder="학교 이름 검색 (예: 성균관대)" autocomplete="off">
+<p class="mytip">💡 <a href="/?login=1">가입(로그인)</a>하고 <a href="/me/">마이페이지</a>에 <b>내 예산·지역</b>을 저장해 두면, <a href="/me/map/">내 조건 지도</a>에서 조건에 맞는 월세를 한 번에 찾을 수 있어요.</p>
 <div id="umapWrap"><div id="umap" role="application" aria-label="전국 대학 지도"></div>
 <div class="legend ulegend"><span><i style="background:#16a34a"></i>35만 미만</span><span><i style="background:#2563eb"></i>35~45만</span><span><i style="background:#d97706"></i>45~55만</span><span><i style="background:#dc2626"></i>55만 이상</span><span><i style="background:#78716c"></i>거래 적음</span></div>
 <p class="hint" id="umapHint">지도의 동그라미를 누르면 학교 정보가 뜨고, 아래 목록에 마우스를 올리면 지도가 그 학교로 이동해요. 동그라미 색은 원룸 중간 월세예요.</p></div>

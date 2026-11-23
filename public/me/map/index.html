@@ -51,6 +51,7 @@ input:focus{border-color:var(--brand)}
 .list .t{flex:1;min-width:0;font-size:13.5px}.list .t small{display:block;color:var(--sub);font-size:12px}
 .tag{font-size:11px;font-weight:700;border-radius:6px;padding:2px 6px;background:var(--soft);color:var(--brand-ink);white-space:nowrap}
 .empty{color:var(--sub);font-size:14px;padding:8px 2px}
+.tip{font-size:13.5px;background:#fff1e8;border:1px solid #ffd9c2;color:#7c2d12;border-radius:12px;padding:10px 13px;margin:10px 0}
 .hide{display:none!important}
 </style>
 </head>
@@ -61,6 +62,7 @@ input:focus{border-color:var(--brand)}
   <a class="nav" href="/me/">👤 마이페이지</a><a class="nav" href="/">🏠 홈</a>
 </header>
 
+<p class="tip hide" id="guestTip">💡 <a href="/?login=1">가입(로그인)</a>하면 <a href="/me/">마이페이지</a>에 내 학교·지역과 예산을 저장해 두고, 여기를 열 때마다 바로 내 조건으로 볼 수 있어요.</p>
 <section class="card">
   <form id="f" class="srch" autocomplete="off">
     <input id="q" list="uList" placeholder="학교 이름이나 지역 검색 (예: 성균관대학교, 명륜3가)" aria-label="학교 또는 지역">
@@ -251,6 +253,7 @@ $('#saveMine').onclick = saveMine;
   $('#uList').innerHTML = [...new Set(INDEX.univ.map(u => u.name))].sort().map(n => '<option value="' + esc(n) + '">').join('');
   let prefs = {}, budget = null;
   try { ME = (await (await fetch('/api/me', { cache: 'no-store' })).json()).user; } catch (e) {}
+  if (!ME) $('#guestTip').classList.remove('hide');
   if (ME) { try { const r = await fetch('/api/saved', { cache: 'no-store' }); if (r.ok) { const d = (await r.json()).data; prefs = d.prefs || {}; budget = d.budget; } } catch (e) {} }
   else { try { prefs = JSON.parse(localStorage.getItem('wsg-pref') || '{}'); budget = JSON.parse(localStorage.getItem('wsg:budget') || 'null'); } catch (e) {} }
   if (prefs.types && prefs.types.length) { types.clear(); prefs.types.forEach(t => types.add(+t)); setTypesUI(); }
