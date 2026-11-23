@@ -164,7 +164,14 @@ details.more>summary span{font-weight:400;color:var(--sub)}
 @media (max-width:700px){.gobar{position:sticky;bottom:0;box-shadow:0 -8px 16px -12px rgba(0,0,0,.15)}}
 @media (max-width:520px){.vtabs button{font-size:15px}.toplink{padding:6px 10px}.actions button{font-size:13px}}
 svg text{font-family:inherit}
-#map{height:340px;border-radius:14px;margin-top:12px;z-index:0;border:1px solid var(--line)}
+#map{height:clamp(340px,55vh,560px);border-radius:14px;margin-top:12px;z-index:0;border:1px solid var(--line)}
+#mapWrap{position:relative}
+#mapFs{position:absolute;top:22px;right:10px;z-index:500;background:#fff;color:var(--ink);border:1.5px solid var(--ink);border-radius:10px;padding:7px 12px;font:600 14px/1 "Pretendard Variable",sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2)}
+#mapWrap.fs{position:fixed;inset:0;z-index:3000;background:#fff;margin:0;padding:0}
+#mapWrap.fs #map{height:100%;margin:0;border:0;border-radius:0}
+#mapWrap.fs #mapFs{top:max(12px,env(safe-area-inset-top));right:12px}
+#mapWrap.fs #mapHint{position:absolute;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));z-index:500;margin:0;background:rgba(255,255,255,.95);padding:8px 12px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.2)}
+body.mapfs{overflow:hidden}
 .dlab{background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:2px 8px;font:600 12px/1.4 "Pretendard Variable",sans-serif;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.15)}
 .dlab.on{background:var(--ink);color:#fff}
 .leaflet-tooltip.dtip{background:transparent;border:0;box-shadow:none;padding:0}
@@ -233,6 +240,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
     </div>
     <div id="mapWrap" class="hide">
       <div id="map" role="application" aria-label="지도"></div>
+      <button type="button" id="mapFs" aria-label="지도 전체화면">⛶ 크게 보기</button>
       <p class="hint" id="mapHint">누르면 그 동네로 찾아요. 숫자는 동별 원룸 월세 중간값이에요.</p>
     </div>
     <div class="place" id="places"></div>
@@ -979,6 +987,16 @@ function showMap() {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap' }).addTo(map);
   dongLayer = L.layerGroup().addTo(map);
   map.on('click', onMapClick);
+  $('#mapFs').addEventListener('click', () => setMapFs(!$('#mapWrap').classList.contains('fs')));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#mapWrap').classList.contains('fs')) setMapFs(false); });
+}
+function setMapFs(on) {
+  $('#mapWrap').classList.toggle('fs', on);
+  document.body.classList.toggle('mapfs', on);
+  $('#mapFs').textContent = on ? '✕ 닫기' : '⛶ 크게 보기';
+  $('#mapFs').setAttribute('aria-label', on ? '전체화면 닫기' : '지도 전체화면');
+  if (map) { on ? map.scrollWheelZoom.enable() : map.scrollWheelZoom.disable(); setTimeout(() => map.invalidateSize(), 60); }
+  if (!on) $('#mapWrap').scrollIntoView({ block: 'nearest' });
 }
 const SIDO_ALIAS = { 광주광역시: '전남광주통합특별시', 전라남도: '전남광주통합특별시' };
 function matchSgg(parts) {
