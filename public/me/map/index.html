@@ -61,6 +61,8 @@ input:focus{border-color:var(--brand)}
   #map{height:100%}
 }
 .hide{display:none!important}
+#lsplit{display:none}
+@media (min-width:1024px){#lsplit{display:block;position:fixed;top:0;bottom:0;left:calc(var(--lw) - 6px);width:12px;cursor:col-resize;z-index:900;touch-action:none}#lsplit::after{content:"";position:absolute;left:4px;top:50%;width:4px;height:48px;margin-top:-24px;border-radius:3px;background:#a8a29e;opacity:.7}#lsplit:hover::after,#lsplit.on::after{background:#ff6b3d;opacity:1}body.mapfs #lsplit{display:none}}
 </style>
 </head>
 <body>
@@ -278,6 +280,21 @@ $('#saveMine').onclick = saveMine;
   const start = qs || prefs.school || prefs.region || '';
   if (start) { $('#q').value = start; search(start); }
   else flash(ME ? '마이페이지에서 학교나 지역을 정해 두면 여기서 바로 열려요.' : '');
+})();
+
+// ===== 왼쪽 메뉴 ↔ 지도 경계선을 끌어서 너비 조절 (PC) =====
+(function () {
+  const KEY = 'wsg-lw', root = document.documentElement, sp = document.createElement('div');
+  sp.id = 'lsplit'; sp.title = '끌어서 메뉴·지도 너비 조절 (두 번 누르면 원래대로)'; document.body.appendChild(sp);
+  const apply = w => root.style.setProperty('--lw', Math.round(Math.min(innerWidth - 320, Math.max(360, w))) + 'px');
+  try { const v = +localStorage.getItem(KEY); if (v) apply(v); } catch {}
+  const relay = () => { try { if (typeof map !== 'undefined' && map) map.relayout(); } catch {} };
+  sp.addEventListener('pointerdown', e => { sp.setPointerCapture(e.pointerId); sp.classList.add('on'); e.preventDefault(); });
+  sp.addEventListener('pointermove', e => { if (sp.classList.contains('on')) apply(e.clientX); });
+  const end = () => { if (!sp.classList.contains('on')) return; sp.classList.remove('on'); try { localStorage.setItem(KEY, parseInt(getComputedStyle(root).getPropertyValue('--lw')) || ''); } catch {} relay(); };
+  sp.addEventListener('pointerup', end); sp.addEventListener('pointercancel', end);
+  sp.addEventListener('dblclick', () => { root.style.removeProperty('--lw'); try { localStorage.removeItem(KEY); } catch {} relay(); });
+  addEventListener('resize', () => { const v = parseInt(root.style.getPropertyValue('--lw')); if (v) apply(v); });
 })();
 </script>
 </body>

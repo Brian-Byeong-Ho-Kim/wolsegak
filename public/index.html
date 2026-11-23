@@ -187,6 +187,9 @@ body.mapfs{overflow:hidden}
   #mapWrap:not(.fs) #mapHint{position:absolute;left:12px;right:12px;bottom:12px;z-index:500;margin:0;background:rgba(255,255,255,.95);padding:8px 12px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.2)}
   [data-tab=map]{display:none}
 }
+#lsplit{display:none}
+@media (min-width:1024px){#lsplit{display:block;position:fixed;top:0;bottom:0;left:calc(var(--lw) - 6px);width:12px;cursor:col-resize;z-index:900;touch-action:none}#lsplit::after{content:"";position:absolute;left:4px;top:50%;width:4px;height:48px;margin-top:-24px;border-radius:3px;background:#a8a29e;opacity:.7}#lsplit:hover::after,#lsplit.on::after{background:#ff6b3d;opacity:1}body.mapfs #lsplit{display:none}}
+.rvgrip{position:absolute;top:0;left:0;right:0;height:16px;cursor:row-resize;z-index:3;touch-action:none;background:linear-gradient(rgba(0,0,0,.45),transparent)}.rvgrip::after{content:"";position:absolute;left:50%;top:5px;width:44px;height:4px;margin-left:-22px;border-radius:3px;background:#fff;opacity:.85}
 .mview{position:absolute;right:10px;bottom:32px;z-index:700;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center;max-width:calc(100% - 20px)}
 #mapWrap.fs .mview{bottom:78px}
 @media (min-width:1024px){#mapWrap:not(.fs) .mview{bottom:70px}}
@@ -1123,13 +1126,40 @@ function kRegion(lat, lng) {
     } catch (e) { res(null); }
   });
 }
+// ===== 왼쪽 메뉴 ↔ 지도 경계선을 끌어서 너비 조절 (PC) =====
+(function () {
+  const KEY = 'wsg-lw', root = document.documentElement, sp = document.createElement('div');
+  sp.id = 'lsplit'; sp.title = '끌어서 메뉴·지도 너비 조절 (두 번 누르면 원래대로)'; document.body.appendChild(sp);
+  const apply = w => root.style.setProperty('--lw', Math.round(Math.min(innerWidth - 320, Math.max(360, w))) + 'px');
+  try { const v = +localStorage.getItem(KEY); if (v) apply(v); } catch {}
+  const relay = () => { try { if (typeof map !== 'undefined' && map) map.relayout(); } catch {} };
+  sp.addEventListener('pointerdown', e => { sp.setPointerCapture(e.pointerId); sp.classList.add('on'); e.preventDefault(); });
+  sp.addEventListener('pointermove', e => { if (sp.classList.contains('on')) apply(e.clientX); });
+  const end = () => { if (!sp.classList.contains('on')) return; sp.classList.remove('on'); try { localStorage.setItem(KEY, parseInt(getComputedStyle(root).getPropertyValue('--lw')) || ''); } catch {} relay(); };
+  sp.addEventListener('pointerup', end); sp.addEventListener('pointercancel', end);
+  sp.addEventListener('dblclick', () => { root.style.removeProperty('--lw'); try { localStorage.removeItem(KEY); } catch {} relay(); });
+  addEventListener('resize', () => { const v = parseInt(root.style.getPropertyValue('--lw')); if (v) apply(v); });
+})();
+
 // 스카이뷰(위성사진)·로드뷰(거리 사진) 전환 — 카카오맵 기본 기능
 function setupMapView(map, wrap) {
   const bar = document.createElement('div'); bar.className = 'mview';
   bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><span class="mvmsg hide"></span>';
   const panel = document.createElement('div'); panel.className = 'rvpanel hide';
-  panel.innerHTML = '<button type="button" class="rvx">✕ 닫기</button><div class="rvbox"></div>';
+  panel.innerHTML = '<div class="rvgrip" title="위아래로 끌어서 로드뷰 크기 조절"></div><button type="button" class="rvx">✕ 닫기</button><div class="rvbox"></div>';
   wrap.appendChild(bar); wrap.appendChild(panel);
+
+  // 로드뷰 창 높이 조절 (위쪽 손잡이를 위아래로 끌기)
+  const grip = panel.querySelector('.rvgrip'), RK = 'wsg-rvh';
+  const setH = r => { r = Math.min(.85, Math.max(.2, r)); panel.style.height = (r * 100) + '%'; return r; };
+  try { const v = +localStorage.getItem(RK); if (v) setH(v); } catch {}
+  grip.addEventListener('pointerdown', e => { grip.setPointerCapture(e.pointerId); grip.dataset.on = 1; e.preventDefault(); });
+  grip.addEventListener('pointermove', e => {
+    if (!grip.dataset.on) return; const r = wrap.getBoundingClientRect();
+    setH((r.bottom - e.clientY) / r.height); if (rv) rv.relayout();
+  });
+  const gEnd = () => { if (!grip.dataset.on) return; delete grip.dataset.on; try { localStorage.setItem(RK, parseFloat(panel.style.height) / 100); } catch {} if (rv) rv.relayout(); };
+  grip.addEventListener('pointerup', gEnd); grip.addEventListener('pointercancel', gEnd);
   const msg = bar.querySelector('.mvmsg'); let rv = null, rvc = null, mk = null, mkEl = null;
   const say = t => { msg.textContent = t || ''; msg.classList.toggle('hide', !t); };
   const openRv = (ll, face) => {
