@@ -243,12 +243,12 @@ const listHtml = head({
 <div id="umapWrap"><div id="umap" role="application" aria-label="전국 대학 지도"></div>
 <div class="legend ulegend"><span><i style="background:#16a34a"></i>35만 미만</span><span><i style="background:#2563eb"></i>35~45만</span><span><i style="background:#d97706"></i>45~55만</span><span><i style="background:#dc2626"></i>55만 이상</span><span><i style="background:#78716c"></i>거래 적음</span></div>
 <p class="hint" id="umapHint">지도의 동그라미를 누르면 학교 정보가 뜨고, 아래 목록에 마우스를 올리면 지도가 그 학교로 이동해요. 동그라미 색은 원룸 중간 월세예요.</p></div>
+${sidoOrder.map(k => `<section class="card sido"><h2>${esc(k)} <small>${bySido.get(k).length}곳</small></h2><div class="links">${bySido.get(k).map(p => `<a href="${p.path}" data-n="${esc([p.full, ...(p.u.a || [])].join(' '))}" data-k="${esc(p.u.name + '|' + p.u.campus)}" data-s="${esc(p.u.sgg)}" data-addr="${esc(p.u.addr)}"${p.s.n >= 15 ? ` data-m="${Math.round(p.s.m)}"` : ''}>${esc(p.full)}${p.s.n >= 15 ? ` <small>${fmt(p.s.m)}만</small>` : ''}</a>`).join('')}</div></section>`).join('')}
 <div class="two">
 <section class="card"><h2>💸 원룸 월세 비싼 곳 TOP 10</h2><table>${top.map((s, i) => `<tr><td>${i + 1}</td><td>${esc(s.name)}</td><td><b>${fmt(s.m1)}만원</b></td></tr>`).join('')}</table></section>
 <section class="card"><h2>🪙 원룸 월세 싼 곳 TOP 10</h2><table>${low.map((s, i) => `<tr><td>${i + 1}</td><td>${esc(s.name)}</td><td><b>${fmt(s.m1)}만원</b></td></tr>`).join('')}</table></section>
 </div>
 <p class="hint">원룸형(전용 23㎡ 이하, 아파트 제외), 보증금 2천만원 이하 신규 월세 계약의 중간 월세. 거래 30건 이상인 ${ranked.length}개 시군구 비교.</p>
-${sidoOrder.map(k => `<section class="card sido"><h2>${esc(k)} <small>${bySido.get(k).length}곳</small></h2><div class="links">${bySido.get(k).map(p => `<a href="${p.path}" data-n="${esc([p.full, ...(p.u.a || [])].join(' '))}" data-k="${esc(p.u.name + '|' + p.u.campus)}" data-s="${esc(p.u.sgg)}" data-addr="${esc(p.u.addr)}"${p.s.n >= 15 ? ` data-m="${Math.round(p.s.m)}"` : ''}>${esc(p.full)}${p.s.n >= 15 ? ` <small>${fmt(p.s.m)}만</small>` : ''}</a>`).join('')}</div></section>`).join('')}
 <script src="/u/map.js?v=${ASSET_V.js}" defer></script>
 <script>
 document.getElementById('f').addEventListener('input', e => {
