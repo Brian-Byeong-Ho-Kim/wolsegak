@@ -11,7 +11,10 @@ const cleanPrefs = x => {
     view: o.view === 'budget' ? 'budget' : 'check',
     types: Array.isArray(o.types) ? [...new Set(o.types.map(Number).filter(t => t >= 0 && t <= 3))] : [],
     areas: Array.isArray(o.areas) ? [...new Set(o.areas.filter(a => AREAS.includes(a)))] : [],
-    home: typeof o.home === 'string' ? o.home.slice(0, 200) : '',   // 열 때 바로 보여줄 관심 지역 (favKey)
+    home: typeof o.home === 'string' ? o.home.slice(0, 200) : '',
+    school: typeof o.school === 'string' ? o.school.replace(/[<>]/g, '').trim().slice(0, 60) : '',   // 내 학교 (이름)
+    region: typeof o.region === 'string' ? o.region.replace(/[<>]/g, '').trim().slice(0, 60) : '',   // 내 지역 (검색어)
+    fee: Math.min(100, Math.max(0, +o.fee || 0)),   // 예상 관리비 (만원)   // 열 때 바로 보여줄 관심 지역 (favKey)
   };
 };
 

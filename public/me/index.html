@@ -77,6 +77,18 @@ input:focus,select:focus{border-color:var(--brand)}
     <input id="nick" maxlength="20" placeholder="카카오 닉네임을 그대로 쓰려면 비워 두세요" autocomplete="nickname">
   </section>
 
+  <section class="card" id="myFind">
+    <h2>🗺 내 조건 지도</h2>
+    <p class="desc">학교나 지역을 정하고 아래 「내 설정」의 집 종류·보증금·월세·관리비를 맞춰 두면, 조건에 맞는 최근 실거래를 지도와 목록으로 바로 볼 수 있어요.</p>
+    <label class="f" for="school">내 학교</label>
+    <input id="school" list="schoolList" placeholder="학교 이름 (예: 성균관대학교)" autocomplete="off">
+    <datalist id="schoolList"></datalist>
+    <label class="f" for="region">내 지역 <span style="font-weight:400">(학교 대신 동네·주소로 찾을 때)</span></label>
+    <input id="region" maxlength="60" placeholder="예: 명륜3가, 서울 종로구" autocomplete="off">
+    <div class="actions"><a class="btn" id="goMap" href="/me/map/" style="text-decoration:none">🗺 내 조건으로 지도 보기</a></div>
+    <p class="desc" style="margin:8px 0 0">설정을 바꾼 뒤에는 아래 「설정 저장」을 먼저 눌러 주세요.</p>
+  </section>
+
   <section class="card">
     <h2>⚙️ 내 설정</h2>
     <p class="desc">월세각을 열 때 이 설정으로 바로 시작해요. 공유 링크로 들어오면 그 링크의 조건이 먼저예요.</p>
@@ -107,11 +119,13 @@ input:focus,select:focus{border-color:var(--brand)}
     <select id="home"><option value="">선택 안 함</option></select>
     <p class="desc" style="margin-top:6px">아래 「관심 지역」에 저장한 곳 중에서 고를 수 있어요.</p>
 
-    <label class="f">내 예산 <span style="font-weight:400">(「내 돈으로 어디?」에 미리 채워져요)</span></label>
+    <label class="f">내 예산 <span style="font-weight:400">(최대 금액 · 「내 돈으로 어디?」와 「내 조건 지도」에 쓰여요)</span></label>
     <div class="row">
       <div class="unit"><input id="bDep" inputmode="numeric" placeholder="보증금"><span>만원</span></div>
       <div class="unit"><input id="bRent" inputmode="numeric" placeholder="월세"><span>만원</span></div>
     </div>
+    <label class="f" for="bFee">예상 관리비 <span style="font-weight:400">(월세에 더해 한 달 부담으로 계산해요)</span></label>
+    <div class="unit"><input id="bFee" inputmode="numeric" placeholder="예: 5"><span>만원</span></div>
   </section>
 
   <section class="card">
@@ -145,7 +159,7 @@ const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAl
 const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const favKey = f => (f.places || []).join(',') + '|' + (f.dongs || []).join(',');
 const TYPE_NAMES = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
-let data = { fav: [], cmp: [], budget: null, prefs: { nick: '', view: 'check', types: [], areas: [], home: '' } };
+let data = { fav: [], cmp: [], budget: null, prefs: { nick: '', view: 'check', types: [], areas: [], home: '', school: '', region: '', fee: 0 } };
 let ME = null, dirty = false;
 
 function setLocal() {
@@ -176,6 +190,9 @@ function render() {
   $('#home').value = data.fav.some(f => favKey(f) === p.home) ? p.home : '';
   $('#bDep').value = data.budget ? data.budget.dep : '';
   $('#bRent').value = data.budget ? data.budget.rent : '';
+  $('#bFee').value = p.fee || '';
+  $('#school').value = p.school || '';
+  $('#region').value = p.region || '';
   $('#favs').innerHTML = data.fav.length ? data.fav.map((f, i) => `<li><span>⭐</span><div class="t"><b>${esc(f.label)}</b></div><a href="${favLink(f)}">열기</a><button type="button" data-fav="${i}" aria-label="삭제">✕</button></li>`).join('') : '<li class="empty">아직 없어요. 월세각에서 지역을 고르고 「☆ 관심 지역 저장」을 눌러 보세요.</li>';
   $('#cmps').innerHTML = data.cmp.length ? data.cmp.map((c, i) => `<li><span>📋</span><div class="t"><b>${esc(cmpTitle(c))}</b><small>${esc(cmpSub(c))}</small></div><button type="button" data-cmp="${i}" aria-label="삭제">✕</button></li>`).join('') : '<li class="empty">아직 없어요.</li>';
 }
@@ -202,6 +219,9 @@ function collect() {
   p.areas = $$('#areas [aria-pressed=true]').map(b => b.dataset.v);
   p.home = $('#home').value;
   const d = parseFloat($('#bDep').value.replace(/,/g, '')), r = parseFloat($('#bRent').value.replace(/,/g, ''));
+  p.fee = Math.min(100, Math.max(0, parseFloat($('#bFee').value.replace(/,/g, '')) || 0));
+  p.school = $('#school').value.replace(/[<>]/g, '').trim().slice(0, 60);
+  p.region = $('#region').value.replace(/[<>]/g, '').trim().slice(0, 60);
   data.budget = d >= 0 && r > 0 ? { dep: d, rent: r } : null;
 }
 $$('#view [data-v]').forEach(b => b.onclick = () => $$('#view [data-v]').forEach(x => x.setAttribute('aria-pressed', x === b)));
@@ -240,6 +260,7 @@ $('#del').onclick = async () => {
   location.href = '/';
 };
 
+fetch('/data/index.json').then(r => r.json()).then(j => { $('#schoolList').innerHTML = [...new Set((j.univ || []).map(u => u.name))].sort().map(n => `<option value="${esc(n)}">`).join(''); }).catch(() => {});
 (async () => {
   try {
     ME = (await (await fetch('/api/me', { cache: 'no-store' })).json()).user;
