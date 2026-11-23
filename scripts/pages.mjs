@@ -178,6 +178,7 @@ async function univPage(u, all) {
 <nav class="crumb"><a href="/">월세각</a> › <a href="/u/">학교별 월세 시세</a> › ${esc(full)}</nav>
 <h1>${esc(full)} 자취방 월세 시세</h1>${aka ? `\n<p class="aka">${esc((u.a || []).join(' · '))}</p>` : ''}
 <p class="lead">${esc(u.addr)} · <b>${esc(s.name)}</b> 실거래 기준 · ${period}</p>
+<a class="cta" href="/#${esc(hash)}">📊 시세 보기 · 내 월세 비교하기 →</a>
 ${enough ? `
 <section class="hero">
   <div class="lab">원룸형 중간 월세 <small>(전용 23㎡ 이하, 보증금 2천만원 이하)</small></div>
