@@ -187,6 +187,14 @@ body.mapfs{overflow:hidden}
   #mapWrap:not(.fs) #mapHint{position:absolute;left:12px;right:12px;bottom:12px;z-index:500;margin:0;background:rgba(255,255,255,.95);padding:8px 12px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.2)}
   [data-tab=map]{display:none}
 }
+.mview{position:absolute;top:10px;left:10px;z-index:500;display:flex;gap:6px;flex-wrap:wrap;align-items:center;max-width:calc(100% - 150px)}
+.mview button{background:#fff;color:var(--ink);border:1.5px solid var(--ink);border-radius:10px;padding:7px 11px;font:600 13px/1 "Pretendard Variable",sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2)}
+.mview button[aria-pressed=true]{background:var(--ink);color:#fff}
+.mvmsg{background:rgba(255,255,255,.95);border-radius:8px;padding:5px 9px;font:600 12px/1.3 "Pretendard Variable",sans-serif;box-shadow:0 1px 6px rgba(0,0,0,.2)}
+.mview .hide,.rvpanel.hide{display:none}
+.rvpanel{position:absolute;left:0;right:0;bottom:0;height:58%;z-index:600;background:#000;border-radius:14px 14px 0 0;overflow:hidden}
+.rvbox{width:100%;height:100%}
+.rvx{position:absolute;top:8px;right:8px;z-index:2;background:#fff;color:#1f1a17;border:0;border-radius:8px;padding:6px 10px;font:700 13px/1 "Pretendard Variable",sans-serif;cursor:pointer}
 #mapDeals{position:absolute;top:22px;right:118px;z-index:500;background:#fff;color:var(--ink);border:1.5px solid var(--ink);border-radius:10px;padding:7px 12px;font:600 14px/1 "Pretendard Variable",sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2)}
 #mapDeals[aria-pressed=true]{background:var(--ink);color:#fff}
 #mapWrap.fs #mapDeals{top:max(12px,env(safe-area-inset-top));right:104px}
@@ -1112,13 +1120,45 @@ function kRegion(lat, lng) {
     } catch (e) { res(null); }
   });
 }
+// 스카이뷰(위성사진)·로드뷰(거리 사진) 전환 — 카카오맵 기본 기능
+function setupMapView(map, wrap) {
+  const bar = document.createElement('div'); bar.className = 'mview';
+  bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><span class="mvmsg hide"></span>';
+  const panel = document.createElement('div'); panel.className = 'rvpanel hide';
+  panel.innerHTML = '<button type="button" class="rvx">✕ 닫기</button><div class="rvbox"></div>';
+  wrap.appendChild(bar); wrap.appendChild(panel);
+  const msg = bar.querySelector('.mvmsg'); let rv = null, rvc = null;
+  const say = t => { msg.textContent = t || ''; msg.classList.toggle('hide', !t); };
+  const openRv = ll => {
+    if (!rvc) rvc = new kakao.maps.RoadviewClient();
+    rvc.getNearestPanoId(ll, 80, id => {
+      if (!id) { say('이 근처에는 로드뷰가 없어요. 다른 곳을 눌러 보세요.'); return; }
+      say(''); panel.classList.remove('hide');
+      if (!rv) rv = new kakao.maps.Roadview(panel.querySelector('.rvbox'));
+      rv.setPanoId(id, ll); setTimeout(() => rv.relayout(), 50);
+    });
+  };
+  bar.addEventListener('click', e => {
+    const b = e.target.closest('button[data-v]'); if (!b) return;
+    const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on);
+    if (b.dataset.v === 'sky') map.setMapTypeId(on ? kakao.maps.MapTypeId.HYBRID : kakao.maps.MapTypeId.ROADMAP);
+    else {
+      window.__rvOn = on;
+      if (on) { map.addOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW); say('지도의 파란 길을 눌러 보세요.'); }
+      else { map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW); say(''); }
+    }
+  });
+  kakao.maps.event.addListener(map, 'click', e => { if (window.__rvOn) openRv(e.latLng); });
+  panel.querySelector('.rvx').onclick = () => panel.classList.add('hide');
+}
 function initMap() {
   return mapP || (mapP = loadKakao().then(() => {
     kGeo = new kakao.maps.services.Geocoder(); kPlaces = new kakao.maps.services.Places();
     map = new kakao.maps.Map($('#map'), { center: LL(36.4, 127.8), level: 13 });
     map.setMaxLevel(14);
     kakao.maps.event.addListener(map, 'idle', () => refreshDeals());
-    kakao.maps.event.addListener(map, 'click', e => { if (Date.now() - lastOv < 400) return; onMapClick({ lat: e.latLng.getLat(), lng: e.latLng.getLng() }); });
+    kakao.maps.event.addListener(map, 'click', e => { if (window.__rvOn) return; if (Date.now() - lastOv < 400) return; onMapClick({ lat: e.latLng.getLat(), lng: e.latLng.getLng() }); });
+    setupMapView(map, $('#mapWrap'));
     $('#mapFs').addEventListener('click', () => setMapFs(!$('#mapWrap').classList.contains('fs')));
     drawSchools();
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#mapWrap').classList.contains('fs')) setMapFs(false); });
