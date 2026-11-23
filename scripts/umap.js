@@ -87,7 +87,7 @@
     const o = byKey.get(k); if (!o) return;
     if (sel) { sel.a.classList.remove('sel'); sel.el.classList.remove('on'); }
     sel = o; o.a.classList.add('sel'); o.el.classList.add('on');
-    if (fly) { if (map.getLevel() > 5) map.setLevel(4); map.panTo(o.pos); }
+    if (fly) { if (map.getLevel() > 5) map.setLevel(4); map.setCenter(o.pos); setTimeout(() => { try { map.panBy(0, Math.round(document.getElementById('umap').clientHeight * 0.24)); } catch (e) {} }, 120);   // 아래 상자들이 보이도록 학교를 위쪽으로 }
     else keepInView(o.pos);
     show(o);
   };
