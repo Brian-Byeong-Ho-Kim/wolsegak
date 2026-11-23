@@ -222,6 +222,8 @@ const seen = new Set();
 for (const u of univs) { const s = slugOf(u); if (seen.has(s)) throw new Error('중복 주소: ' + s); seen.add(s); }
 const pages = [];
 for (const u of univs) pages.push(await univPage(u, univs));
+// 첫 화면 지도의 점 색(학교별 원룸 중간 월세, 거래 15건 이상만)
+await writeFile(new URL('data/univ_m.json', pub), JSON.stringify(Object.fromEntries(pages.filter(p => p.s.n >= 15).map(p => [p.u.name + '|' + p.u.campus, Math.round(p.s.m)]))));
 
 // 목록 페이지
 const bySido = new Map();
