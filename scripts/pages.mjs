@@ -100,7 +100,12 @@ ${extra}
 </head>
 <body>
 <div class="wrap">
-<header><a class="home" href="/"><span class="logo"><svg width="22" height="22" viewBox="0 0 64 64"><path d="M10 32 32 13l22 19v19a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3z" fill="#fff"/><path d="m22 37 7 7 13-14" stroke="#ff6b3d" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>월세각</b><small>이 월세, 각 나오나?</small></span></a></header>`;
+<header><a class="home" href="/"><span class="logo"><svg width="22" height="22" viewBox="0 0 64 64"><path d="M10 32 32 13l22 19v19a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3z" fill="#fff"/><path d="m22 37 7 7 13-14" stroke="#ff6b3d" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><b>월세각</b><small>이 월세, 각 나오나?</small></span></a><nav class="topr"><a class="tb" href="/">🏠 홈</a><a class="tb" id="loginTb" href="/api/auth/kakao">로그인</a></nav></header>
+<script>
+(function(){var a=document.getElementById('loginTb');if(!a)return;
+a.href='/api/auth/kakao?next='+encodeURIComponent(location.pathname);
+fetch('/api/me',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){if(j&&j.user){a.textContent='마이페이지';a.href='/me/'}}).catch(function(){});})();
+</script>`;
 
 const foot = `<footer>
 <div>데이터: 국토교통부 전월세 실거래가 자료(단독/다가구·연립다세대·오피스텔·아파트), 한국대학교육협의회 전국대학및전문대학정보표준데이터 (공공데이터포털). 최근 12개월(${period}), 전용 85㎡ 이하, 갱신 계약 제외. ${esc(index.updated)} 갱신.</div>
