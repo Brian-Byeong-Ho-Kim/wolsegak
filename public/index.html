@@ -192,6 +192,11 @@ body.mapfs{overflow:hidden}
 .kdeal.ok{border-color:#16a34a}.kdeal.no{border-color:#a8a29e;color:#78716c}
 .kpop{background:#fff;border:1.5px solid var(--ink);border-radius:10px;padding:8px 10px;font:500 13px/1.5 "Pretendard Variable",sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);min-width:170px;max-width:260px;transform:translateY(-34px)}
 .kpop b{display:block;margin-bottom:3px}.kpop div{white-space:nowrap}.kpop .x{float:right;cursor:pointer;margin-left:10px}
+.sdot{width:13px;height:13px;border-radius:50%;background:#ff6b3d;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer}
+.sdot:hover{transform:scale(1.35)}
+.spop{background:#fff;border:1.5px solid var(--ink);border-radius:10px;padding:8px 10px;font:500 13px/1.5 "Pretendard Variable",sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);white-space:nowrap;transform:translateY(-26px)}
+.spop b{display:block;font-size:14px}.spop button{margin-top:6px;background:#ff6b3d;color:#fff;border:0;border-radius:8px;padding:6px 10px;font:700 13px/1 inherit;cursor:pointer}
+.spop .x{float:right;cursor:pointer;margin-left:12px}
 .dlab{background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:2px 8px;font:600 12px/1.4 "Pretendard Variable",sans-serif;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.15)}
 .dlab.on{background:var(--ink);color:#fff}
 .kov{cursor:pointer;transform:translateY(-6px)}
@@ -265,7 +270,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
       <button type="button" id="mapFs" aria-label="지도 전체화면">⛶ 크게 보기</button>
       <button type="button" id="mapDeals" aria-pressed="false" aria-label="실거래 핀 보기">📍 실거래 보기</button>
       <div id="dealMsg" class="hide"></div>
-      <p class="hint" id="mapHint">누르면 그 동네로 찾아요. 숫자는 동별 원룸 월세 중간값이에요.</p>
+      <p class="hint" id="mapHint">주황 점은 대학교예요. 눌러서 그 학교 근처 월세를 볼 수 있어요. 지도를 눌러도 그 동네로 찾아요.</p>
     </div>
     <div class="place" id="places"></div>
     <button type="button" class="chip hide" id="favBtn">☆ 관심 지역 저장</button>
@@ -1029,6 +1034,7 @@ function initMap() {
     map.setMaxLevel(14);
     kakao.maps.event.addListener(map, 'click', e => { if (Date.now() - lastOv < 400) return; onMapClick({ lat: e.latLng.getLat(), lng: e.latLng.getLng() }); });
     $('#mapFs').addEventListener('click', () => setMapFs(!$('#mapWrap').classList.contains('fs')));
+    drawSchools();
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#mapWrap').classList.contains('fs')) setMapFs(false); });
     return map;
   }).catch(e => { $('#mapHint').textContent = '지도를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.'; mapP = null; throw e; }));
@@ -1151,6 +1157,38 @@ async function drawDongs(sets, dongs) {
     dongOv.push(ov); dongMk.set(d, ov); b.extend(LL(r.lat, r.lng)); n++;
   }
   fitSelected();
+}
+
+// ===== 첫 화면 지도: 전국 대학교 점 (좌표는 우리 데이터 public/data/univ_geo.json) =====
+let schoolMk = [], schoolPop = null, schoolsDrawn = false;
+async function drawSchools() {
+  if (schoolsDrawn || !map) return;
+  schoolsDrawn = true;
+  try {
+    while (!INDEX) await new Promise(r => setTimeout(r, 200));
+    const geo = await (await fetch(DATA + 'univ_geo.json')).json();
+    for (const u of INDEX.univ) {
+      const c = geo[u.name + '|' + u.campus]; if (!c) continue;
+      const el = document.createElement('div'); el.className = 'sdot'; el.title = u.name;
+      const pos = LL(c[0], c[1]);
+      el.onclick = ev => { ev.stopPropagation(); lastOv = Date.now(); showSchoolPop(u, pos); };
+      schoolMk.push(new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: .5, xAnchor: .5, clickable: true, map }));
+    }
+    kakao.maps.event.addListener(map, 'click', () => { if (Date.now() - lastOv < 400) return; if (schoolPop) { schoolPop.setMap(null); schoolPop = null; } });
+  } catch (e) { schoolsDrawn = false; }
+}
+function showSchoolPop(u, pos) {
+  if (schoolPop) schoolPop.setMap(null);
+  const el = document.createElement('div'); el.className = 'spop';
+  el.innerHTML = `<span class="x" aria-label="닫기">✕</span><b>🎓 ${escH(u.name)}</b><button type="button">이 학교 월세 시세 보기</button>`;
+  el.querySelector('.x').onclick = () => { schoolPop.setMap(null); schoolPop = null; };
+  el.querySelector('button').onclick = () => { schoolPop.setMap(null); schoolPop = null; pickUniv(u); };
+  schoolPop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 12, map });
+  try {
+    const pt = map.getProjection().containerPointFromCoords(pos), h = $('#map').clientHeight, w = $('#map').clientWidth;
+    const dy = pt.y < 110 ? 110 - pt.y : 0, dx = pt.x < 110 ? 110 - pt.x : pt.x > w - 110 ? w - 110 - pt.x : 0;
+    if (dx || dy) map.panBy(dx, dy);
+  } catch (e) {}
 }
 
 // ===== 지도 실거래 핀 (주소 기반) =====
