@@ -1220,6 +1220,13 @@ async function drawDeals() {
   if (gen !== dealGen) return;
   if (!sets.some(Boolean)) { dealMsg('이 지역은 주소가 있는 실거래 데이터가 아직 없어요. 동별 숫자를 참고해 주세요.'); return; }
   const ranges = areaRanges(), onlyNew = $('#onlyNew').checked, B = budget(), jeonse = state.mode === 'jeonse';
+  // 동을 고르지 않았으면, 학교(또는 지도 가운데)에서 가까운 동 몇 곳의 거래만 그린다 (화면 밖 주소를 조회하느라 느려지지 않게)
+  let near = null;
+  if (!state.dongs.size && dongMk.size) {
+    const ref = (univMk && state.univ) ? univMk.getPosition() : map.getCenter();
+    const dd2 = p => { const dx = p.getLng() - ref.getLng(), dy = p.getLat() - ref.getLat(); return dx * dx + dy * dy; };
+    near = new Set([...dongMk].sort((a, b) => dd2(a[1].getPosition()) - dd2(b[1].getPosition())).slice(0, 4).map(([d]) => d));
+  }
   const groups = new Map(); let total = 0;
   for (const s of sets) {
     if (!s) continue;
@@ -1227,6 +1234,7 @@ async function drawDeals() {
       const dong = s.dongs[r[1]];
       if (!state.types.has(r[0]) || !r[9]) continue;
       if (state.dongs.size && !state.dongs.has(dong)) continue;
+      if (near && !near.has(dong)) continue;
       if (jeonse ? r[4] > 0 : r[4] <= 0) continue;
       if (!jeonse && r[3] > 2000) continue;
       if (onlyNew && r[8] === 2) continue;
