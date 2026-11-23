@@ -25,6 +25,19 @@
   const map = new kakao.maps.Map(document.getElementById('umap'), { center: spos, level: 4 });
   new kakao.maps.CustomOverlay({ position: spos, content: '<div style="font-size:26px;line-height:1;transform:translateY(-4px)" title="' + name.replace(/"/g, '') + '">🎓</div>', yAnchor: 1, map });
   const msgEl = document.createElement('div'); msgEl.id = 'udeal'; wrap.appendChild(msgEl);
+  // 월세 / 반전세 / 전세 보기 선택 (전세는 기본 꺼짐)
+  const kinds = new Set(['w', 'b']), pins = [];
+  const kindOf = r => r[4] <= 0 ? 'j' : r[3] > 5000 ? 'b' : 'w';
+  const kb = document.createElement('div'); kb.id = 'dealKinds'; kb.setAttribute('role', 'group'); kb.setAttribute('aria-label', '거래 종류');
+  kb.innerHTML = '<button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button>';
+  wrap.appendChild(kb);
+  const paint = g => { const a = g.deals.filter(r => kinds.has(kindOf(r))), x = a.length ? a : g.deals, d0 = x[0]; g.el.className = 'kdeal' + (d0[4] <= 0 ? ' jn' : ''); g.el.innerHTML = (d0[4] <= 0 ? '전세 ' + eok(d0[3]) : d0[4] + '만') + (x.length > 1 ? ' <small>외 ' + (x.length - 1) + '</small>' : ''); };
+  const applyKinds = () => { for (const p of pins) { paint(p.g); const on = p.g.deals.some(r => kinds.has(kindOf(r))); p.ov.setMap(on ? map : null); if (!on && pop && pop.__g === p.g) { pop.setMap(null); pop = null; } } };
+  kb.addEventListener('click', e => {
+    const bt = e.target.closest('button'); if (!bt) return; const k = bt.dataset.k;
+    if (kinds.has(k)) { if (kinds.size === 1) return; kinds.delete(k); } else kinds.add(k);
+    bt.setAttribute('aria-pressed', kinds.has(k)); applyKinds();
+  });
   const setMsg = t => { msgEl.textContent = t || ''; msgEl.classList.toggle('hide', !t); };
   const dist = (a, b) => { const d = Math.PI / 180, x = (b.lng - a.lng) * d * Math.cos((a.lat + b.lat) / 2 * d), y = (b.lat - a.lat) * d; return 6371 * Math.hypot(x, y); };
   const dd = v => { v = String(v).padStart(6, '0'); return v.slice(0, 2) + '.' + v.slice(2, 4) + '.' + v.slice(4); };
@@ -33,13 +46,14 @@
   const TN = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
   const escH = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let pop = null;
+  const gd = g => { const a = g.deals.filter(r => kinds.has(kindOf(r))); return a.length ? a : g.deals; };
   const showPop = (g, pos) => {
     if (pop) pop.setMap(null);
     const el = document.createElement('div'); el.className = 'kpop';
-    const rows = g.deals.slice(0, 6).map(r => '<div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('');
-    el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.nm || (g.dong + ' ' + g.jb)) + '</b><div style="opacity:.65">' + escH(g.dong + ' ' + g.jb) + ' · ' + TN[g.deals[0][0]] + '</div>' + rows + (g.deals.length > 6 ? '<div style="opacity:.6">외 ' + (g.deals.length - 6) + '건</div>' : '');
+    const rows = gd(g).slice(0, 6).map(r => '<div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('');
+    el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.nm || (g.dong + ' ' + g.jb)) + '</b><div style="opacity:.65">' + escH(g.dong + ' ' + g.jb) + ' · ' + TN[gd(g)[0][0]] + '</div>' + rows + (gd(g).length > 6 ? '<div style="opacity:.6">외 ' + (gd(g).length - 6) + '건</div>' : '');
     el.querySelector('.x').onclick = () => { pop.setMap(null); pop = null; };
-    pop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 30, map });
+    pop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 30, map }); pop.__g = g;
   };
   let lastPin = 0;
   kakao.maps.event.addListener(map, 'click', () => { if (Date.now() - lastPin < 400) return; if (pop) { pop.setMap(null); pop = null; } });
@@ -88,10 +102,9 @@
       const c = (await kFind(d.name + ' ' + g.dong + ' ' + g.jb)) || (g.nm ? await kFind(d.name + ' ' + g.dong + ' ' + g.nm, 1) : null);
       if (!c) continue;
       const pos = LL(c.lat, c.lng), d0 = g.deals[0];
-      const el = document.createElement('div'); el.className = 'kdeal' + (d0[4] <= 0 ? ' jn' : '');
-      el.innerHTML = (d0[4] <= 0 ? '전세 ' + eok(d0[3]) : d0[4] + '만') + (g.deals.length > 1 ? ' <small>외 ' + (g.deals.length - 1) + '</small>' : '');
+      const el = document.createElement('div'); g.el = el; paint(g);
       el.onclick = ev => { ev.stopPropagation(); lastPin = Date.now(); showPop(g, pos); };
-      new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, map }); shown++;
+      const ov = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, map: g.deals.some(r => kinds.has(kindOf(r))) ? map : null }); pins.push({ g, ov }); shown++;
     }
   };
   await Promise.all(Array.from({ length: 6 }, work));
