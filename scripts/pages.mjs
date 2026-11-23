@@ -174,7 +174,7 @@ async function univPage(u, all) {
     ...(faq.length ? [{ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(([qq, a]) => ({ '@type': 'Question', name: qq, acceptedAnswer: { '@type': 'Answer', text: a } })) }] : []),
   ];
   const html = head({ title, desc, path, extra: `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>` }).replace('<div class="wrap">', '<div class="wrap split">') + `
-<div id="umapWrap" data-name="${esc(u.name)}" data-s="${esc(u.sgg)}" data-addr="${esc(u.addr)}"${GEO[u.name + '|' + u.campus] ? ` data-lat="${GEO[u.name + '|' + u.campus][0]}" data-lng="${GEO[u.name + '|' + u.campus][1]}"` : ''}><div id="umap" role="application" aria-label="${esc(u.name)} 주변 실거래 지도"></div><p class="hint" id="umapHint">🎓 학교 주변 최근 3개월 실거래예요. 숫자를 누르면 건물별 거래가 보여요.</p><script src="/u/smap.js?v=${ASSET_V.sj}" defer></script></div>
+<div id="umapWrap" data-name="${esc(u.name)}" data-s="${esc(u.sgg)}" data-addr="${esc(u.addr)}"${GEO[u.name + '|' + u.campus] ? ` data-lat="${GEO[u.name + '|' + u.campus][0]}" data-lng="${GEO[u.name + '|' + u.campus][1]}"` : ''}><div id="umap" role="application" aria-label="${esc(u.name)} 주변 실거래 지도"></div><p class="hint" id="umapHint">🎓 학교 주변 최근 12개월 실거래예요. 숫자를 누르면 건물별 거래가 보여요.</p><script src="/u/smap.js?v=${ASSET_V.sj}" defer></script></div>
 <nav class="crumb"><a href="/">월세각</a> › <a href="/u/">학교별 월세 시세</a> › ${esc(full)}</nav>
 <h1>${esc(full)} 자취방 월세 시세</h1>${aka ? `\n<p class="aka">${esc((u.a || []).join(' · '))}</p>` : ''}
 <p class="lead">${esc(u.addr)} · <b>${esc(s.name)}</b> 실거래 기준 · ${period}</p>

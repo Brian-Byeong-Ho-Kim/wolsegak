@@ -28,6 +28,7 @@
   const setMsg = t => { msgEl.textContent = t || ''; msgEl.classList.toggle('hide', !t); };
   const dist = (a, b) => { const d = Math.PI / 180, x = (b.lng - a.lng) * d * Math.cos((a.lat + b.lat) / 2 * d), y = (b.lat - a.lat) * d; return 6371 * Math.hypot(x, y); };
   const dd = v => { v = String(v).padStart(6, '0'); return v.slice(0, 2) + '.' + v.slice(2, 4) + '.' + v.slice(4); };
+  const eok = m => m >= 10000 ? Math.floor(m / 10000) + '억' + (m % 10000 ? ' ' + (m % 10000).toLocaleString() : '') : m.toLocaleString() + '만';
   const fl = f => f == null ? '-' : f < 0 ? '지하' : f;
   const TN = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
   const escH = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -35,7 +36,7 @@
   const showPop = (g, pos) => {
     if (pop) pop.setMap(null);
     const el = document.createElement('div'); el.className = 'kpop';
-    const rows = g.deals.slice(0, 6).map(r => '<div>' + dd(r[7]) + ' · ' + r[3].toLocaleString() + '/' + r[4] + '만 · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('');
+    const rows = g.deals.slice(0, 6).map(r => '<div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('');
     el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.nm || (g.dong + ' ' + g.jb)) + '</b><div style="opacity:.65">' + escH(g.dong + ' ' + g.jb) + ' · ' + TN[g.deals[0][0]] + '</div>' + rows + (g.deals.length > 6 ? '<div style="opacity:.6">외 ' + (g.deals.length - 6) + '건</div>' : '');
     el.querySelector('.x').onclick = () => { pop.setMap(null); pop = null; };
     pop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 30, map });
@@ -72,14 +73,14 @@
   const ok = new Set(near.map(x => x.i));
   const groups = new Map(); let total = 0;
   for (const r of d.rows) {
-    if (!ok.has(r[1]) || !r[9] || r[4] <= 0 || r[3] > 2000 || r[2] > 33 || r[8] === 2) continue;
+    if (!ok.has(r[1]) || !r[9] || r[2] > 60) continue;
     total++;
     const key = r[1] + '|' + r[9]; let g = groups.get(key);
     if (!g) groups.set(key, g = { dong: d.dongs[r[1]], jb: r[9], nm: r[10] >= 0 ? d.names[r[10]] : '', deals: [] });
     g.deals.push(r);
   }
-  const list = [...groups.values()].sort((a, b) => b.deals[0][7] - a.deals[0][7]).slice(0, 80);
-  if (!list.length) { setMsg('주변에 최근 3개월 소형 월세 실거래(주소 있는 것)가 없어요. 원룸·다가구는 지번이 공개되지 않아 지도에 못 그려요.'); return; }
+  const list = [...groups.values()].sort((a, b) => b.deals[0][7] - a.deals[0][7]).slice(0, 120);
+  if (!list.length) { setMsg('주변에 최근 12개월 실거래(주소 있는 것)가 없어요. 원룸·다가구는 지번이 공개되지 않아 지도에 못 그려요.'); return; }
   let i = 0, shown = 0;
   const work = async () => {
     while (i < list.length) {
@@ -87,12 +88,12 @@
       const c = (await kFind(d.name + ' ' + g.dong + ' ' + g.jb)) || (g.nm ? await kFind(d.name + ' ' + g.dong + ' ' + g.nm, 1) : null);
       if (!c) continue;
       const pos = LL(c.lat, c.lng), d0 = g.deals[0];
-      const el = document.createElement('div'); el.className = 'kdeal';
-      el.innerHTML = d0[4] + '만' + (g.deals.length > 1 ? ' <small>외 ' + (g.deals.length - 1) + '</small>' : '');
+      const el = document.createElement('div'); el.className = 'kdeal' + (d0[4] <= 0 ? ' jn' : '');
+      el.innerHTML = (d0[4] <= 0 ? '전세 ' + eok(d0[3]) : d0[4] + '만') + (g.deals.length > 1 ? ' <small>외 ' + (g.deals.length - 1) + '</small>' : '');
       el.onclick = ev => { ev.stopPropagation(); lastPin = Date.now(); showPop(g, pos); };
       new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, map }); shown++;
     }
   };
   await Promise.all(Array.from({ length: 6 }, work));
-  setMsg(shown ? '최근 3개월 소형(33㎡ 이하) 월세 실거래 ' + total + '건 중 ' + shown + '곳. 숫자는 월세(만원)예요. 눌러서 자세히 보세요.' : '주소를 지도에서 찾지 못했어요.');
+  setMsg(shown ? '최근 12개월 실거래(월세·전세, 전용 60㎡ 이하) ' + total + '건 중 ' + shown + '곳. 숫자는 월세(만원), 점선 \'전세\'는 전세금이에요. 눌러서 자세히 보세요.' : '주소를 지도에서 찾지 못했어요.');
 })();

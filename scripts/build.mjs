@@ -35,7 +35,7 @@ const months = Array.from({ length: MONTHS }, (_, i) => ymOf(i));
 // 전년 비교용: 그 앞 12개월 (arg.prev=0 이면 끔)
 const PREV = arg.prev === '0' ? 0 : 12;
 const prevMonths = Array.from({ length: PREV }, (_, i) => ymOf(MONTHS + i));
-const RECENT = new Set(months.slice(0, 3));
+const RECENT = new Set(months);   // 지도 핀용 지번·건물명은 수집한 전 기간(최근 12개월)
 const rowYm = r => '20' + String(r[7]).padStart(6, '0').slice(0, 4);
 const monthRange = (from, to) => { const out = []; if (!from || !to) return out; let y = +from.slice(0, 4), m = +from.slice(4); while (y * 100 + m <= +to) { out.push(`${y}${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++; } } return out; };
 
