@@ -1520,6 +1520,19 @@ async function drawDeals() {
     const jn = d0[4] <= 0, ok = B ? (jn ? d0[3] <= B.dep : (d0[3] <= B.dep && d0[4] <= B.rent)) : null;
     el.className = 'kdeal' + (jn ? ' jn' : d0[3] > 5000 ? ' bj' : '') + (ok === true ? ' ok' : ok === false ? ' no' : '');
   };
+  for (const [k, v] of [...dealShown]) if (v.dg) { v.ov.setMap(null); dealShown.delete(k); }
+  const dgs = new Map();
+  const sg = await loadSgg(code).catch(() => null); if (gen !== dealGen) return;
+  const nmIdx = new Map(d.dongs.map((n, i) => [n, i]));
+  for (const r0 of (sg ? sg.rows : [])) {
+    if (r0[0] !== 0) continue;
+    const di = nmIdx.get(sg.dongs[r0[1]]); if (di === undefined || !okDong.has(di)) continue;
+    const r = r0.slice(); r[1] = di;
+    if (r[2] > 60 || !pinTypes.has(catOf(r)) || !dealKinds.has(kindOf(r))) continue;
+    let g = dgs.get(di); if (!g) dgs.set(di, g = { dong: d.dongs[di], c: { 0: [], 4: [] } });
+    g.c[catOf(r)].push(r);
+  }
+  let dgCount = 0;
   // 원룸·투룸(단독·다가구)은 지번이 없어 건물을 구분할 수 없다 → 동네·종류별로 한 묶음 핀으로 보여 준다
   const proj = map.getProjection();
   for (const [i, g] of dgs) {
