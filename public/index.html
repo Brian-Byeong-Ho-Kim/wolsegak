@@ -1005,7 +1005,7 @@ function showMap() {
   if (!window.L) return;
   syncMapVis();
   if (map) { setTimeout(() => map.invalidateSize(), 50); return; }
-  map = L.map('map', { scrollWheelZoom: false }).setView([36.4, 127.8], 7);
+  map = L.map('map', { scrollWheelZoom: true }).setView([36.4, 127.8], 7);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap' }).addTo(map);
   dongLayer = L.layerGroup().addTo(map);
   map.on('click', onMapClick);
@@ -1017,7 +1017,7 @@ function setMapFs(on) {
   document.body.classList.toggle('mapfs', on);
   $('#mapFs').textContent = on ? '✕ 닫기' : '⛶ 크게 보기';
   $('#mapFs').setAttribute('aria-label', on ? '전체화면 닫기' : '지도 전체화면');
-  if (map) { on ? map.scrollWheelZoom.enable() : map.scrollWheelZoom.disable(); setTimeout(() => map.invalidateSize(), 60); }
+  if (map) setTimeout(() => map.invalidateSize(), 60);
   if (!on) $('#mapWrap').scrollIntoView({ block: 'nearest' });
 }
 const SIDO_ALIAS = { 광주광역시: '전남광주통합특별시', 전라남도: '전남광주통합특별시' };
