@@ -311,7 +311,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
       <button type="button" id="mapFs" aria-label="지도 전체화면">⛶ 크게 보기</button>
       <button type="button" id="mapDeals" aria-pressed="true" aria-label="실거래 핀 보기">📍 실거래 끄기</button>
       <button type="button" id="mapLoc" aria-label="내 위치 찾기">📍 내 위치</button>
-      <div id="dealKinds" role="group" aria-label="거래 종류"><button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="true" title="월세 없는 전세">전세</button></div>
+      <div id="dealKinds" role="group" aria-label="거래 종류"><button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button></div>
       <div id="dealMsg" class="hide"></div>
       <div class="mlegend" aria-label="학교 점 색 설명"><span><i style="background:#16a34a"></i>35만 미만</span><span><i style="background:#2563eb"></i>35~45만</span><span><i style="background:#d97706"></i>45~55만</span><span><i style="background:#dc2626"></i>55만 이상</span><span><i style="background:#78716c"></i>거래 적음</span></div>
       <p class="hint" id="mapHint">점은 대학교예요(색 = 원룸 중간 월세). 눌러서 그 학교 근처 월세를 볼 수 있어요.</p>
@@ -1293,7 +1293,7 @@ $('#mapLoc').addEventListener('click', async () => {
 
 // ===== 지도 실거래 핀 (주소 기반) =====
 // 카카오 좌표는 저장·캐시하지 않고 화면에 그릴 때만 실시간 조회한다 (카카오 정책).
-const dealKinds = new Set(['w', 'b', 'j']);
+const dealKinds = new Set(['w', 'b']);   // 전세는 기본 꺼짐 (누르면 나옴)
 const kindOf = r => r[4] <= 0 ? 'j' : r[3] > 5000 ? 'b' : 'w';
 let dealOn = true, dealOv = [], dealGen = 0, dealPop = null;
 const addrCache = new Map();
