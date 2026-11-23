@@ -140,3 +140,7 @@ body.mapfs{overflow:hidden}
   #umapWrap.sm:not(.fs) #dealMsg{top:100px;max-width:80%}
   #umapWrap.sm.fs #dealKinds{top:12px}#umapWrap.sm.fs #dealTypes{top:56px}#umapWrap.sm.fs #dealMsg{top:100px}
 }
+
+.upop .ufav{margin-top:6px;border:1.5px solid #1f1a17;background:#fff;color:#1f1a17;border-radius:8px;padding:5px 10px;font:700 13px/1 inherit;cursor:pointer}
+.upop .ufav[aria-pressed=true]{background:#1f1a17;color:#fff}
+.upop .ufm{font-size:12px;color:#c2410c}

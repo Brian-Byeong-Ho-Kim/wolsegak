@@ -223,6 +223,8 @@ body.mapfs{overflow:hidden}
 .spop{background:#fff;border:1.5px solid var(--ink);border-radius:10px;padding:8px 10px;font:500 13px/1.5 "Pretendard Variable",sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);white-space:nowrap;transform:translateY(-26px)}
 .spop b{display:block;font-size:14px}.spop button{margin-top:6px;background:#ff6b3d;color:#fff;border:0;border-radius:8px;padding:6px 10px;font:700 13px/1 inherit;cursor:pointer}
 .spop .x{float:right;cursor:pointer;margin-left:12px}
+.spop button.fv{display:block;background:#fff;color:var(--ink);border:1.5px solid var(--ink)}
+.spop button.fv[aria-pressed=true]{background:var(--ink);color:#fff}
 .dlab{background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:2px 8px;font:600 12px/1.4 "Pretendard Variable",sans-serif;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.15)}
 .dlab.on{background:var(--ink);color:#fff}
 .kov{cursor:pointer;transform:translateY(-6px)}
@@ -1272,9 +1274,13 @@ function showSchoolPop(u, pos) {
   if (schoolPop) schoolPop.setMap(null);
   const el = document.createElement('div'); el.className = 'spop';
   const mm = schoolMed[u.name + '|' + u.campus];
-  el.innerHTML = `<span class="x" aria-label="닫기">✕</span><b>🎓 ${escH(u.name)}</b>${mm ? `<div style="opacity:.7">원룸 중간 월세 ${mm}만원</div>` : ''}<button type="button">이 학교 월세 시세 보기</button>`;
+  el.innerHTML = `<span class="x" aria-label="닫기">✕</span><b>🎓 ${escH(u.name)}</b>${mm ? `<div style="opacity:.7">원룸 중간 월세 ${mm}만원</div>` : ''}<button type="button" class="go">이 학교 월세 시세 보기</button><button type="button" class="fv"></button>`;
   el.querySelector('.x').onclick = () => { schoolPop.setMap(null); schoolPop = null; };
-  el.querySelector('button').onclick = () => { schoolPop.setMap(null); schoolPop = null; pickUniv(u); };
+  el.querySelector('.go').onclick = () => { schoolPop.setMap(null); schoolPop = null; pickUniv(u); };
+  const fv = el.querySelector('.fv'), schoolFav = () => ({ places: [u.sgg], dongs: [], univ: u.name, label: `${u.name.replace(/대학교/, '대')} · ${shortName(u.sgg)}` });
+  const paintFv = () => { const h = favs.some(f => favKey(f) === favKey(schoolFav())); fv.textContent = h ? '★ 관심 지역에 저장됨' : '☆ 관심 지역에 저장'; fv.setAttribute('aria-pressed', h); };
+  paintFv();
+  fv.onclick = () => { const f = schoolFav(), k = favKey(f); favs = favs.some(x => favKey(x) === k) ? favs.filter(x => favKey(x) !== k) : [f, ...favs].slice(0, 20); saveFavs(); paintFv(); };
   schoolPop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 12, map });
   try {
     const pt = map.getProjection().containerPointFromCoords(pos), h = $('#map').clientHeight, w = $('#map').clientWidth;

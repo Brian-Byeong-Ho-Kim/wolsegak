@@ -37,8 +37,40 @@
   const bov = new kakao.maps.CustomOverlay({ content: bubble, yAnchor: 1.9, clickable: true, zIndex: 20 });
   let sel = null, lastDot = 0;
   const addrOf = k => links.find(a => a.dataset.k === k);
+  // 학교를 관심 지역으로 저장/해제 (로그인하면 계정, 아니면 이 기기에 저장)
+  let IDX = null, meUser;
+  const favKey = x => (x.places || []).join(',') + '|' + (x.dongs || []).join(',');
+  const locFav = () => { try { return JSON.parse(localStorage.getItem('wsg-fav') || '[]'); } catch (e) { return []; } };
+  async function favObj(o) {
+    const [name] = o.a.dataset.k.split('|'), code = o.a.dataset.s;
+    if (!IDX) { try { IDX = await (await fetch('/data/index.json')).json(); } catch (e) { IDX = { sgg: [] }; } }
+    const s = IDX.sgg.find(x => x.code === code), [sd, ...rest] = (s ? s.name : '').split(' ');
+    const sh = { 서울특별시: '서울', 부산광역시: '부산', 대구광역시: '대구', 인천광역시: '인천', 대전광역시: '대전', 울산광역시: '울산', 세종특별자치시: '세종', 경기도: '경기', 충청북도: '충북', 충청남도: '충남', 경상북도: '경북', 경상남도: '경남', 제주특별자치도: '제주', 강원특별자치도: '강원', 전북특별자치도: '전북', 전남광주통합특별시: '전남광주' };
+    return { places: [code], dongs: [], univ: name, label: name.replace(/대학교/, '대') + (s ? ' · ' + (sh[sd] || sd) + ' ' + rest.join(' ') : '') };
+  }
+  async function favInit(o, btn, msg) {
+    const f = await favObj(o), k = favKey(f);
+    const paint = a => { const h = a.some(x => favKey(x) === k); btn.textContent = h ? '★ 관심 지역에 저장됨' : '☆ 관심 지역에 저장'; btn.setAttribute('aria-pressed', h); };
+    paint(locFav());
+    if (meUser === undefined) { try { meUser = (await (await fetch('/api/me', { cache: 'no-store' })).json()).user || null; } catch (e) { meUser = null; } }
+    if (meUser) { try { const r = await fetch('/api/saved', { cache: 'no-store' }); if (r.ok) paint((await r.json()).data.fav || []); } catch (e) {} }
+    btn.onclick = async () => {
+      btn.disabled = true; msg.textContent = '';
+      const upd = a => a.some(x => favKey(x) === k) ? a.filter(x => favKey(x) !== k) : [f, ...a].slice(0, 20);
+      try {
+        if (!meUser) { const a = upd(locFav()); localStorage.setItem('wsg-fav', JSON.stringify(a)); paint(a); msg.innerHTML = ' <a href="/?login=1">로그인</a>하면 계정에 저장돼요.'; }
+        else {
+          const cur = (await (await fetch('/api/saved', { cache: 'no-store' })).json()).data || {}, a = upd(cur.fav || []); cur.fav = a;
+          const w = await fetch('/api/saved', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data: cur }) });
+          if (!w.ok) throw 0; try { localStorage.setItem('wsg-fav', JSON.stringify(a)); } catch (e) {} paint(a);
+        }
+      } catch (e) { msg.textContent = ' 저장하지 못했어요.'; }
+      btn.disabled = false;
+    };
+  }
   const show = o => {
-    bubble.innerHTML = `<div class="upop"><b>${o.name}</b><small>${o.m ? '원룸 중간 월세 ' + o.m + '만원' : '거래가 적어 시군구 기준으로 봐요'}</small><br><a href="${o.a.getAttribute('href')}" onclick="location.href=this.href;return false">더 자세히 시세 보기 →</a></div>`;
+    bubble.innerHTML = `<div class="upop"><b>${o.name}</b><small>${o.m ? '원룸 중간 월세 ' + o.m + '만원' : '거래가 적어 시군구 기준으로 봐요'}</small><br><a href="${o.a.getAttribute('href')}" onclick="location.href=this.href;return false">더 자세히 시세 보기 →</a><br><button type="button" class="ufav">☆ 관심 지역에 저장</button><span class="ufm"></span></div>`;
+    favInit(o, bubble.querySelector('.ufav'), bubble.querySelector('.ufm'));
     bov.setPosition(o.pos); bov.setMap(map);
   };
   // 말풍선이 지도 밖으로 잘려 링크를 못 누르는 일이 없도록, 점이 가장자리에 있으면 지도를 살짝 밀어 준다
