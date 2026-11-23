@@ -24,11 +24,22 @@
     bubble.innerHTML = `<div class="upop"><b>${o.name}</b><small>${o.m ? '원룸 중간 월세 ' + o.m + '만원' : '거래가 적어 시군구 기준으로 봐요'}</small><br><a href="${o.a.getAttribute('href')}" onclick="location.href=this.href;return false">시세 보기 →</a></div>`;
     bov.setPosition(o.pos); bov.setMap(map);
   };
+  // 말풍선이 지도 밖으로 잘려 링크를 못 누르는 일이 없도록, 점이 가장자리에 있으면 지도를 살짝 밀어 준다
+  const keepInView = pos => {
+    try {
+      const pt = map.getProjection().containerPointFromCoords(pos), box = document.getElementById('umap');
+      const w = box.clientWidth, h = box.clientHeight;
+      const dy = pt.y < 130 ? 130 - pt.y : pt.y > h - 30 ? h - 30 - pt.y : 0;
+      const dx = pt.x < 120 ? 120 - pt.x : pt.x > w - 120 ? w - 120 - pt.x : 0;
+      if (dx || dy) map.panBy(dx, dy);
+    } catch (e) {}
+  };
   const select = (k, fly) => {
     const o = byKey.get(k); if (!o) return;
     if (sel) { sel.a.classList.remove('sel'); sel.el.classList.remove('on'); }
     sel = o; o.a.classList.add('sel'); o.el.classList.add('on');
     if (fly) { if (map.getLevel() > 5) map.setLevel(4); map.panTo(o.pos); }
+    else keepInView(o.pos);
     show(o);
   };
   for (const a of links) {
