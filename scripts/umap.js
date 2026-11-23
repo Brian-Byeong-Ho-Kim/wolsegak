@@ -15,7 +15,24 @@
   const LL = (a, b) => new kakao.maps.LatLng(a, b);
   const map = new kakao.maps.Map(document.getElementById('umap'), { center: LL(36.4, 127.8), level: 13 });
   const col = m => m == null ? '#78716c' : m < 35 ? '#16a34a' : m < 45 ? '#2563eb' : m < 55 ? '#d97706' : '#dc2626';
-  const byKey = new Map();
+  const byKey = new Map(), labels = [];
+  // 확대하면, 서로 안 겹치는 학교부터 이름을 보여 준다
+  const layout = () => {
+    const proj = map.getProjection(), box = document.getElementById('umap'), W = box.clientWidth, H = box.clientHeight, lv = map.getLevel();
+    const taken = [], vis = [];
+    for (const o of labels) {
+      const p = proj.containerPointFromCoords(o.pos);
+      if (p.x < -20 || p.y < -10 || p.x > W + 20 || p.y > H + 10) { o.sl.classList.remove('show'); continue; }
+      vis.push({ o, x: p.x, y: p.y });
+    }
+    vis.sort((a, b) => a.o.pr - b.o.pr);
+    for (const { o, x, y } of vis) {
+      const b = [x - 8, y - 9, x + 10 + o.w, y + 9];
+      const hit = lv > 11 || taken.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
+      o.sl.classList.toggle('show', !hit);
+      taken.push(hit ? [x - 8, y - 8, x + 8, y + 8] : b);
+    }
+  };
   const bubble = document.createElement('div'); bubble.className = 'ubub';
   const bov = new kakao.maps.CustomOverlay({ content: bubble, yAnchor: 1.9, clickable: true, zIndex: 20 });
   let sel = null, lastDot = 0;
@@ -49,6 +66,8 @@
     const el = document.createElement('div'); el.className = 'ud'; el.style.background = col(m); el.title = name;
     el.onclick = e => { e.stopPropagation(); lastDot = Date.now(); select(k, false); openSchool(k); };
     const pos = LL(c[0], c[1]);
+    const sl = document.createElement('span'); sl.className = 'sl'; const short = name.replace(/\(.*\)/, ''); sl.textContent = short; el.appendChild(sl);
+    labels.push({ pos, sl, w: short.length * 12.5 + 8, pr: /대학교$/.test(short) ? 0 : 1 });
     new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: .5, xAnchor: .5, clickable: true, map });
     byKey.set(k, { a, el, pos, m, name });
     // 목록: 누르면 그 학교 페이지로 이동, PC에서는 마우스를 올리면 지도가 그 학교로 이동
@@ -135,6 +154,7 @@
     if (vis.length === 1) select(vis[0].dataset.k, true);
     else if (vis.length > 1 && vis.length < 12) { const b = new kakao.maps.LatLngBounds(); vis.forEach(a => b.extend(byKey.get(a.dataset.k).pos)); map.setBounds(b, 50, 50, 50, 50); }
   });
+  kakao.maps.event.addListener(map, 'idle', layout); layout();
   matchMedia('(min-width:1024px)').addEventListener('change', () => setTimeout(() => map.relayout(), 80));
   setTimeout(() => map.relayout(), 100);
 })();
