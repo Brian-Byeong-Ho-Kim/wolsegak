@@ -203,6 +203,7 @@ ${same.length ? `<section class="card"><h2>🎓 ${esc(place)}의 다른 학교</
 await rm(new URL('u/', pub), { recursive: true, force: true });
 await mkdir(new URL('u/', pub), { recursive: true });
 await writeFile(new URL('u/u.css', pub), await readFile(new URL('scripts/u.css', root)));
+await writeFile(new URL('u/map.js', pub), await readFile(new URL('scripts/umap.js', root)));
 const univs = [...index.univ].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 const seen = new Set();
 for (const u of univs) { const s = slugOf(u); if (seen.has(s)) throw new Error('중복 주소: ' + s); seen.add(s); }
@@ -223,12 +224,16 @@ const listHtml = head({
 <h1>전국 대학가 자취방 월세 시세</h1>
 <p class="lead">학교를 고르면 그 학교가 있는 시군구의 원룸 실거래 시세를 볼 수 있어요. ${period} 국토교통부 실거래가 기준.</p>
 <input id="f" class="find" placeholder="학교 이름 검색 (예: 성균관대)" autocomplete="off">
+<div id="umapWrap"><div id="umap" role="application" aria-label="전국 대학 지도"></div>
+<div class="legend ulegend"><span><i style="background:#16a34a"></i>35만 미만</span><span><i style="background:#2563eb"></i>35~45만</span><span><i style="background:#d97706"></i>45~55만</span><span><i style="background:#dc2626"></i>55만 이상</span><span><i style="background:#78716c"></i>거래 적음</span></div>
+<p class="hint" id="umapHint">지도에서 학교를 누르거나, 아래 목록에서 학교를 고르면 지도에 표시돼요. 동그라미 색은 원룸 중간 월세예요.</p></div>
 <div class="two">
 <section class="card"><h2>💸 원룸 월세 비싼 곳 TOP 10</h2><table>${top.map((s, i) => `<tr><td>${i + 1}</td><td>${esc(s.name)}</td><td><b>${fmt(s.m1)}만원</b></td></tr>`).join('')}</table></section>
 <section class="card"><h2>🪙 원룸 월세 싼 곳 TOP 10</h2><table>${low.map((s, i) => `<tr><td>${i + 1}</td><td>${esc(s.name)}</td><td><b>${fmt(s.m1)}만원</b></td></tr>`).join('')}</table></section>
 </div>
 <p class="hint">원룸형(전용 23㎡ 이하, 아파트 제외), 보증금 2천만원 이하 신규 월세 계약의 중간 월세. 거래 30건 이상인 ${ranked.length}개 시군구 비교.</p>
-${sidoOrder.map(k => `<section class="card sido"><h2>${esc(k)} <small>${bySido.get(k).length}곳</small></h2><div class="links">${bySido.get(k).map(p => `<a href="${p.path}" data-n="${esc([p.full, ...(p.u.a || [])].join(' '))}">${esc(p.full)}${p.s.n >= 15 ? ` <small>${fmt(p.s.m)}만</small>` : ''}</a>`).join('')}</div></section>`).join('')}
+${sidoOrder.map(k => `<section class="card sido"><h2>${esc(k)} <small>${bySido.get(k).length}곳</small></h2><div class="links">${bySido.get(k).map(p => `<a href="${p.path}" data-n="${esc([p.full, ...(p.u.a || [])].join(' '))}" data-k="${esc(p.u.name + '|' + p.u.campus)}" data-addr="${esc(p.u.addr)}"${p.s.n >= 15 ? ` data-m="${Math.round(p.s.m)}"` : ''}>${esc(p.full)}${p.s.n >= 15 ? ` <small>${fmt(p.s.m)}만</small>` : ''}</a>`).join('')}</div></section>`).join('')}
+<script src="/u/map.js" defer></script>
 <script>
 document.getElementById('f').addEventListener('input', e => {
   const nz = t => t.replace(/\\s/g, '').replace(/대학교|대학/g, '대').toLowerCase();

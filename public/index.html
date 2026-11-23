@@ -19,8 +19,6 @@
 <script src="/visit.js" defer></script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23ff6b3d'/><path d='M14 34 32 18l18 16v14a2 2 0 0 1-2 2H16a2 2 0 0 1-2-2z' fill='white'/><path d='m24 38 6 6 11-12' stroke='%23ff6b3d' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <style>
 :root{
   --bg:#fff8f3; --card:#ffffff; --ink:#1f1a17; --sub:#6d635c; --line:#efe3da; --soft:#fff1e8;
@@ -186,8 +184,8 @@ body.mapfs{overflow:hidden}
 }
 .dlab{background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:2px 8px;font:600 12px/1.4 "Pretendard Variable",sans-serif;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.15)}
 .dlab.on{background:var(--ink);color:#fff}
-.leaflet-tooltip.dtip{background:transparent;border:0;box-shadow:none;padding:0}
-.leaflet-tooltip.dtip::before{display:none}
+.kov{cursor:pointer;transform:translateY(-6px)}
+.kuniv{font-size:26px;line-height:1;transform:translateY(-4px)}
 .qk{margin-top:8px;gap:6px}.qk .chip{padding:5px 10px;font-size:13px}
 tr.good td:first-child{font-weight:700}
 h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
@@ -441,7 +439,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
   <footer>
     <div id="srcLine">데이터: 국토교통부 전월세 실거래가 자료(단독/다가구·연립다세대·오피스텔·아파트), 한국대학교육협의회 전국대학및전문대학정보표준데이터 (공공데이터포털)</div>
     <div>전용 85㎡ 이하 계약만 모았어요. 법정 전환율 상한은 한국은행 기준금리 <span id="baseRate"></span>% + 2%p 기준.</div>
-    <div>지도 © OpenStreetMap 기여자, 위치 검색 Nominatim.</div>
+    <div>지도·위치 검색 © Kakao.</div>
     <div>월세각은 공공데이터로 만든 참고 서비스이며, 법률·금융 자문이 아닙니다.</div>
     <div style="margin-top:10px" class="hide" id="legalLinks"><a href="/terms/">이용약관</a> · <a href="/privacy/"><b>개인정보처리방침</b></a></div>
     <div style="margin-top:6px;font-weight:600;color:var(--ink)">© 2026 이티컴퍼니</div>
@@ -527,7 +525,7 @@ $$('[data-go]').forEach(b => b.onclick = () => {
   else if (isWide()) { showMap(); setMapFs(true); }
   else { $$('[data-tab=map]')[0].click(); $('#mapWrap').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
 });
-matchMedia('(min-width:1024px)').addEventListener('change', () => { syncMapVis(); if (map) setTimeout(() => map.invalidateSize(), 80); });
+matchMedia('(min-width:1024px)').addEventListener('change', () => { syncMapVis(); if (map) setTimeout(() => map.relayout(), 80); });
 // 크기: "6평", "19.8", "19.8㎡" 모두 ㎡로
 function areaVal() {
   const t = ($('#myArea').value || '').replace(/,/g, '').trim();
@@ -974,50 +972,73 @@ function deals(sel, wolse) {
     (list.length ? '' : '<tr><td colspan="7">해당 조건의 거래가 없어요.</td></tr>');
 }
 
-// ===== 지도 (OpenStreetMap + Nominatim, 키 없음) =====
-let map, clickMk, univMk, dongLayer, dongMk = new Map(), geoGen = 0;
-const geoQ = []; let geoBusy = false;
-function nominatim(path, gen) {
-  const url = 'https://nominatim.openstreetmap.org/' + path + (path.includes('?') ? '&' : '?') + 'format=jsonv2&accept-language=ko&countrycodes=kr';
-  const k = 'wsg:' + path;
-  try { const c = localStorage.getItem(k); if (c) return Promise.resolve(JSON.parse(c)); } catch {}
-  return new Promise(res => { geoQ.push({ url, k, res, gen }); pump(); });
-}
-async function pump() {  // Nominatim 이용 정책: 초당 1회
-  if (geoBusy) return; geoBusy = true;
-  while (geoQ.length) {
-    const j = geoQ.shift();
-    if (j.gen != null && j.gen !== geoGen) { j.res(null); continue; }
-    try { const d = await (await fetch(j.url)).json(); try { localStorage.setItem(j.k, JSON.stringify(d)); } catch {} j.res(d); }
-    catch { j.res(null); }
-    await new Promise(r => setTimeout(r, 1100));
-  }
-  geoBusy = false;
-}
+// ===== 지도 (카카오맵) =====
+const KAKAO_JS_KEY = '6c67906fb926c31e6e09524a74d819c6';
+let map, mapP, clickMk, univMk, dongOv = [], dongMk = new Map(), geoGen = 0, kGeo, kPlaces;
 const isWide = () => matchMedia('(min-width:1024px)').matches;
+function loadKakao() {
+  return new Promise((res, rej) => {
+    if (window.kakao && kakao.maps && kakao.maps.Map) return res();
+    const sc = document.createElement('script');
+    sc.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + KAKAO_JS_KEY + '&autoload=false&libraries=services';
+    sc.onload = () => kakao.maps.load(res);
+    sc.onerror = () => rej(new Error('kakao sdk'));
+    document.head.appendChild(sc);
+  });
+}
+const LL = (lat, lng) => new kakao.maps.LatLng(lat, lng);
+// 주소/장소 → {lat,lng} (없으면 null)
+function kFind(q, kind) {
+  return new Promise(res => {
+    try {
+      const done = (r, st) => res(st === kakao.maps.services.Status.OK && r && r[0] ? { lat: +r[0].y, lng: +r[0].x } : null);
+      if (kind === 'kw') kPlaces.keywordSearch(q, done); else kGeo.addressSearch(q, done);
+    } catch (e) { res(null); }
+  });
+}
+// 좌표 → 행정구역 이름 조각들
+function kRegion(lat, lng) {
+  return new Promise(res => {
+    try {
+      kGeo.coord2RegionCode(lng, lat, (r, st) => {
+        if (st !== kakao.maps.services.Status.OK || !r || !r.length) return res(null);
+        const parts = [];
+        for (const x of r) for (const k of ['region_1depth_name', 'region_2depth_name', 'region_3depth_name']) (x[k] || '').split(/\s+/).filter(Boolean).forEach(t => parts.push(SIDO_LONG[t] || t));
+        res(parts);
+      });
+    } catch (e) { res(null); }
+  });
+}
+function initMap() {
+  return mapP || (mapP = loadKakao().then(() => {
+    kGeo = new kakao.maps.services.Geocoder(); kPlaces = new kakao.maps.services.Places();
+    map = new kakao.maps.Map($('#map'), { center: LL(36.4, 127.8), level: 13 });
+    map.setMaxLevel(14);
+    kakao.maps.event.addListener(map, 'click', e => onMapClick({ lat: e.latLng.getLat(), lng: e.latLng.getLng() }));
+    $('#mapFs').addEventListener('click', () => setMapFs(!$('#mapWrap').classList.contains('fs')));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#mapWrap').classList.contains('fs')) setMapFs(false); });
+    return map;
+  }).catch(e => { $('#mapHint').textContent = '지도를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.'; mapP = null; throw e; }));
+}
 function wantMap() { return isWide() || ($$('[data-tab=map]')[0].getAttribute('aria-selected') === 'true') || (state.view === 'budget' && state.places.length > 0); }
+function fitMap() {
+  if (!map) return;
+  map.relayout();
+  if (univMk && state.univ) { map.setCenter(univMk.getPosition()); map.setLevel(4); }
+  else if (dongOv.length) { const b = new kakao.maps.LatLngBounds(); dongOv.forEach(o => b.extend(o.getPosition())); map.setBounds(b, 40, 40, 40, 40); }
+}
 function syncMapVis() {
   const on = wantMap(), was = !$('#mapWrap').classList.contains('hide');
   $('#mapWrap').classList.toggle('hide', !on);
-  if (on && !was) { if (!map) showMap(); setTimeout(() => { if (!map) return; map.invalidateSize(); if (univMk && state.univ) map.setView(univMk.getLatLng(), 14); else if (dongLayer && dongLayer.getLayers().length) { try { map.fitBounds(L.featureGroup(dongLayer.getLayers()).getBounds(), { padding: [30, 30], maxZoom: 15 }); } catch (e) {} } }, 60); }
+  if (on && !was) initMap().then(() => setTimeout(fitMap, 60)).catch(() => {});
 }
-function showMap() {
-  if (!window.L) return;
-  syncMapVis();
-  if (map) { setTimeout(() => map.invalidateSize(), 50); return; }
-  map = L.map('map', { scrollWheelZoom: true }).setView([36.4, 127.8], 7);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap' }).addTo(map);
-  dongLayer = L.layerGroup().addTo(map);
-  map.on('click', onMapClick);
-  $('#mapFs').addEventListener('click', () => setMapFs(!$('#mapWrap').classList.contains('fs')));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#mapWrap').classList.contains('fs')) setMapFs(false); });
-}
+function showMap() { syncMapVis(); return initMap().then(() => setTimeout(() => map.relayout(), 50)).catch(() => {}); }
 function setMapFs(on) {
   $('#mapWrap').classList.toggle('fs', on);
   document.body.classList.toggle('mapfs', on);
   $('#mapFs').textContent = on ? '✕ 닫기' : '⛶ 크게 보기';
   $('#mapFs').setAttribute('aria-label', on ? '전체화면 닫기' : '지도 전체화면');
-  if (map) setTimeout(() => map.invalidateSize(), 60);
+  if (map) setTimeout(() => map.relayout(), 60);
   if (!on) $('#mapWrap').scrollIntoView({ block: 'nearest' });
 }
 const SIDO_ALIAS = { 광주광역시: '전남광주통합특별시', 전라남도: '전남광주통합특별시' };
@@ -1041,11 +1062,10 @@ function dongIn(parts, dongs) {
 }
 async function onMapClick(e) {
   if (!INDEX) return;
-  if (clickMk) clickMk.remove();
-  clickMk = L.marker(e.latlng).addTo(map);
+  if (clickMk) clickMk.setMap(null);
+  clickMk = new kakao.maps.Marker({ position: LL(e.lat, e.lng), map });
   $('#mapHint').textContent = '어느 동네인지 찾는 중…';
-  const r = await nominatim(`reverse?lat=${e.latlng.lat.toFixed(5)}&lon=${e.latlng.lng.toFixed(5)}&zoom=16`);
-  const parts = (r && r.display_name || '').split(',').map(x => x.trim());
+  const parts = (await kRegion(e.lat, e.lng)) || [];
   const code = matchSgg(parts);
   if (!code) { $('#mapHint').textContent = '이 위치의 시·군·구를 찾지 못했어요. 조금 옆을 눌러 보세요.'; return; }
   state.univ = null; $('#uq').value = '';
@@ -1055,15 +1075,16 @@ async function onMapClick(e) {
   $('#mapHint').textContent = `${shortName(code)}${dong ? ' ' + dong : ''}을(를) 골랐어요. 숫자 동그라미를 눌러 동을 더하거나 뺄 수 있어요.`;
 }
 async function markUniv(u) {
-  showMap();
+  try { await showMap(); } catch { return; }
+  if (!map) return;
   const gen = ++geoGen;
-  let r = await nominatim(`search?q=${encodeURIComponent(u.addr.replace(/\s*\(.*\)$/, ''))}&limit=1`);
-  if (!(r && r.length)) r = await nominatim(`search?q=${encodeURIComponent(u.name.replace(/\(.*\)/, ''))}&limit=1`);
+  let r = await kFind(u.addr.replace(/\s*\(.*\)$/, ''));
+  if (!r) r = await kFind(u.name.replace(/\(.*\)/, ''), 'kw');
   if (gen !== geoGen && gen !== geoGen - 1) return;
-  if (r && r.length) {
-    if (univMk) univMk.remove();
-    univMk = L.marker([+r[0].lat, +r[0].lon], { icon: L.divIcon({ className: '', html: '<div style="font-size:26px">🎓</div>', iconSize: [28, 28], iconAnchor: [14, 14] }) }).addTo(map).bindTooltip(u.name);
-    map.setView([+r[0].lat, +r[0].lon], 14);
+  if (r) {
+    if (univMk) univMk.setMap(null);
+    univMk = new kakao.maps.CustomOverlay({ position: LL(r.lat, r.lng), content: `<div class="kuniv" title="${u.name}">🎓</div>`, yAnchor: 1, map });
+    map.setCenter(LL(r.lat, r.lng)); map.setLevel(4);
   }
 }
 let dongSets = [];
@@ -1088,30 +1109,28 @@ function labelHtml(d) {
   const m = dongMedian(d);
   return `<div class="dlab ${state.dongs.has(d) ? 'on' : ''}">${d.split(' ').pop()} ${m == null ? '-' : fmt(m) + '만'}</div>`;
 }
-function refreshDongLabels() { for (const [d, mk] of dongMk) mk.setTooltipContent(labelHtml(d)); }
+function refreshDongLabels() { for (const [d, o] of dongMk) o.getContent().innerHTML = labelHtml(d); }
 async function drawDongs(sets, dongs) {
-  if (!map) return;
-  dongSets = sets; dongLayer.clearLayers(); dongMk.clear();
+  try { await initMap(); } catch { return; }
+  dongSets = sets; dongOv.forEach(o => o.setMap(null)); dongOv = []; dongMk.clear();
   const gen = ++geoGen, names = new Map();
   for (const s of sets) for (const d of s.dongs) if (!names.has(d)) names.set(d, s.name);
-  const pts = [];
   if (!univMk || !state.univ) {
-    const c = await nominatim(`search?q=${encodeURIComponent(sets[0].name)}&limit=1`, gen);
+    const c = await kFind(sets[0].name);
     if (gen !== geoGen) return;
-    if (c && c.length) map.setView([+c[0].lat, +c[0].lon], 13);
+    if (c) { map.setCenter(LL(c.lat, c.lng)); map.setLevel(6); }
   }
-  for (const d of dongs) {
-    const r = await nominatim(`search?q=${encodeURIComponent(names.get(d) + ' ' + d)}&limit=1`, gen);
-    if (gen !== geoGen) return;
-    if (!(r && r.length)) continue;
-    const ll = [+r[0].lat, +r[0].lon];
-    const mk = L.circleMarker(ll, { radius: 6, color: '#ff6b3d', fillOpacity: .8 })
-      .bindTooltip(labelHtml(d), { permanent: true, direction: 'top', className: 'dtip', interactive: true })
-      .on('click', () => toggleDong(d)).addTo(dongLayer);
-    dongMk.set(d, mk); pts.push(ll);
-    if (pts.length === 4 && !state.univ) map.fitBounds(pts, { padding: [30, 30], maxZoom: 15 });
+  const found = await Promise.all(dongs.map(async d => ({ d, r: (await kFind(names.get(d) + ' ' + d)) || (await kFind(names.get(d) + ' ' + d, 'kw')) })));
+  if (gen !== geoGen) return;
+  const b = new kakao.maps.LatLngBounds(); let n = 0;
+  for (const { d, r } of found) {
+    if (!r) continue;
+    const el = document.createElement('div'); el.className = 'kov'; el.innerHTML = labelHtml(d);
+    el.onclick = () => toggleDong(d);
+    const ov = new kakao.maps.CustomOverlay({ position: LL(r.lat, r.lng), content: el, yAnchor: 1, clickable: true, map });
+    dongOv.push(ov); dongMk.set(d, ov); b.extend(LL(r.lat, r.lng)); n++;
   }
-  if (pts.length > 1 && !state.univ) map.fitBounds(pts, { padding: [30, 30], maxZoom: 15 });
+  if (n > 1 && !state.univ) map.setBounds(b, 40, 40, 40, 40);
 }
 
 // ===== 내 예산 (개인화) =====
