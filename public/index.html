@@ -1046,6 +1046,7 @@ function initMap() {
     kGeo = new kakao.maps.services.Geocoder(); kPlaces = new kakao.maps.services.Places();
     map = new kakao.maps.Map($('#map'), { center: LL(36.4, 127.8), level: 13 });
     map.setMaxLevel(14);
+    kakao.maps.event.addListener(map, 'idle', () => refreshDeals());
     kakao.maps.event.addListener(map, 'click', e => { if (Date.now() - lastOv < 400) return; onMapClick({ lat: e.latLng.getLat(), lng: e.latLng.getLng() }); });
     $('#mapFs').addEventListener('click', () => setMapFs(!$('#mapWrap').classList.contains('fs')));
     drawSchools();
@@ -1269,66 +1270,71 @@ function loadAddr(code) {
   return addrCache.get(code);
 }
 function dealMsg(t) { const e = $('#dealMsg'); e.textContent = t || ''; e.classList.toggle('hide', !t); }
-function clearDeals() { dealGen++; dealOv.forEach(o => o.setMap(null)); dealOv = []; if (dealPop) { dealPop.setMap(null); dealPop = null; } }
+let dealShown = new Map(), dealCode = null, dongPos = null;
+function hideDeals() { dealShown.forEach(v => v.ov.setMap(null)); dealShown.clear(); if (dealPop) { dealPop.setMap(null); dealPop = null; } }
+function clearDeals() { dealGen++; hideDeals(); dealCode = null; dongPos = null; }
 const dealDate = v => { v = String(v).padStart(6, '0'); return `${v.slice(0, 2)}.${v.slice(2, 4)}.${v.slice(4)}`; };
 let dealT;
-function refreshDeals() { clearTimeout(dealT); dealT = setTimeout(drawDeals, 200); }
+function refreshDeals() { clearTimeout(dealT); dealT = setTimeout(drawDeals, 450); }
+async function pool(items, fn, n) { let i = 0; await Promise.all(Array.from({ length: n }, async () => { while (i < items.length) { const it = items[i++]; await fn(it); } })); }
+// 지도를 옮기거나 확대·축소할 때마다 지금 화면에 보이는 동네의 실거래를 다시 그린다.
+// 카카오 좌표는 저장하지 않고, 화면에 보이는 동안만 메모리에 둔다.
 async function drawDeals() {
-  clearDeals();
-  if (!dealOn || !map || !state.places.length) { dealMsg(''); return; }
-  const gen = dealGen;
-  dealMsg('실거래 불러오는 중…');
-  const sets = await Promise.all(state.places.map(loadAddr));
+  if (!dealOn || !map || $('#mapWrap').classList.contains('hide')) { clearDeals(); dealMsg(''); return; }
+  const gen = ++dealGen;
+  if (map.getLevel() > 6) { hideDeals(); dealMsg('지도를 동네 단위로 확대하면 실거래가 보여요.'); return; }
+  const bounds = map.getBounds(), ctr = map.getCenter();
+  const sw = bounds.getSouthWest(), ne = bounds.getNorthEast();
+  const padLat = (ne.getLat() - sw.getLat()) * 0.15, padLng = (ne.getLng() - sw.getLng()) * 0.15;
+  const inView = (c, k = 1) => c.lat >= sw.getLat() - padLat * k && c.lat <= ne.getLat() + padLat * k && c.lng >= sw.getLng() - padLng * k && c.lng <= ne.getLng() + padLng * k;
+  const parts = await kRegion(ctr.getLat(), ctr.getLng());
   if (gen !== dealGen) return;
-  if (!sets.some(Boolean)) { dealMsg('이 지역은 주소가 있는 실거래 데이터가 아직 없어요. 동별 숫자를 참고해 주세요.'); return; }
-  const B = budget();
-  // 동을 고르지 않았으면, 학교(또는 지도 가운데)에서 가까운 동 몇 곳의 거래만 그린다 (화면 밖 주소를 조회하느라 느려지지 않게)
-  let near = null;
-  if (!state.dongs.size && dongMk.size) {
-    const ref = (univMk && state.univ) ? univMk.getPosition() : map.getCenter();
-    const dd2 = p => { const dx = p.getLng() - ref.getLng(), dy = p.getLat() - ref.getLat(); return dx * dx + dy * dy; };
-    near = new Set([...dongMk].sort((a, b) => dd2(a[1].getPosition()) - dd2(b[1].getPosition())).slice(0, 4).map(([d]) => d));
+  const code = (parts && matchSgg(parts)) || state.places[0] || null;
+  if (!code) { hideDeals(); dealMsg('이 위치의 시·군·구를 찾지 못했어요.'); return; }
+  const d = await loadAddr(code);
+  if (gen !== dealGen) return;
+  if (!d) { hideDeals(); dealMsg('이 지역은 주소가 있는 실거래 데이터가 아직 없어요. 동별 숫자를 참고해 주세요.'); return; }
+  if (dealCode !== code) { hideDeals(); dongPos = null; dealCode = code; }
+  if (!dongPos) {
+    dealMsg('동네 위치 찾는 중…');
+    const idx = [...new Set(d.rows.map(r => r[1]))], got = [];
+    await pool(idx, async i => { const c = await kFind(d.name + ' ' + d.dongs[i]); if (c) got.push([i, c]); }, 8);
+    if (gen !== dealGen) return;
+    dongPos = new Map(got);
   }
-  const groups = new Map(); let total = 0;
-  for (const s of sets) {
-    if (!s) continue;
-    for (const r of s.rows) {
-      const dong = s.dongs[r[1]];
-      if (!state.types.has(r[0]) || !r[9]) continue;
-      if (state.dongs.size && !state.dongs.has(dong)) continue;
-      if (near && !near.has(dong)) continue;
-      if (r[2] > 60) continue;
-      total++;
-      const key = dong + '|' + r[9];
-      let g = groups.get(key);
-      if (!g) groups.set(key, g = { dong, jb: r[9], nm: r[10] >= 0 ? s.names[r[10]] : '', sgg: s.name, deals: [] });
-      g.deals.push(r);
-    }
+  const okDong = new Set([...dongPos].filter(([, c]) => inView(c, 2)).map(([i]) => i));
+  const B = budget(), groups = new Map(); let total = 0;
+  for (const r of d.rows) {
+    if (!okDong.has(r[1]) || !r[9] || !state.types.has(r[0]) || r[2] > 60) continue;
+    total++;
+    const key = r[1] + '|' + r[9];
+    let g = groups.get(key);
+    if (!g) groups.set(key, g = { key, dong: d.dongs[r[1]], jb: r[9], nm: r[10] >= 0 ? d.names[r[10]] : '', sgg: d.name, deals: [] });
+    g.deals.push(r);
   }
-  const list = [...groups.values()].sort((a, b) => b.deals[0][7] - a.deals[0][7]).slice(0, 120);
-  if (!list.length) { dealMsg(state.dongs.size ? '조건에 맞는 최근 실거래가 없어요. 동을 더 고르거나 조건을 바꿔 보세요.' : '조건에 맞는 최근 실거래가 없어요.'); return; }
-  const pts = []; let shown = 0, i = 0;
-  const work = async () => {
-    while (i < list.length) {
-      const g = list[i++];
-      const addr = `${g.sgg} ${g.dong} ${g.jb}`;
-      const c = (await kFind(addr)) || (g.nm ? await kFind(`${g.sgg} ${g.dong} ${g.nm}`, 'kw') : null);
-      if (gen !== dealGen) return;
-      if (!c) continue;
-      const d0 = g.deals[0], jn = d0[4] <= 0;
-      const ok = B ? (jn ? d0[3] <= B.dep : (d0[3] <= B.dep && d0[4] <= B.rent)) : null;
-      const el = document.createElement('div');
-      el.className = 'kdeal' + (jn ? ' jn' : '') + (ok === true ? ' ok' : ok === false ? ' no' : '');
-      el.innerHTML = (jn ? '전세 ' + won(d0[3]) : d0[4] + '만') + (g.deals.length > 1 ? ` <small>외 ${g.deals.length - 1}</small>` : '');
-      const pos = LL(c.lat, c.lng);
-      el.onclick = ev => { ev.stopPropagation(); lastOv = Date.now(); showDealPop(g, pos); };
-      dealOv.push(new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, map }));
-      pts.push(pos); shown++;
-    }
+  const list = [...groups.values()].sort((a, b) => b.deals[0][7] - a.deals[0][7]).slice(0, 150);
+  const want = new Set(list.map(g => g.key));
+  for (const [k, v] of [...dealShown]) if (!want.has(k) || !inView(v.pos, 1)) { v.ov.setMap(null); dealShown.delete(k); }
+  const style = (el, d0) => {
+    const jn = d0[4] <= 0, ok = B ? (jn ? d0[3] <= B.dep : (d0[3] <= B.dep && d0[4] <= B.rent)) : null;
+    el.className = 'kdeal' + (jn ? ' jn' : '') + (ok === true ? ' ok' : ok === false ? ' no' : '');
   };
-  await Promise.all(Array.from({ length: 6 }, work));
+  for (const v of dealShown.values()) style(v.el, v.g.deals[0]);
+  const todo = list.filter(g => !dealShown.has(g.key));
+  if (!list.length) { dealMsg('이 화면에는 조건에 맞는 최근 실거래(주소 있는 것)가 없어요. 원룸·다가구는 지번이 없어 동 숫자로만 보여요.'); return; }
+  dealMsg(todo.length ? '실거래 불러오는 중…' : '');
+  await pool(todo, async g => {
+    if (gen !== dealGen) return;
+    const c = (await kFind(`${g.sgg} ${g.dong} ${g.jb}`)) || (g.nm ? await kFind(`${g.sgg} ${g.dong} ${g.nm}`, 'kw') : null);
+    if (gen !== dealGen || !c || !inView(c, 1)) return;
+    const d0 = g.deals[0], jn = d0[4] <= 0, el = document.createElement('div'), pos = LL(c.lat, c.lng);
+    style(el, d0);
+    el.innerHTML = (jn ? '전세 ' + won(d0[3]) : d0[4] + '만') + (g.deals.length > 1 ? ` <small>외 ${g.deals.length - 1}</small>` : '');
+    el.onclick = ev => { ev.stopPropagation(); lastOv = Date.now(); showDealPop(g, pos); };
+    dealShown.set(g.key, { ov: new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, map }), el, g, pos: c });
+  }, 6);
   if (gen !== dealGen) return;
-  dealMsg(shown ? `최근 12개월 실거래(월세·전세, 전용 60㎡ 이하) ${total.toLocaleString()}건 중 ${shown}곳을 표시했어요${list.length < groups.size ? ' (최신순)' : ''}.` : '주소를 지도에서 찾지 못했어요.');
+  dealMsg(dealShown.size ? `이 화면의 최근 12개월 실거래(전용 60㎡ 이하) ${total.toLocaleString()}건 중 ${dealShown.size}곳. 지도를 옮기면 새로 보여 드려요.` : '주소를 지도에서 찾지 못했어요.');
 }
 function showDealPop(g, pos) {
   if (dealPop) dealPop.setMap(null);
