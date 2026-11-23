@@ -293,7 +293,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
   <div class="tabs vtabs" role="tablist" id="viewTabs">
     <button type="button" class="go goHome" aria-label="홈으로">🏠 홈</button>
     <button role="tab" aria-selected="true" data-view="check">🔍 이 방 비싸요?</button>
-    <button role="tab" aria-selected="false" data-view="budget">💰 내 돈으로 어디?</button>
+    <button role="tab" aria-selected="false" data-view="budget">💰 내 예산으로 찾기</button>
     <button type="button" class="go" data-go="stats">📊 실거래 통계</button>
     <button type="button" class="go" data-go="map">🗺 지도 크게</button>
   </div>
@@ -580,7 +580,7 @@ function fillSido(sel, sub, optional) {
   };
 }
 
-// ===== 보기 전환: 이 방 비싸요? / 내 돈으로 어디? =====
+// ===== 보기 전환: 이 방 비싸요? / 내 예산으로 찾기 =====
 state.view = 'check';
 function setView(v, quiet) {
   state.view = v;
