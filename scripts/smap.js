@@ -40,7 +40,7 @@
     wrap.appendChild(bar); wrap.appendChild(panel);
     const msg = bar.querySelector('.mvmsg'); let rv = null, rvc = null, mk = null, mkEl = null;
     const say = t => { msg.textContent = t || ''; msg.classList.toggle('hide', !t); };
-    const openRv = ll => {
+    const openRv = (ll, face) => {
       if (!rvc) rvc = new kakao.maps.RoadviewClient();
       rvc.getNearestPanoId(ll, 80, id => {
         if (!id) { say('이 근처에는 로드뷰가 없어요. 다른 곳을 눌러 보세요.'); return; }
@@ -54,6 +54,12 @@
       }
       mk.setPosition(ll); mk.setMap(map);
         rv.setPanoId(id, ll); setTimeout(() => rv.relayout(), 50);
+      if (face) setTimeout(() => {   // 건물(실거래 핀) 쪽을 바라보도록 방향을 맞춘다
+        try {
+          const pp = rv.getPosition(), dx = (ll.getLng() - pp.getLng()) * Math.cos(pp.getLat() * Math.PI / 180), dy = ll.getLat() - pp.getLat();
+          if (Math.abs(dx) + Math.abs(dy) > 1e-7) rv.setViewpoint({ pan: (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360, tilt: 0, zoom: 0 });
+        } catch {}
+      }, 700);
       });
     };
     bar.addEventListener('click', e => {
@@ -66,7 +72,8 @@
         else { map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW); say(''); panel.classList.add('hide'); if (mk) mk.setMap(null); }
       }
     });
-    kakao.maps.event.addListener(map, 'click', e => { if (window.__rvOn) openRv(e.latLng); });
+    window.__rvOpen = ll => openRv(ll, true);
+  kakao.maps.event.addListener(map, 'click', e => { if (window.__rvOn) openRv(e.latLng); });
     panel.querySelector('.rvx').onclick = () => { panel.classList.add('hide'); if (mk) mk.setMap(null); };
   }
   // ===== 조작 버튼 (첫 화면 지도와 같은 모양·위치) =====
@@ -211,7 +218,7 @@
       const d0 = g.deals[0], jn = d0[4] <= 0, el = document.createElement('div'), pos = LL(c.lat, c.lng);
       style(el, d0);
       el.innerHTML = (jn ? '전세 ' + eok(d0[3]) : d0[3] > 5000 ? '반 ' + eok(d0[3]) + '/' + d0[4] : d0[4] + '만') + (g.deals.length > 1 ? ' <small>외 ' + (g.deals.length - 1) + '</small>' : '');
-      el.onclick = ev => { ev.stopPropagation(); lastPin = Date.now(); showDealPop(g, pos); };
+      el.onclick = ev => { ev.stopPropagation(); lastPin = Date.now(); if (window.__rvOn && window.__rvOpen) { window.__rvOpen(pos); return; } showDealPop(g, pos); };
       dealShown.set(g.key, { ov: new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, map }), el, g, pos: c });
     }, 6);
     if (gen !== dealGen) return;
