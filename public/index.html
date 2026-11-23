@@ -1838,7 +1838,7 @@ function renderMyTip() {
 function renderMe() {
   renderMyTip();
   const name = ME ? (prefs.nick || ME.nickname || (ME.email ? ME.email.split('@')[0] : '') || '내 정보') : '';
-  $('#loginBtn').textContent = ME ? '👤 ' + name : '로그인';
+  $('#loginBtn').textContent = ME ? '👤 마이페이지' : '로그인';
   $('#loginBtn').title = ME ? '마이페이지' : '';
   $('#loginPane').classList.toggle('hide', !!ME);
   $('#mePane').classList.toggle('hide', !ME);
