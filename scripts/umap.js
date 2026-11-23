@@ -18,7 +18,7 @@
   const byKey = new Map();
   const bubble = document.createElement('div'); bubble.className = 'ubub';
   const bov = new kakao.maps.CustomOverlay({ content: bubble, yAnchor: 1.9, clickable: true, zIndex: 20 });
-  let sel = null;
+  let sel = null, lastDot = 0;
   const addrOf = k => links.find(a => a.dataset.k === k);
   const show = o => {
     bubble.innerHTML = `<div class="upop"><b>${o.name}</b><small>${o.m ? '원룸 중간 월세 ' + o.m + '만원' : '거래가 적어 시군구 기준으로 봐요'}</small><br><a href="${o.a.getAttribute('href')}" onclick="location.href=this.href;return false">시세 보기 →</a></div>`;
@@ -47,14 +47,15 @@
     const m = a.dataset.m ? +a.dataset.m : null;
     const name = a.childNodes[0].textContent.trim();
     const el = document.createElement('div'); el.className = 'ud'; el.style.background = col(m); el.title = name;
-    el.onclick = e => { e.stopPropagation(); select(k, false); };
+    el.onclick = e => { e.stopPropagation(); lastDot = Date.now(); select(k, false); };
     const pos = LL(c[0], c[1]);
     new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: .5, xAnchor: .5, clickable: true, map });
     byKey.set(k, { a, el, pos, m, name });
     // 목록: 누르면 그 학교 페이지로 이동, PC에서는 마우스를 올리면 지도가 그 학교로 이동
     a.addEventListener('mouseenter', () => { if (matchMedia('(hover:hover)').matches) select(k, true); });
   }
-  kakao.maps.event.addListener(map, 'click', () => bov.setMap(null));
+  // 점을 누른 직후에 지도 클릭 이벤트가 따라와 말풍선을 바로 닫아 버리는 것을 막는다
+  kakao.maps.event.addListener(map, 'click', () => { if (Date.now() - lastDot < 400) return; bov.setMap(null); });
   if (!byKey.size) hint.textContent = '학교 위치를 아직 불러오지 못했어요. 아래 목록에서 학교를 골라 주세요.';
   document.getElementById('f').addEventListener('input', () => {
     const vis = links.filter(a => a.style.display !== 'none' && byKey.has(a.dataset.k));

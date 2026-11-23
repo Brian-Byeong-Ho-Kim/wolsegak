@@ -986,6 +986,7 @@ function deals(sel, wolse) {
 
 // ===== 지도 (카카오맵) =====
 const KAKAO_JS_KEY = '6c67906fb926c31e6e09524a74d819c6';
+let lastOv = 0; // 겹침 클릭 방지
 let map, mapP, clickMk, univMk, dongOv = [], dongMk = new Map(), geoGen = 0, kGeo, kPlaces;
 const isWide = () => matchMedia('(min-width:1024px)').matches;
 function loadKakao() {
@@ -1026,7 +1027,7 @@ function initMap() {
     kGeo = new kakao.maps.services.Geocoder(); kPlaces = new kakao.maps.services.Places();
     map = new kakao.maps.Map($('#map'), { center: LL(36.4, 127.8), level: 13 });
     map.setMaxLevel(14);
-    kakao.maps.event.addListener(map, 'click', e => onMapClick({ lat: e.latLng.getLat(), lng: e.latLng.getLng() }));
+    kakao.maps.event.addListener(map, 'click', e => { if (Date.now() - lastOv < 400) return; onMapClick({ lat: e.latLng.getLat(), lng: e.latLng.getLng() }); });
     $('#mapFs').addEventListener('click', () => setMapFs(!$('#mapWrap').classList.contains('fs')));
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#mapWrap').classList.contains('fs')) setMapFs(false); });
     return map;
@@ -1145,7 +1146,7 @@ async function drawDongs(sets, dongs) {
   for (const { d, r } of found) {
     if (!r) continue;
     const el = document.createElement('div'); el.className = 'kov'; el.innerHTML = labelHtml(d);
-    el.onclick = () => toggleDong(d);
+    el.onclick = () => { lastOv = Date.now(); toggleDong(d); };
     const ov = new kakao.maps.CustomOverlay({ position: LL(r.lat, r.lng), content: el, yAnchor: 1, clickable: true, map });
     dongOv.push(ov); dongMk.set(d, ov); b.extend(LL(r.lat, r.lng)); n++;
   }
@@ -1208,7 +1209,7 @@ async function drawDeals() {
       el.className = 'kdeal' + (ok === true ? ' ok' : ok === false ? ' no' : '');
       el.innerHTML = (jeonse ? won(v) : v + '만') + (g.deals.length > 1 ? ` <small>외 ${g.deals.length - 1}</small>` : '');
       const pos = LL(c.lat, c.lng);
-      el.onclick = ev => { ev.stopPropagation(); showDealPop(g, pos, jeonse); };
+      el.onclick = ev => { ev.stopPropagation(); lastOv = Date.now(); showDealPop(g, pos, jeonse); };
       dealOv.push(new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, map }));
       pts.push(pos); shown++;
     }
