@@ -206,26 +206,29 @@
     const kdWrap = (e, t) => { const w = document.createElement('div'); w.style.cssText = 'padding-top:40px;pointer-events:none;' + (t === 0 ? 'padding-right:3px' : 'padding-left:3px'); w.appendChild(e); return w; };
     const medOf = a => { const x = a.slice().sort((p, q) => p - q); return x[x.length >> 1]; };
     let dgCount = 0;
+    // 원룸·투룸(단독·다가구)은 지번이 없어 정확한 위치를 알 수 없다 → 거래마다 동네 중심 둘레에 하나씩 펼쳐 보여 준다
+    const proj = map.getProjection();
     for (const [i, g] of dgs) {
       const c = dongPos.get(i); if (!c || !inView(c, 1)) continue;
-      const pos = LL(c.lat, c.lng);
-      for (const t of [0, 4]) {   // 원룸·투룸은 각각 따로 상자로 (원룸은 왼쪽, 투룸은 오른쪽)
-        const rs = g.c[t]; if (!rs.length) continue;
-        const rr = rs.filter(r => r[4] > 0);
-        const el = document.createElement('div'); el.className = 'kdong t' + t;
-        el.innerHTML = '<b>' + TN[t] + '</b> ' + rs.length + '건<div>' + (rr.length ? '월세 ' + medOf(rr.map(r => r[4])) + '만' : '전세 ' + eok(medOf(rs.map(r => r[3])))) + '</div><small>동네 중간값</small>';
+      const ctrPt = proj.containerPointFromCoords(LL(c.lat, c.lng));
+      const rows = [...g.c[0], ...g.c[4]].sort((p, q) => q[7] - p[7]).slice(0, 60);
+      rows.forEach((r, k) => {
+        const ang = k * 2.39996, rad = 34 * Math.sqrt(k + 0.6);   // 해바라기 모양으로 펼치기
+        const pos = proj.coordsFromContainerPoint(new kakao.maps.Point(ctrPt.x + rad * Math.cos(ang), ctrPt.y + rad * Math.sin(ang) * 0.62));
+        const t = catOf(r), el = document.createElement('div');
+        style(el, r); el.className += ' dz t' + t;
+        el.innerHTML = '<small>' + TN[t].charAt(0) + '</small> ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[4] > 0 && r[3] > 5000 ? '반 ' + eok(r[3]) + '/' + r[4] : r[4] + '만');
         el.onclick = ev => {
           ev.stopPropagation(); lastPin = Date.now();
           if (dealPop) dealPop.setMap(null);
-          const all = rs.slice().sort((p, q) => q[7] - p[7]).slice(0, 12);
           const pe = document.createElement('div'); pe.className = 'kpop';
-          pe.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.dong) + ' ' + TN[t] + '</b><div style="opacity:.65">단독·다가구 최근 거래 (지번이 없어 건물은 알 수 없어요)</div>' + all.map(r => '<div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층</div>').join('');
+          pe.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.dong) + ' ' + TN[t] + '</b><div style="opacity:.65">단독·다가구 · 지번이 없어 정확한 위치가 아니라 동네 안에 펼쳐 표시해요</div><div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>';
           pe.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
           dealPop = new kakao.maps.CustomOverlay({ position: pos, content: pe, yAnchor: 1, clickable: true, zIndex: 10, map });
         };
-        dealShown.set('dg|' + i + '|' + t, { ov: new kakao.maps.CustomOverlay({ position: pos, content: kdWrap(el, t), xAnchor: t === 0 ? 1 : 0, yAnchor: 0, clickable: true, zIndex: 15, map }), el, dg: 1, pos: c });
+        dealShown.set('dg|' + i + '|' + k, { ov: new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 12, map }), el, dg: 1, pos: { lat: pos.getLat(), lng: pos.getLng() } });
         dgCount++;
-      }
+      });
     }
     for (const v of dealShown.values()) if (!v.dg) style(v.el, v.g.deals[0]);
     const todo = list.filter(g => !dealShown.has(g.key));
