@@ -151,6 +151,27 @@
     if (gen !== dealGen) return;
     const near = cen.filter(x => x.c).map(x => ({ i: x.i, km: dist(sc, x.c) })).sort((a, b) => a.km - b.km).filter((x, n) => n < 3 || x.km < 1.5).slice(0, 5);
     const ok = new Set(near.map(x => x.i)), dkm = new Map(near.map(x => [x.i, x.km]));
+    // 1-2) 학교 가까운 동 기준으로 종류별(원룸·투룸·빌라·오피스텔·아파트) 시세 상자를 학교 아래에 보여 준다
+    try {
+      const sgd = await (await fetch('/data/sgg/' + code + '.json')).json();
+      if (gen !== dealGen) return;
+      const nn = new Set(near.map(x => d.dongs[x.i])), by = { 0: [], 4: [], 1: [], 2: [], 3: [] };
+      for (const r of sgd.rows) { if (r[2] > 60 || !nn.has(sgd.dongs[r[1]])) continue; by[catOf(r)].push(r); }
+      const qv = (arr, f) => { const x = arr.slice().sort((p, q) => p - q); return x[Math.min(x.length - 1, Math.floor(x.length * f))]; };
+      const wrapDiv = document.createElement('div'); wrapDiv.className = 'schinfo';
+      for (const t of [0, 4, 1, 2, 3]) {
+        const rs = by[t]; if (!rs.length) continue;
+        const rr = rs.filter(r => r[4] > 0), box = document.createElement('div'); box.className = 'kdong big t' + t;
+        let h = '<b>' + TN[t] + '</b> ' + rs.length.toLocaleString() + '건';
+        if (rr.length >= 3) h += '<div>월세 ' + qv(rr.map(r => r[4]), .5) + '만</div><span>보증금 ' + eok(qv(rr.map(r => r[3]), .5)) + '</span><span>월세 ' + qv(rr.map(r => r[4]), .25) + '~' + qv(rr.map(r => r[4]), .75) + '만</span>';
+        else if (rr.length) h += '<div>월세 ' + qv(rr.map(r => r[4]), .5) + '만</div>';
+        const jj = rs.filter(r => r[4] <= 0);
+        if (jj.length >= 3) h += '<span>전세 ' + eok(qv(jj.map(r => r[3]), .5)) + ' (' + jj.length + '건)</span>';
+        box.innerHTML = h + '<small>가까운 동 중간값</small>';
+        wrapDiv.appendChild(box);
+      }
+      if (wrapDiv.children.length) dealOv.push(new kakao.maps.CustomOverlay({ position: o.pos, content: wrapDiv, xAnchor: .5, yAnchor: 0, zIndex: 25, map }));
+    } catch (e) {}
     // 2) 그 동의 월세 거래(소형, 빌라·오피스텔·아파트)를 건물별로 묶는다
     const groups = new Map(); let total = 0;
     for (const r of d.rows) {
