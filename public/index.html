@@ -339,7 +339,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
       <button type="button" id="mapDeals" aria-pressed="true" aria-label="실거래 핀 보기">📍 실거래 끄기</button>
       <button type="button" id="mapLoc" aria-label="내 위치 찾기">📍 내 위치</button>
       <div id="dealKinds" role="group" aria-label="거래 종류"><button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button></div>
-      <div id="dealTypes" role="group" aria-label="집 종류"><button type="button" data-t="0" aria-pressed="true" title="원룸·다가구 (지번 없어 핀은 거의 없어요)">원룸</button><button type="button" data-t="1" aria-pressed="true">빌라</button><button type="button" data-t="2" aria-pressed="true">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button></div>
+      <div id="dealTypes" role="group" aria-label="집 종류"><button type="button" data-t="0" aria-pressed="true" title="단독·다가구 (원룸이 많은 유형 · 지번 없어 핀은 거의 없어요)">다가구</button><button type="button" data-t="1" aria-pressed="true">빌라</button><button type="button" data-t="2" aria-pressed="true">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button></div>
       <div id="dealMsg" class="hide"></div>
       <div class="mlegend" aria-label="학교 점 색 설명"><span><i style="background:#16a34a"></i>35만 미만</span><span><i style="background:#2563eb"></i>35~45만</span><span><i style="background:#d97706"></i>45~55만</span><span><i style="background:#dc2626"></i>55만 이상</span><span><i style="background:#78716c"></i>거래 적음</span></div>
       <p class="hint" id="mapHint">점은 대학교예요(색 = 원룸 중간 월세). 눌러서 그 학교 근처 월세를 볼 수 있어요.</p>
@@ -378,7 +378,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
     <details class="more" id="moreBox" open>
       <summary>더 정확하게 <span>(집 종류·층·관리비)</span></summary>
       <div class="row">
-        <div><label class="f" for="ckType">집 종류</label><select id="ckType"><option value="">상관없음</option><option value="0">원룸·다가구</option><option value="1">빌라(연립·다세대)</option><option value="2">오피스텔</option><option value="3">아파트</option></select></div>
+        <div><label class="f" for="ckType">집 종류</label><select id="ckType"><option value="">상관없음</option><option value="0">단독·다가구</option><option value="1">빌라(연립·다세대)</option><option value="2">오피스텔</option><option value="3">아파트</option></select></div>
         <div><label class="f" for="ckFloor">층</label><input id="ckFloor" placeholder="3, 반지하"></div>
       </div>
       <div class="row">
@@ -472,11 +472,12 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
     <h2>🏠 어떤 집을 찾으세요?</h2>
     <label class="f">집 종류 (여러 개 선택 가능)</label>
     <div class="chips" id="types">
-      <button class="chip" aria-pressed="true" data-v="0">원룸·다가구</button>
+      <button class="chip" aria-pressed="true" data-v="0">단독·다가구</button>
       <button class="chip" aria-pressed="true" data-v="1">빌라(연립·다세대)</button>
       <button class="chip" aria-pressed="true" data-v="2">오피스텔</button>
       <button class="chip" aria-pressed="false" data-v="3">아파트</button>
     </div>
+    <p class="hint" style="margin:6px 2px 0">국토교통부 실거래 구분이에요. 흔히 말하는 <b>원룸</b>은 단독·다가구, 빌라, 오피스텔 모두에 있어서 종류보다 <b>크기(~23㎡)</b>로 골라요.</p>
     <label class="f">크기</label>
     <div class="chips" id="areas">
       <button class="chip" aria-pressed="true" data-v="0-23">~23㎡ <small>(~7평, 원룸)</small></button>
@@ -540,7 +541,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
 const BASE_RATE = 3.00;          // 한국은행 기준금리(%) — 2026-10-22 금통위 기준. 바뀌면 여기만 고치세요.
 const LEGAL_CAP = Math.min(10, BASE_RATE + 2) / 100; // 주택임대차보호법 시행령 제9조
 const DEFAULT_RATE = 0.06;       // 보증금 차이를 월세로 환산할 때 쓰는 기본 전환율(연). 화면에서 바꿀 수 있음
-const TYPE_NAMES = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
+const TYPE_NAMES = ['단독·다가구', '빌라', '오피스텔', '아파트'];
 const DATA = './data/';
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
@@ -785,7 +786,7 @@ function parseListing(raw) {
   if (/반지하|지하\s?\d?층?|B\d층/i.test(t)) out.floor = '반지하';
   else if ((m = t.match(/(\d+)\s*층?\s*\/\s*\d+\s*층/)) || (m = t.match(/(\d+)\s*층/))) out.floor = m[1];  // 5/12층 → 5
   if (/오피스텔/.test(t)) out.type = 2; else if (/아파트/.test(t)) out.type = 3;
-  else if (/빌라|다세대|연립/.test(t)) out.type = 1; else if (/원룸|투룸|1\.5룸|다가구|단독|분리형|오픈형|복층/.test(t)) out.type = 0;
+  else if (/빌라|다세대|연립/.test(t)) out.type = 1; else if (/다가구|단독/.test(t)) out.type = 0;   // '원룸·투룸' 같은 방 구조 표현만으로는 건물 종류를 정하지 않는다 (빌라·오피스텔에도 있음)
   out.addr = t;
   return out;
 }
@@ -1419,7 +1420,7 @@ async function drawDeals() {
   };
   for (const v of dealShown.values()) style(v.el, v.g.deals[0]);
   const todo = list.filter(g => !dealShown.has(g.key));
-  if (!list.length) { dealMsg('이 화면에는 조건에 맞는 최근 실거래(주소 있는 것)가 없어요. 원룸·다가구는 지번이 없어 동 숫자로만 보여요.'); return; }
+  if (!list.length) { dealMsg('이 화면에는 조건에 맞는 최근 실거래(주소 있는 것)가 없어요. 단독·다가구는 지번이 없어 동 숫자로만 보여요.'); return; }
   dealMsg(todo.length ? '실거래 불러오는 중…' : '');
   await pool(todo, async g => {
     if (gen !== dealGen) return;
@@ -1579,7 +1580,7 @@ $('#bDeals').addEventListener('click', async e => {
   pop.querySelector('.x').onclick = () => { bDealPop.setMap(null); bDealPop = null; };
   bDealPop = new kakao.maps.CustomOverlay({ position: pos, content: pop, yAnchor: 1, clickable: true, zIndex: 40, map });
   map.setLevel(exact ? 3 : 5); map.setCenter(pos);
-  hint.textContent = exact ? '선택한 거래의 위치예요.' : '원룸·다가구 등 지번이 공개되지 않은 거래는 동네 위치로 보여 드려요.';
+  hint.textContent = exact ? '선택한 거래의 위치예요.' : '단독·다가구 등 지번이 공개되지 않은 거래는 동네 위치로 보여 드려요.';
 });
 // ===== 실거래 통계 =====
 let statSets = [], statPrev = [];

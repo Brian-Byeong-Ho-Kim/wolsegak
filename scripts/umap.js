@@ -125,7 +125,7 @@
   const dd = v => { v = String(v).padStart(6, '0'); return v.slice(0, 2) + '.' + v.slice(2, 4) + '.' + v.slice(4); };
   const eok = m => m >= 10000 ? Math.floor(m / 10000) + '억' + (m % 10000 ? ' ' + (m % 10000).toLocaleString() : '') : m.toLocaleString() + '만';
   const fl = f => f == null ? '-' : f < 0 ? '지하' : f;
-  const TN = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
+  const TN = ['단독·다가구', '빌라', '오피스텔', '아파트'];
   const escH = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   function showDealPop(g, pos) {
     if (dealPop) dealPop.setMap(null);
@@ -160,7 +160,7 @@
       g.deals.push(r);
     }
     const list = [...groups.values()].sort((a, b) => a.km - b.km || b.deals[0][7] - a.deals[0][7]).slice(0, 150);   // 학교에서 가까운 동부터
-    if (!list.length) { setMsg(o.name + ' 주변에는 최근 12개월 실거래(주소 있는 것)가 없어요. 원룸·다가구는 지번이 공개되지 않아 지도에 못 그려요.'); return; }
+    if (!list.length) { setMsg(o.name + ' 주변에는 최근 12개월 실거래(주소 있는 것)가 없어요. 단독·다가구는 지번이 공개되지 않아 지도에 못 그려요.'); return; }
     // 학교에서 500m·1km 안을 원으로 표시 (가까운 곳 위주로 보도록)
     for (const [rad, op] of [[500, .5], [1000, .3]]) dealOv.push(new kakao.maps.Circle({ center: o.pos, radius: rad, strokeWeight: 2, strokeColor: '#ff6b3d', strokeOpacity: op + .2, strokeStyle: 'dashed', fillColor: '#ff6b3d', fillOpacity: rad === 500 ? .06 : .03, map }));
     for (const [rad, t] of [[500, '500m'], [1000, '1km']]) dealOv.push(new kakao.maps.CustomOverlay({ position: LL(sc.lat + rad / 111320, sc.lng), content: '<div class="rlab">' + t + '</div>', xAnchor: .5, yAnchor: .5, zIndex: 3, map }));
@@ -184,7 +184,7 @@
     await Promise.all(Array.from({ length: 6 }, work));
     if (gen !== dealGen) return;
     const md = a => a.length >= 3 ? ' · 월세 중간 ' + [...a].sort((x, y) => x - y)[a.length >> 1] + '만' : '';
-    dmsg.innerHTML = shown ? '<b>' + o.name.replace(/</g, '') + '에서 가까운 실거래</b> (최근 12개월, 60㎡ 이하)<br>300m 안 <b>' + band[300] + '건</b> · 500m 안 <b>' + band[500] + '건</b>' + md(bandW[500]) + ' · 1km 안 <b>' + band[1000] + '건</b>' + md(bandW[1000]) + '<br><small>숫자는 월세(만원), 점선 \'전세\'는 전세금. 지번 없는 원룸·다가구는 세지 못해요.</small>' : '주소를 지도에서 찾지 못했어요.';
+    dmsg.innerHTML = shown ? '<b>' + o.name.replace(/</g, '') + '에서 가까운 실거래</b> (최근 12개월, 60㎡ 이하)<br>300m 안 <b>' + band[300] + '건</b> · 500m 안 <b>' + band[500] + '건</b>' + md(bandW[500]) + ' · 1km 안 <b>' + band[1000] + '건</b>' + md(bandW[1000]) + '<br><small>숫자는 월세(만원), 점선 \'전세\'는 전세금. 지번 없는 단독·다가구는 세지 못해요.</small>' : '주소를 지도에서 찾지 못했어요.';
     dmsg.classList.remove('hide');
   }
   // 점을 누른 직후에 지도 클릭 이벤트가 따라와 말풍선을 바로 닫아 버리는 것을 막는다

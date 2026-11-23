@@ -79,7 +79,7 @@ input:focus{border-color:var(--brand)}
   </form>
   <label class="f">집 종류</label>
   <div class="chips" id="types">
-    <button type="button" class="chip" aria-pressed="true" data-v="0">원룸·다가구</button>
+    <button type="button" class="chip" aria-pressed="true" data-v="0">단독·다가구</button>
     <button type="button" class="chip" aria-pressed="true" data-v="1">빌라</button>
     <button type="button" class="chip" aria-pressed="true" data-v="2">오피스텔</button>
     <button type="button" class="chip" aria-pressed="false" data-v="3">아파트</button>
@@ -101,14 +101,14 @@ input:focus{border-color:var(--brand)}
 <div id="mapBox"><div id="map" role="application" aria-label="조건에 맞는 실거래 지도"></div></div>
 <div class="sum" id="sum"></div>
 <section class="card"><ul class="list" id="list"><li class="empty">학교나 지역을 검색해 보세요.</li></ul></section>
-<p style="font-size:12px;color:var(--sub)">출처: 국토교통부 전월세 실거래가(공공데이터포털). 지도 좌표는 저장하지 않고 화면에 그릴 때만 카카오에서 조회해요. 원룸·다가구는 지번이 공개되지 않아 목록에만 나와요.</p>
+<p style="font-size:12px;color:var(--sub)">출처: 국토교통부 전월세 실거래가(공공데이터포털). 지도 좌표는 저장하지 않고 화면에 그릴 때만 카카오에서 조회해요. 단독·다가구는 지번이 공개되지 않아 목록에만 나와요.</p>
 </div>
 
 <script>
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const KEY = '6c67906fb926c31e6e09524a74d819c6';
 const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const TN = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
+const TN = ['단독·다가구', '빌라', '오피스텔', '아파트'];
 const SIDO_SHORT = { 서울특별시: '서울', 부산광역시: '부산', 대구광역시: '대구', 인천광역시: '인천', 대전광역시: '대전', 울산광역시: '울산', 세종특별자치시: '세종', 경기도: '경기', 충청북도: '충북', 충청남도: '충남', 경상북도: '경북', 경상남도: '경남', 제주특별자치도: '제주', 강원특별자치도: '강원', 전북특별자치도: '전북', 전남광주통합특별시: '전남광주' };
 const SIDO_LONG = Object.fromEntries(Object.entries(SIDO_SHORT).map(([l, sh]) => [sh, l]));
 Object.assign(SIDO_LONG, { 광주: '전남광주통합특별시', 전남: '전남광주통합특별시', 광주광역시: '전남광주통합특별시', 전라남도: '전남광주통합특별시', 강원도: '강원특별자치도', 전라북도: '전북특별자치도', 제주도: '제주특별자치도' });

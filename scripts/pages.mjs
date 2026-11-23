@@ -12,7 +12,7 @@ const index = JSON.parse(await readFile(new URL('data/index.json', pub), 'utf8')
 const hashOf = async f => createHash('md5').update(await readFile(new URL(f, root))).digest('hex').slice(0, 8);
 const ASSET_V = { css: await hashOf('scripts/u.css'), js: await hashOf('scripts/umap.js'), sj: await hashOf('scripts/smap.js') };
 const GEO = JSON.parse(await readFile(new URL('data/univ_geo.json', pub), 'utf8'));
-const TYPE_NAMES = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
+const TYPE_NAMES = ['단독·다가구', '빌라', '오피스텔', '아파트'];
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = n => n == null || !isFinite(n) ? '-' : Math.round(n).toLocaleString('ko-KR');

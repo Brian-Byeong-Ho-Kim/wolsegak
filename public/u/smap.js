@@ -37,7 +37,7 @@
   const bDeals = mk('button', 'mapDeals', '📍 실거래 끄기', { type: 'button', 'aria-pressed': 'true', 'aria-label': '실거래 핀 보기' });
   const bLoc = mk('button', 'mapLoc', '📍 내 위치', { type: 'button', 'aria-label': '내 위치 찾기' });
   const kinds = mk('div', 'dealKinds', '<button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button>', { role: 'group', 'aria-label': '거래 종류' });
-  const typesEl = mk('div', 'dealTypes', '<button type="button" data-t="0" aria-pressed="true" title="원룸·다가구 (지번 없어 핀은 거의 없어요)">원룸</button><button type="button" data-t="1" aria-pressed="true">빌라</button><button type="button" data-t="2" aria-pressed="true">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button>', { role: 'group', 'aria-label': '집 종류' });
+  const typesEl = mk('div', 'dealTypes', '<button type="button" data-t="0" aria-pressed="true" title="단독·다가구 (원룸이 많은 유형 · 지번 없어 핀은 거의 없어요)">다가구</button><button type="button" data-t="1" aria-pressed="true">빌라</button><button type="button" data-t="2" aria-pressed="true">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button>', { role: 'group', 'aria-label': '집 종류' });
   const msgEl = mk('div', 'dealMsg', '', {}); msgEl.classList.add('hide');
   const dealMsg = t => { msgEl.textContent = t || ''; msgEl.classList.toggle('hide', !t); };
 
@@ -47,7 +47,7 @@
   const eok = m => m >= 10000 ? Math.floor(m / 10000) + '억' + (m % 10000 ? ' ' + (m % 10000).toLocaleString() : '') : m.toLocaleString() + '만';
   const dd = v => { v = String(v).padStart(6, '0'); return v.slice(0, 2) + '.' + v.slice(2, 4) + '.' + v.slice(4); };
   const fl = f => f == null ? '-' : f < 0 ? '지하' : f;
-  const TN = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
+  const TN = ['단독·다가구', '빌라', '오피스텔', '아파트'];
   const escH = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let B = null; try { const b = JSON.parse(localStorage.getItem('wsg:budget') || 'null'); if (b && b.rent > 0) B = b; } catch (e) {}
 
@@ -124,7 +124,7 @@
     const style = (el, d0) => { const jn = d0[4] <= 0, ok = B ? (jn ? d0[3] <= B.dep : (d0[3] <= B.dep && d0[4] <= B.rent)) : null; el.className = 'kdeal' + (jn ? ' jn' : d0[3] > 5000 ? ' bj' : '') + (ok === true ? ' ok' : ok === false ? ' no' : ''); };
     for (const v of dealShown.values()) style(v.el, v.g.deals[0]);
     const todo = list.filter(g => !dealShown.has(g.key));
-    if (!list.length) { dealMsg('이 화면에는 조건에 맞는 최근 실거래(주소 있는 것)가 없어요. 원룸·다가구는 지번이 없어 지도에 못 그려요.'); return; }
+    if (!list.length) { dealMsg('이 화면에는 조건에 맞는 최근 실거래(주소 있는 것)가 없어요. 단독·다가구는 지번이 없어 지도에 못 그려요.'); return; }
     dealMsg(todo.length ? '실거래 불러오는 중…' : '');
     await pool(todo, async g => {
       if (gen !== dealGen) return;
