@@ -68,7 +68,7 @@
     return best;
   };
   const pool = async (items, fn, n) => { let i = 0; await Promise.all(Array.from({ length: n }, async () => { while (i < items.length) await fn(items[i++]); })); };
-  const addrCache = new Map();
+  const addrCache = new Map(), sggCache = new Map();
   const loadAddr = code => { if (!addrCache.has(code)) addrCache.set(code, fetch('/data/addr/' + code + '.json').then(r => r.ok ? r.json() : null).catch(() => null)); return addrCache.get(code); };
 
   // ===== 실거래 핀 =====
@@ -126,9 +126,14 @@
     // 원룸·투룸(단독·다가구)은 지번이 없어서 동네(동) 단위로 묶어 보여 준다
     for (const [k, v] of [...dealShown]) if (v.dg) { v.ov.setMap(null); dealShown.delete(k); }
     const dgs = new Map();
-    for (const r of d.rows) {
-      if (r[0] !== 0 || r[9] || !okDong.has(r[1]) || r[2] > 60 || !pinTypes.has(catOf(r)) || !dealKinds.has(kindOf(r))) continue;
-      let g = dgs.get(r[1]); if (!g) dgs.set(r[1], g = { dong: d.dongs[r[1]], c: { 0: [], 4: [] } });
+    const sg = await (sggCache.get(code) || sggCache.set(code, fetch('/data/sgg/' + code + '.json').then(r => r.ok ? r.json() : null).catch(() => null)).get(code)); if (gen !== dealGen) return;
+    const nmIdx = new Map(d.dongs.map((n, i) => [n, i]));
+    for (const r0 of (sg ? sg.rows : [])) {
+      if (r0[0] !== 0) continue;
+      const di = nmIdx.get(sg.dongs[r0[1]]); if (di === undefined || !okDong.has(di)) continue;
+      const r = r0.slice(); r[1] = di;
+      if (r[2] > 60 || !pinTypes.has(catOf(r)) || !dealKinds.has(kindOf(r))) continue;
+      let g = dgs.get(di); if (!g) dgs.set(di, g = { dong: d.dongs[di], c: { 0: [], 4: [] } });
       g.c[catOf(r)].push(r);
     }
     const medOf = a => { const x = a.slice().sort((p, q) => p - q); return x[x.length >> 1]; };
