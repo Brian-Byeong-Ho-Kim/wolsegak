@@ -54,6 +54,12 @@ input:focus{border-color:var(--brand)}
 .tag{font-size:11px;font-weight:700;border-radius:6px;padding:2px 6px;background:var(--soft);color:var(--brand-ink);white-space:nowrap}
 .empty{color:var(--sub);font-size:14px;padding:8px 2px}
 .tip{font-size:13.5px;background:#fff1e8;border:1px solid #ffd9c2;color:#7c2d12;border-radius:12px;padding:10px 13px;margin:10px 0}
+@media(min-width:1024px){
+  :root{--lw:clamp(440px,38vw,560px)}
+  .wrap{max-width:none;margin:0;width:var(--lw);padding:0 20px 70px}
+  #mapBox{position:fixed;top:0;right:0;bottom:0;left:var(--lw);margin:0;border-radius:0;border:0;z-index:1}
+  #map{height:100%}
+}
 .hide{display:none!important}
 </style>
 </head>
