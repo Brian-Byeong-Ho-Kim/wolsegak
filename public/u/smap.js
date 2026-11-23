@@ -167,6 +167,7 @@
       let g = dgs.get(di); if (!g) dgs.set(di, g = { dong: d.dongs[di], c: { 0: [], 4: [] } });
       g.c[catOf(r)].push(r);
     }
+    const kdWrap = e => { const w = document.createElement('div'); w.style.cssText = 'padding-top:40px;pointer-events:none'; w.appendChild(e); return w; };
     const medOf = a => { const x = a.slice().sort((p, q) => p - q); return x[x.length >> 1]; };
     let dgCount = 0;
     for (const [i, g] of dgs) {
@@ -189,7 +190,7 @@
         pe.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
         dealPop = new kakao.maps.CustomOverlay({ position: pos, content: pe, yAnchor: 1, clickable: true, zIndex: 10, map });
       };
-      dealShown.set('dg|' + i, { ov: new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 0.5, clickable: true, zIndex: 15, map }), el, dg: 1, pos: c });
+      dealShown.set('dg|' + i, { ov: new kakao.maps.CustomOverlay({ position: pos, content: kdWrap(el), yAnchor: 0, clickable: true, zIndex: 15, map }), el, dg: 1, pos: c });
       dgCount++;
     }
     for (const v of dealShown.values()) if (!v.dg) style(v.el, v.g.deals[0]);
