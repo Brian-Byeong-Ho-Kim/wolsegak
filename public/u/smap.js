@@ -75,8 +75,8 @@
   function showDealPop(g, pos) {
     if (dealPop) dealPop.setMap(null);
     const el = document.createElement('div'); el.className = 'kpop';
-    const rows = g.deals.slice(0, 6).map(r => '<div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('');
-    el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.nm || (g.dong + ' ' + g.jb)) + '</b><div style="opacity:.65">' + escH(g.dong + ' ' + g.jb) + ' · ' + TN[g.deals[0][0]] + '</div>' + rows + (g.deals.length > 6 ? '<div style="opacity:.6">외 ' + (g.deals.length - 6) + '건</div>' : '');
+    const rows = g.deals.map(r => '<div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('');
+    el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.nm || (g.dong + ' ' + g.jb)) + '</b><div style="opacity:.65">' + escH(g.dong + ' ' + g.jb) + ' · ' + TN[g.deals[0][0]] + '</div>' + rows;
     el.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
     dealPop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 10, map });
   }
@@ -103,16 +103,19 @@
       if (gen !== dealGen) return;
       dongPos = new Map(got);
     }
+    const dk = new Map([...dongPos].map(([i, c]) => [i, Math.hypot((c.lng - ctr.getLng()) * Math.cos(ctr.getLat() * Math.PI / 180), c.lat - ctr.getLat())]));
     const okDong = new Set([...dongPos].filter(([, c]) => inView(c, 2)).map(([i]) => i));
+    [...dk].sort((x, y) => x[1] - y[1]).slice(0, 3).forEach(([i]) => okDong.add(i));   // 많이 확대해도 가까운 동 3곳은 포함
     const groups = new Map(); let total = 0;
     for (const r of d.rows) {
       if (!okDong.has(r[1]) || !r[9] || !pinTypes.has(r[0]) || r[2] > 60 || !dealKinds.has(kindOf(r))) continue;
       total++;
       const key = r[1] + '|' + r[9]; let g = groups.get(key);
-      if (!g) groups.set(key, g = { key, dong: d.dongs[r[1]], jb: r[9], nm: r[10] >= 0 ? d.names[r[10]] : '', sgg: d.name, deals: [] });
+      if (!g) groups.set(key, g = { key, dong: d.dongs[r[1]], jb: r[9], nm: r[10] >= 0 ? d.names[r[10]] : '', sgg: d.name, dk: dk.get(r[1]) || 0, deals: [] });
       g.deals.push(r);
     }
-    const list = [...groups.values()].sort((a, b) => b.deals[0][7] - a.deals[0][7]).slice(0, 150);
+    const cap = map.getLevel() <= 2 ? 500 : map.getLevel() <= 3 ? 350 : 150;
+    const list = [...groups.values()].sort((a, b) => a.dk - b.dk || b.deals[0][7] - a.deals[0][7]).slice(0, cap);
     const want = new Set(list.map(g => g.key));
     for (const [k, v] of [...dealShown]) if (!want.has(k) || !inView(v.pos, 1)) { v.ov.setMap(null); dealShown.delete(k); }
     const style = (el, d0) => { const jn = d0[4] <= 0, ok = B ? (jn ? d0[3] <= B.dep : (d0[3] <= B.dep && d0[4] <= B.rent)) : null; el.className = 'kdeal' + (jn ? ' jn' : d0[3] > 5000 ? ' bj' : '') + (ok === true ? ' ok' : ok === false ? ' no' : ''); };
