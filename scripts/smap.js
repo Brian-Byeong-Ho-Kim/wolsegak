@@ -1,0 +1,80 @@
+// 학교 시세 페이지: 오른쪽(모바일은 위) 지도에 그 학교 주변 최근 3개월 실거래를 핀으로 보여 준다.
+// 카카오 좌표는 저장·캐시하지 않고 화면에 그릴 때만 실시간으로 조회한다 (카카오 정책).
+(async () => {
+  const KEY = '6c67906fb926c31e6e09524a74d819c6';
+  const wrap = document.getElementById('umapWrap'), hint = document.getElementById('umapHint');
+  if (!wrap) return;
+  const { name, s: code, addr } = wrap.dataset;
+  let lat = parseFloat(wrap.dataset.lat), lng = parseFloat(wrap.dataset.lng);
+  try {
+    await new Promise((res, rej) => {
+      const sc = document.createElement('script');
+      sc.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + KEY + '&autoload=false&libraries=services';
+      sc.onload = () => kakao.maps.load(res); sc.onerror = rej; document.head.appendChild(sc);
+    });
+  } catch (e) { hint.textContent = '지도를 불러오지 못했어요.'; return; }
+  const LL = (a, b) => new kakao.maps.LatLng(a, b);
+  const geocoder = new kakao.maps.services.Geocoder(), places = new kakao.maps.services.Places();
+  const kFind = (q, kw) => new Promise(res => { try { const done = (r, st) => res(st === kakao.maps.services.Status.OK && r && r[0] ? { lat: +r[0].y, lng: +r[0].x } : null); kw ? places.keywordSearch(q, done) : geocoder.addressSearch(q, done); } catch (e) { res(null); } });
+  if (!isFinite(lat) || !isFinite(lng)) {
+    const c = (await kFind((addr || '').replace(/\s*\(.*\)$/, ''))) || (await kFind(name, 1));
+    if (!c) { hint.textContent = '학교 위치를 찾지 못했어요.'; return; }
+    lat = c.lat; lng = c.lng;
+  }
+  const sc0 = { lat, lng }, spos = LL(lat, lng);
+  const map = new kakao.maps.Map(document.getElementById('umap'), { center: spos, level: 4 });
+  new kakao.maps.CustomOverlay({ position: spos, content: '<div style="font-size:26px;line-height:1;transform:translateY(-4px)" title="' + name.replace(/"/g, '') + '">🎓</div>', yAnchor: 1, map });
+  const msgEl = document.createElement('div'); msgEl.id = 'udeal'; wrap.appendChild(msgEl);
+  const setMsg = t => { msgEl.textContent = t || ''; msgEl.classList.toggle('hide', !t); };
+  const dist = (a, b) => { const d = Math.PI / 180, x = (b.lng - a.lng) * d * Math.cos((a.lat + b.lat) / 2 * d), y = (b.lat - a.lat) * d; return 6371 * Math.hypot(x, y); };
+  const dd = v => { v = String(v).padStart(6, '0'); return v.slice(0, 2) + '.' + v.slice(2, 4) + '.' + v.slice(4); };
+  const fl = f => f == null ? '-' : f < 0 ? '지하' : f;
+  const TN = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
+  const escH = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  let pop = null;
+  const showPop = (g, pos) => {
+    if (pop) pop.setMap(null);
+    const el = document.createElement('div'); el.className = 'kpop';
+    const rows = g.deals.slice(0, 6).map(r => '<div>' + dd(r[7]) + ' · ' + r[3].toLocaleString() + '/' + r[4] + '만 · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('');
+    el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.nm || (g.dong + ' ' + g.jb)) + '</b><div style="opacity:.65">' + escH(g.dong + ' ' + g.jb) + ' · ' + TN[g.deals[0][0]] + '</div>' + rows + (g.deals.length > 6 ? '<div style="opacity:.6">외 ' + (g.deals.length - 6) + '건</div>' : '');
+    el.querySelector('.x').onclick = () => { pop.setMap(null); pop = null; };
+    pop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 30, map });
+  };
+  let lastPin = 0;
+  kakao.maps.event.addListener(map, 'click', () => { if (Date.now() - lastPin < 400) return; if (pop) { pop.setMap(null); pop = null; } });
+  setTimeout(() => map.relayout(), 100);
+  matchMedia('(min-width:1024px)').addEventListener('change', () => setTimeout(() => { map.relayout(); map.setCenter(spos); }, 80));
+
+  setMsg(name + ' 주변 실거래 찾는 중…');
+  const d = await fetch('/data/addr/' + code + '.json').then(r => r.ok ? r.json() : null).catch(() => null);
+  if (!d) { setMsg('이 지역은 주소가 있는 실거래 데이터가 아직 없어요.'); return; }
+  const dongs = [...new Set(d.rows.map(r => r[1]))];
+  const cen = await Promise.all(dongs.map(async i => ({ i, c: await kFind(d.name + ' ' + d.dongs[i]) })));
+  const near = cen.filter(x => x.c).map(x => ({ i: x.i, km: dist(sc0, x.c) })).sort((a, b) => a.km - b.km).filter((x, n) => n < 3 || x.km < 1.5).slice(0, 5);
+  const ok = new Set(near.map(x => x.i));
+  const groups = new Map(); let total = 0;
+  for (const r of d.rows) {
+    if (!ok.has(r[1]) || !r[9] || r[4] <= 0 || r[3] > 2000 || r[2] > 33 || r[8] === 2) continue;
+    total++;
+    const key = r[1] + '|' + r[9]; let g = groups.get(key);
+    if (!g) groups.set(key, g = { dong: d.dongs[r[1]], jb: r[9], nm: r[10] >= 0 ? d.names[r[10]] : '', deals: [] });
+    g.deals.push(r);
+  }
+  const list = [...groups.values()].sort((a, b) => b.deals[0][7] - a.deals[0][7]).slice(0, 80);
+  if (!list.length) { setMsg('주변에 최근 3개월 소형 월세 실거래(주소 있는 것)가 없어요. 원룸·다가구는 지번이 공개되지 않아 지도에 못 그려요.'); return; }
+  let i = 0, shown = 0;
+  const work = async () => {
+    while (i < list.length) {
+      const g = list[i++];
+      const c = (await kFind(d.name + ' ' + g.dong + ' ' + g.jb)) || (g.nm ? await kFind(d.name + ' ' + g.dong + ' ' + g.nm, 1) : null);
+      if (!c) continue;
+      const pos = LL(c.lat, c.lng), d0 = g.deals[0];
+      const el = document.createElement('div'); el.className = 'kdeal';
+      el.innerHTML = d0[4] + '만' + (g.deals.length > 1 ? ' <small>외 ' + (g.deals.length - 1) + '</small>' : '');
+      el.onclick = ev => { ev.stopPropagation(); lastPin = Date.now(); showPop(g, pos); };
+      new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, map }); shown++;
+    }
+  };
+  await Promise.all(Array.from({ length: 6 }, work));
+  setMsg(shown ? '최근 3개월 소형(33㎡ 이하) 월세 실거래 ' + total + '건 중 ' + shown + '곳. 숫자는 월세(만원)예요. 눌러서 자세히 보세요.' : '주소를 지도에서 찾지 못했어요.');
+})();

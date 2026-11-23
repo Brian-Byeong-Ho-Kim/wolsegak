@@ -10,7 +10,8 @@ const pub = new URL('public/', root);
 const index = JSON.parse(await readFile(new URL('data/index.json', pub), 'utf8'));
 // 브라우저 캐시가 예전 css/js를 붙들지 않도록, 파일 내용 해시를 주소에 붙인다
 const hashOf = async f => createHash('md5').update(await readFile(new URL(f, root))).digest('hex').slice(0, 8);
-const ASSET_V = { css: await hashOf('scripts/u.css'), js: await hashOf('scripts/umap.js') };
+const ASSET_V = { css: await hashOf('scripts/u.css'), js: await hashOf('scripts/umap.js'), sj: await hashOf('scripts/smap.js') };
+const GEO = JSON.parse(await readFile(new URL('data/univ_geo.json', pub), 'utf8'));
 const TYPE_NAMES = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -172,7 +173,8 @@ async function univPage(u, all) {
       { '@type': 'ListItem', position: 3, name: full, item: SITE + path }] },
     ...(faq.length ? [{ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faq.map(([qq, a]) => ({ '@type': 'Question', name: qq, acceptedAnswer: { '@type': 'Answer', text: a } })) }] : []),
   ];
-  const html = head({ title, desc, path, extra: `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>` }) + `
+  const html = head({ title, desc, path, extra: `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>` }).replace('<div class="wrap">', '<div class="wrap split">') + `
+<div id="umapWrap" data-name="${esc(u.name)}" data-s="${esc(u.sgg)}" data-addr="${esc(u.addr)}"${GEO[u.name + '|' + u.campus] ? ` data-lat="${GEO[u.name + '|' + u.campus][0]}" data-lng="${GEO[u.name + '|' + u.campus][1]}"` : ''}><div id="umap" role="application" aria-label="${esc(u.name)} 주변 실거래 지도"></div><p class="hint" id="umapHint">🎓 학교 주변 최근 3개월 실거래예요. 숫자를 누르면 건물별 거래가 보여요.</p><script src="/u/smap.js?v=${ASSET_V.sj}" defer></script></div>
 <nav class="crumb"><a href="/">월세각</a> › <a href="/u/">학교별 월세 시세</a> › ${esc(full)}</nav>
 <h1>${esc(full)} 자취방 월세 시세</h1>${aka ? `\n<p class="aka">${esc((u.a || []).join(' · '))}</p>` : ''}
 <p class="lead">${esc(u.addr)} · <b>${esc(s.name)}</b> 실거래 기준 · ${period}</p>
@@ -214,6 +216,7 @@ await mkdir(new URL('u/', pub), { recursive: true });
 const cssSrc = await readFile(new URL('scripts/u.css', root)), jsSrc = await readFile(new URL('scripts/umap.js', root));
 await writeFile(new URL('u/u.css', pub), cssSrc);
 await writeFile(new URL('u/map.js', pub), jsSrc);
+await writeFile(new URL('u/smap.js', pub), await readFile(new URL('scripts/smap.js', root)));
 const univs = [...index.univ].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 const seen = new Set();
 for (const u of univs) { const s = slugOf(u); if (seen.has(s)) throw new Error('중복 주소: ' + s); seen.add(s); }

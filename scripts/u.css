@@ -51,7 +51,7 @@ td small{color:var(--sub)}
 .more{text-align:center;margin:20px 0}
 footer{margin-top:28px;font-size:12px;color:var(--sub);display:grid;gap:6px}
 @media (max-width:560px){.two{grid-template-columns:1fr}.hero .big{font-size:38px}.bar{width:60px}h1{font-size:22px}}
-#umapWrap{margin:8px 0 4px}
+#umapWrap{margin:8px 0 4px;position:relative}
 #umap{height:clamp(300px,48vh,520px);border-radius:14px;border:1px solid var(--line);z-index:0}
 .ulegend{margin:6px 0 0}
 .links a.sel{background:var(--ink);color:#fff}
