@@ -271,7 +271,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
     <div id="mapWrap" class="hide">
       <div id="map" role="application" aria-label="지도"></div>
       <button type="button" id="mapFs" aria-label="지도 전체화면">⛶ 크게 보기</button>
-      <button type="button" id="mapDeals" aria-pressed="false" aria-label="실거래 핀 보기">📍 실거래 보기</button>
+      <button type="button" id="mapDeals" aria-pressed="true" aria-label="실거래 핀 보기">📍 실거래 끄기</button>
       <div id="dealMsg" class="hide"></div>
       <p class="hint" id="mapHint">주황 점은 대학교예요. 눌러서 그 학교 근처 월세를 볼 수 있어요. 지도를 눌러도 그 동네로 찾아요.</p>
     </div>
@@ -1160,6 +1160,7 @@ async function drawDongs(sets, dongs) {
     dongOv.push(ov); dongMk.set(d, ov); b.extend(LL(r.lat, r.lng)); n++;
   }
   fitSelected();
+  refreshDeals();
 }
 
 // ===== 첫 화면 지도: 전국 대학교 점 (좌표는 우리 데이터 public/data/univ_geo.json) =====
@@ -1199,7 +1200,7 @@ function showSchoolPop(u, pos) {
 
 // ===== 지도 실거래 핀 (주소 기반) =====
 // 카카오 좌표는 저장·캐시하지 않고 화면에 그릴 때만 실시간 조회한다 (카카오 정책).
-let dealOn = false, dealOv = [], dealGen = 0, dealPop = null;
+let dealOn = true, dealOv = [], dealGen = 0, dealPop = null;
 const addrCache = new Map();
 function loadAddr(code) {
   if (!addrCache.has(code)) addrCache.set(code, fetch(DATA + `addr/${code}.json`).then(r => r.ok ? r.json() : null).catch(() => null));
