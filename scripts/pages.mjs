@@ -226,7 +226,7 @@ const listHtml = head({
 <input id="f" class="find" placeholder="학교 이름 검색 (예: 성균관대)" autocomplete="off">
 <div id="umapWrap"><div id="umap" role="application" aria-label="전국 대학 지도"></div>
 <div class="legend ulegend"><span><i style="background:#16a34a"></i>35만 미만</span><span><i style="background:#2563eb"></i>35~45만</span><span><i style="background:#d97706"></i>45~55만</span><span><i style="background:#dc2626"></i>55만 이상</span><span><i style="background:#78716c"></i>거래 적음</span></div>
-<p class="hint" id="umapHint">지도에서 학교를 누르거나, 아래 목록에서 학교를 고르면 지도에 표시돼요. 동그라미 색은 원룸 중간 월세예요.</p></div>
+<p class="hint" id="umapHint">지도의 동그라미를 누르면 학교 정보가 뜨고, 아래 목록에 마우스를 올리면 지도가 그 학교로 이동해요. 동그라미 색은 원룸 중간 월세예요.</p></div>
 <div class="two">
 <section class="card"><h2>💸 원룸 월세 비싼 곳 TOP 10</h2><table>${top.map((s, i) => `<tr><td>${i + 1}</td><td>${esc(s.name)}</td><td><b>${fmt(s.m1)}만원</b></td></tr>`).join('')}</table></section>
 <section class="card"><h2>🪙 원룸 월세 싼 곳 TOP 10</h2><table>${low.map((s, i) => `<tr><td>${i + 1}</td><td>${esc(s.name)}</td><td><b>${fmt(s.m1)}만원</b></td></tr>`).join('')}</table></section>

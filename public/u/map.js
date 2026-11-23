@@ -15,14 +15,13 @@
   const LL = (a, b) => new kakao.maps.LatLng(a, b);
   const map = new kakao.maps.Map(document.getElementById('umap'), { center: LL(36.4, 127.8), level: 13 });
   const col = m => m == null ? '#78716c' : m < 35 ? '#16a34a' : m < 45 ? '#2563eb' : m < 55 ? '#d97706' : '#dc2626';
-  const geocoder = new kakao.maps.services.Geocoder();
   const byKey = new Map();
   const bubble = document.createElement('div'); bubble.className = 'ubub';
   const bov = new kakao.maps.CustomOverlay({ content: bubble, yAnchor: 1.9, clickable: true, zIndex: 20 });
   let sel = null;
   const addrOf = k => links.find(a => a.dataset.k === k);
   const show = o => {
-    bubble.innerHTML = `<div class="upop"><b>${o.name}</b><small>${o.m ? '원룸 중간 월세 ' + o.m + '만원' : '거래가 적어 시군구 기준으로 봐요'}</small><br><a href="${o.a.getAttribute('href')}">시세 보기 →</a></div>`;
+    bubble.innerHTML = `<div class="upop"><b>${o.name}</b><small>${o.m ? '원룸 중간 월세 ' + o.m + '만원' : '거래가 적어 시군구 기준으로 봐요'}</small><br><a href="${o.a.getAttribute('href')}" onclick="location.href=this.href;return false">시세 보기 →</a></div>`;
     bov.setPosition(o.pos); bov.setMap(map);
   };
   const select = (k, fly) => {
@@ -41,17 +40,8 @@
     const pos = LL(c[0], c[1]);
     new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: .5, xAnchor: .5, clickable: true, map });
     byKey.set(k, { a, el, pos, m, name });
-    a.addEventListener('click', e => { e.preventDefault(); select(k, true); if (!matchMedia('(min-width:1024px)').matches) document.getElementById('umapWrap').scrollIntoView({ behavior: 'smooth', block: 'center' }); });
-  }
-  // 좌표가 없는 학교는 목록에서 고를 때 카카오 주소 검색으로 찾는다 (저장하지 않음)
-  for (const a of links) {
-    if (byKey.has(a.dataset.k)) continue;
-    a.addEventListener('click', e => {
-      e.preventDefault();
-      const addr = a.dataset.addr; const name = a.childNodes[0].textContent.trim();
-      const go = (x, y) => { const pos = LL(y, x); map.setLevel(4); map.panTo(pos); show({ name, m: a.dataset.m ? +a.dataset.m : null, a, pos }); };
-      geocoder.addressSearch(addr || name, (r, st) => { if (st === kakao.maps.services.Status.OK && r[0]) go(+r[0].x, +r[0].y); else location.href = a.getAttribute('href'); });
-    });
+    // 목록: 누르면 그 학교 페이지로 이동, PC에서는 마우스를 올리면 지도가 그 학교로 이동
+    a.addEventListener('mouseenter', () => { if (matchMedia('(hover:hover)').matches) select(k, true); });
   }
   kakao.maps.event.addListener(map, 'click', () => bov.setMap(null));
   if (!byKey.size) hint.textContent = '학교 위치를 아직 불러오지 못했어요. 아래 목록에서 학교를 골라 주세요.';
