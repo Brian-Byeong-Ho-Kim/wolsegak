@@ -224,6 +224,29 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--sub);margin-top:4px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
 @media (max-width:520px){.stats{grid-template-columns:1fr 1fr}.verdict .big{font-size:26px}}
+/* ===== 모바일 정리 ===== */
+@media (max-width:1023px){
+  #mapWrap:not(.fs) #mapFs{top:10px;right:10px}
+  #mapWrap:not(.fs) #mapDeals{top:52px;right:10px}
+  #mapWrap:not(.fs) #mapLoc{top:94px;right:10px}
+  #dealKinds{top:10px;left:10px}
+  #dealKinds button{font-size:13px;padding:8px 11px}
+  #mapWrap:not(.fs) #dealMsg{top:54px;max-width:calc(100% - 150px)}
+  #mapWrap.fs #dealKinds{top:calc(max(12px,env(safe-area-inset-top)) + 46px)}
+  #mapWrap.fs #dealMsg{top:calc(max(12px,env(safe-area-inset-top)) + 90px);max-width:calc(100% - 24px)}
+}
+@media (max-width:700px){
+  .topr .goHome{display:none}
+  .vtabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .vtabs::-webkit-scrollbar{display:none}
+  .vtabs button{flex:0 0 auto;white-space:nowrap;padding:12px 13px;font-size:15px}
+  .vtabs button.go{font-size:14px}
+}
+@media (max-width:520px){
+  .brand p{display:none}
+  .topr{gap:5px}
+  .topr .toplink{padding:6px 10px;font-size:13px}
+}
 </style>
 </head>
 <body>
