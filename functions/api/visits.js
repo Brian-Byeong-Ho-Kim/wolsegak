@@ -9,7 +9,7 @@
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
 const PATH = /^\/[A-Za-z0-9\-_.~%\/]{0,240}$/;
-const SKIP = /^\/(api|stats|data)(\/|$)/;
+const SKIP = /^\/(api|stats|data|admin)(\/|$)/;
 const LABEL = /^[0-9]{5}\|(wolse|jeonse)$/;
 const SHARE = /^(native|copy)$/;
 const REF = /^(share|from:[a-z0-9_\-]{1,30}|[a-z0-9.\-]{1,80})$/;
@@ -69,5 +69,15 @@ export async function onRequestGet({ env }) {
   const ev = async (kind, from, to) => (await d.prepare("SELECT COALESCE(SUM(n),0) n FROM wsg_events WHERE kind = ? AND day >= ? AND day <= ?").bind(kind, from, to).first()).n;
   const [sToday, s7, s30, sAll] = await Promise.all([ev('share', t, t), ev('share', kst(6), t), ev('share', from30, t), ev('share', '0000-00-00', '9999-99-99')]);
   const { results: topRefs } = await d.prepare("SELECT label, SUM(n) n FROM wsg_events WHERE kind = 'ref' AND day >= ? GROUP BY label ORDER BY n DESC LIMIT 20").bind(from30).all();
-  return json({ today, yesterday, d7, d30, all, checks: { today: cToday, d7: c7, d30: c30, all: cAll }, shares: { today: sToday, d7: s7, d30: s30, all: sAll }, daily, checksDaily, topPlaces, topRefs, today_day: t });
+  // 가입자 수 (숫자만. 회원 표가 아직 없으면 0)
+  let members = { today: 0, d7: 0, d30: 0, all: 0, kakao: 0, email: 0 };
+  try {
+    const since = day => new Date(`${day}T00:00:00+09:00`).toISOString();
+    const cnt = async from => (await d.prepare('SELECT COUNT(*) n FROM wsg_users WHERE created >= ?').bind(from).first()).n;
+    const [mt, m7, m30, mAll] = await Promise.all([cnt(since(t)), cnt(since(kst(6))), cnt(since(from30)), cnt('0')]);
+    const { results: byProv } = await d.prepare('SELECT provider, COUNT(DISTINCT user_id) n FROM wsg_accounts GROUP BY provider').all();
+    const pv = Object.fromEntries(byProv.map(r => [r.provider, r.n]));
+    members = { today: mt, d7: m7, d30: m30, all: mAll, kakao: pv.kakao || 0, email: pv.email || 0 };
+  } catch {}
+  return json({ members, today, yesterday, d7, d30, all, checks: { today: cToday, d7: c7, d30: c30, all: cAll }, shares: { today: sToday, d7: s7, d30: s30, all: sAll }, daily, checksDaily, topPlaces, topRefs, today_day: t });
 }

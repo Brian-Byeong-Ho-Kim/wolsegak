@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>월세각 관리자 · 회원</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{--bg:#fff8f3;--card:#fff;--ink:#1f1a17;--sub:#6d635c;--line:#efe3da;--soft:#fff1e8;--brand:#ff6b3d;--bad:#dc2626;--r:18px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:980px;margin:0 auto;padding:24px 16px 60px}
+h1{margin:0 0 4px;font-size:24px}
+.note{color:var(--sub);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin:14px 0}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input{font:inherit;font-size:15px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;min-width:240px;flex:1}
+button,a.btn{font:inherit;font-size:14px;font-weight:600;border:0;border-radius:10px;padding:10px 14px;background:var(--ink);color:#fff;cursor:pointer;text-decoration:none;display:inline-block}
+button.ghost{background:var(--soft);color:var(--ink)}
+button.del{background:transparent;color:var(--bad);border:1px solid #fecaca;padding:5px 9px;font-size:12px}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-size:12px;color:var(--sub);font-weight:600}
+.tag{display:inline-block;background:var(--soft);border-radius:999px;padding:2px 8px;font-size:11px;margin-right:4px}
+.tag.kakao{background:#fee500}
+.msg{padding:16px;border-radius:12px;background:var(--soft);line-height:1.7}
+</style>
+</head>
+<body>
+<main>
+  <h1>👤 회원 관리</h1>
+  <p class="note">대표 전용 화면이에요. 이 화면의 정보는 개인정보처리방침에 적은 목적(로그인·저장 기능 운영) 밖으로 쓰거나 내보내지 마세요. <a href="/stats/">방문 통계</a> · <a href="/">월세각 홈</a></p>
+  <div id="gate" class="card" style="display:none"></div>
+  <div id="app" class="card" style="display:none">
+    <div class="bar">
+      <input id="q" placeholder="닉네임이나 이메일로 찾기">
+      <button id="find">찾기</button>
+      <button id="csv" class="ghost" title="지금 보이는 목록을 CSV로 저장">CSV 저장</button>
+    </div>
+    <p class="note" id="sum"></p>
+    <div class="scroll"><table id="tbl"></table></div>
+  </div>
+</main>
+<script>
+var $ = function (id) { return document.getElementById(id); };
+var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+var kdt = function (iso) { if (!iso) return '-'; var d = new Date(iso); return d.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); };
+var rows = [];
+
+function gate(html) { var g = $('gate'); g.innerHTML = '<div class="msg">' + html + '</div>'; g.style.display = ''; $('app').style.display = 'none'; }
+
+async function load() {
+  var q = $('q').value.trim();
+  var r = await fetch('/api/admin/users' + (q ? '?q=' + encodeURIComponent(q) : ''), { credentials: 'same-origin' });
+  var j = await r.json().catch(function () { return {}; });
+  if (!r.ok) {
+    var here = encodeURIComponent('/admin/');
+    if (j.code === 'login') return gate('관리자 계정으로 로그인해야 볼 수 있어요.<br><br><a class="btn" href="/api/auth/kakao?next=' + here + '">카카오로 로그인</a> &nbsp; <a class="btn" style="background:#fff;color:#1f1a17;border:1px solid #efe3da" href="/?login=1&next=%2Fadmin%2F">이메일로 로그인</a>');
+    if (j.code === 'forbidden') return gate('지금 로그인한 계정(' + esc(j.you || '이메일 없음') + ')은 관리자로 등록돼 있지 않아요.<br>Cloudflare Pages → 월세각 → 설정 → 환경 변수 <b>ADMIN_EMAILS</b>에 대표님 이메일을 넣고, 그 이메일로 로그인해 주세요. 카카오 계정에 이메일 제공 동의를 안 했다면 이메일 로그인을 써 주세요.');
+    if (j.code === 'no_admin') return gate('관리자 이메일이 아직 설정되지 않았어요.<br>Cloudflare Pages → 월세각 → 설정 → 환경 변수에 <b>ADMIN_EMAILS</b> = 대표님 이메일 을 추가한 뒤 다시 배포해 주세요.');
+    return gate(esc(j.error || '불러오지 못했어요 (' + r.status + ')'));
+  }
+  $('gate').style.display = 'none'; $('app').style.display = '';
+  rows = j.users || [];
+  $('sum').textContent = '전체 회원 ' + j.total.toLocaleString() + '명' + (q ? ' · 검색 결과 ' + j.shown.toLocaleString() + '명' : '') + (j.shown >= 1000 ? ' (최근 1,000명까지 표시)' : '');
+  $('tbl').innerHTML = '<tr><th>닉네임</th><th>이메일</th><th>로그인 방식</th><th>가입</th><th>최근 로그인</th><th>저장 데이터</th><th></th></tr>' +
+    (rows.length ? rows.map(function (u) {
+      var tags = String(u.providers || '').split(',').filter(Boolean).map(function (p) { return '<span class="tag ' + p + '">' + (p === 'kakao' ? '카카오' : p === 'email' ? '이메일' : esc(p)) + '</span>'; }).join('');
+      return '<tr><td>' + esc(u.nickname || '-') + '</td><td>' + esc(u.email || '-') + '</td><td>' + tags + '</td><td>' + kdt(u.created) + '</td><td>' + kdt(u.last_login) + '</td><td>' + (u.saved_updated ? kdt(u.saved_updated) : '-') + '</td><td><button class="del" data-id="' + esc(u.id) + '" data-n="' + esc(u.nickname || u.email || '이 회원') + '">탈퇴 처리</button></td></tr>';
+    }).join('') : '<tr><td colspan="7" class="note">회원이 없어요.</td></tr>');
+}
+$('tbl').addEventListener('click', async function (e) {
+  var b = e.target.closest('button.del'); if (!b) return;
+  var name = b.getAttribute('data-n');
+  var typed = window.prompt('「' + name + '」 회원을 탈퇴 처리하면 계정·저장 데이터가 바로 지워지고 되돌릴 수 없어요.\n계속하려면 "탈퇴"라고 입력하세요.');
+  if (typed !== '탈퇴') return;
+  var r = await fetch('/api/admin/users?id=' + encodeURIComponent(b.getAttribute('data-id')), { method: 'DELETE', credentials: 'same-origin' });
+  var j = await r.json().catch(function () { return {}; });
+  alert(r.ok ? '탈퇴 처리했어요.' : (j.error || '처리하지 못했어요.'));
+  load();
+});
+$('find').onclick = load;
+$('q').addEventListener('keydown', function (e) { if (e.key === 'Enter') load(); });
+$('csv').onclick = function () {
+  var head = ['닉네임', '이메일', '로그인 방식', '가입', '최근 로그인'];
+  var lines = [head].concat(rows.map(function (u) { return [u.nickname || '', u.email || '', u.providers || '', kdt(u.created), kdt(u.last_login)]; }))
+    .map(function (r) { return r.map(function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(','); });
+  var blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '월세각_회원_' + new Date().toISOString().slice(0, 10) + '.csv'; a.click();
+};
+load();
+</script>
+</body>
+</html>

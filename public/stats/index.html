@@ -44,6 +44,7 @@ li:last-child{border-bottom:0}
   <div id="body" hidden>
     <div class="card"><h2>방문</h2><div class="kpis" id="kpis"></div></div>
     <div class="card"><h2>매물 검증 횟수</h2><div class="kpis" id="ckpis"></div></div>
+    <div class="card"><h2>가입자 <span class="note" id="mnote"></span></h2><div class="kpis" id="mkpis"></div></div>
     <div class="card"><h2>최근 30일</h2><p class="note" style="margin:0">주황 막대 = 조회수(위 숫자 = 방문자), 파랑 막대 = 매물 검증</p><div class="chart" id="chart"></div></div>
     <div class="card"><h2>많이 검증한 지역 <span class="note">(최근 30일)</span></h2><ol id="places"></ol></div>
     <div class="card"><h2>결과 공유 횟수</h2><div class="kpis" id="skpis"></div></div>
@@ -82,6 +83,11 @@ li:last-child{border-bottom:0}
   $('places').innerHTML = s.topPlaces.length ? s.topPlaces.map(function (r) {
     var p = r.label.split('|'); return '<li><span>' + (names[p[0]] || p[0]) + ' · ' + (p[1] === 'jeonse' ? '전세' : '월세') + '</span><b>' + fmt(r.n) + '회</b></li>';
   }).join('') : '<li class="empty">아직 기록이 없어요.</li>';
+  var mb = s.members || { today: 0, d7: 0, d30: 0, all: 0, kakao: 0, email: 0 };
+  $('mkpis').innerHTML = [['오늘', mb.today], ['최근 7일', mb.d7], ['최근 30일', mb.d30], ['전체', mb.all]].map(function (c) {
+    return '<div class="kpi"><span>' + c[0] + '</span><b>' + fmt(c[1]) + '</b><em>명</em></div>';
+  }).join('');
+  $('mnote').textContent = '(카카오 ' + fmt(mb.kakao) + '명 · 이메일 ' + fmt(mb.email) + '명 · 회원 목록은 관리자 화면에서)';
   var sh = s.shares || { today: 0, d7: 0, d30: 0, all: 0 };
   $('skpis').innerHTML = [['오늘', sh.today], ['최근 7일', sh.d7], ['최근 30일', sh.d30], ['전체', sh.all]].map(function (c) {
     return '<div class="kpi"><span>' + c[0] + '</span><b>' + fmt(c[1]) + '</b><em>회</em></div>';

@@ -1483,7 +1483,7 @@ function toggleAcct(open) {
   if (on) { c.scrollIntoView({ behavior: 'smooth', block: 'start' }); if (!ME && !$('#emailBox').classList.contains('hide')) setTimeout(() => $('#loginEmail').focus(), 300); }
 }
 $('#loginBtn').onclick = () => { if (ME) location.href = '/me/'; else toggleAcct(); };
-const nextHere = () => location.pathname + location.hash;
+const nextHere = () => { const n = new URLSearchParams(location.search).get('next'); return n && /^\/(?!\/)/.test(n) ? n : location.pathname + location.hash; };
 $('#kakaoBtn').onclick = () => { location.href = '/api/auth/kakao?next=' + encodeURIComponent(nextHere()); };
 async function sendLink() {
   const email = $('#loginEmail').value.trim();
@@ -1526,6 +1526,8 @@ async function initAuth() {
   try { ME = (await (await fetch('/api/me', { cache: 'no-store' })).json()).user; } catch (e) {}
   renderMe();
   if (ME) pullSaved();
+  // /?login=1&next=/admin/ → 로그인 창을 바로 연다 (로그인 뒤 next로 돌아감)
+  if (!ME && sp.get('login') === '1') toggleAcct(true);
 }
 initAuth();
 loadIndex();
