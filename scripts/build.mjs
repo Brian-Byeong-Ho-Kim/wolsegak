@@ -35,6 +35,7 @@ const months = Array.from({ length: MONTHS }, (_, i) => ymOf(i));
 // 전년 비교용: 그 앞 12개월 (arg.prev=0 이면 끔)
 const PREV = arg.prev === '0' ? 0 : 12;
 const prevMonths = Array.from({ length: PREV }, (_, i) => ymOf(MONTHS + i));
+const RECENT = new Set(months.slice(0, 3));
 const rowYm = r => '20' + String(r[7]).padStart(6, '0').slice(0, 4);
 const monthRange = (from, to) => { const out = []; if (!from || !to) return out; let y = +from.slice(0, 4), m = +from.slice(4); while (y * 100 + m <= +to) { out.push(`${y}${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++; } } return out; };
 
@@ -80,6 +81,7 @@ function shape(t, x, dongFilter) {
     dong,
     row: [t.code, 0, Math.round(area * 10) / 10, dep, rent, num(tag(x, 'floor')), num(tag(x, 'buildYear')),
       +(y.slice(2) + m + d), ct === '신규' ? 1 : ct === '갱신' ? 2 : 0],
+    jb: tag(x, 'jibun'), nm: t.name ? tag(x, t.name) : '',
   };
 }
 
@@ -89,6 +91,7 @@ const notRegistered = e => /SERVICE_KEY_IS_NOT_REGISTERED|등록되지 않은 �
 
 async function buildSgg([code, name], monthList = months) {
   const rows = [], dongs = [], dIdx = new Map(), perType = [0, 0, 0, 0];
+  const addr = [], names = [], nIdx = new Map(), seenJb = [0, 0, 0, 0];   // 최근 3개월 거래의 지번·건물명 (지도 핀용)
   for (const t of TYPES) {
     if (skipped.has(t.svc)) continue;
     try { await typeRows(t); }
@@ -111,13 +114,18 @@ async function buildSgg([code, name], monthList = months) {
       for (const x of items) { const s = shape(t, x, filter); if (s) push(s); }
     }
   }
-  function push({ dong, row }) {
+  function push({ dong, row, jb, nm }) {
     if (!dIdx.has(dong)) { dIdx.set(dong, dongs.length); dongs.push(dong); }
     row[1] = dIdx.get(dong);
     rows.push(row); perType[row[0]]++;
+    if (jb) seenJb[row[0]]++;
+    if (jb && RECENT.has(rowYm(row))) {
+      if (nm && !nIdx.has(nm)) { nIdx.set(nm, names.length); names.push(nm); }
+      addr.push([...row, jb, nm ? nIdx.get(nm) : -1]);
+    }
   }
   rows.sort((a, b) => b[7] - a[7]);
-  return { code, name, dongs, rows, perType };
+  return { code, name, dongs, rows, perType, addr, names, seenJb };
 }
 
 await mkdir(new URL('public/data/sgg/', root), { recursive: true });
@@ -166,6 +174,15 @@ async function worker() {
         cols: ['type', 'dong', 'area', 'deposit', 'rent', 'floor', 'built', 'yymmdd', 'contract'],
         dongs: r.dongs, rows: r.rows,
       }));
+      if (r.addr.length) {
+        await mkdir(new URL('public/data/addr/', root), { recursive: true });
+        await writeFile(new URL(`public/data/addr/${r.code}.json`, root), JSON.stringify({
+          v: 1, code: r.code, name: r.name, updated, months: [...RECENT].sort(),
+          cols: ['type', 'dong', 'area', 'deposit', 'rent', 'floor', 'built', 'yymmdd', 'contract', 'jibun', 'name'],
+          dongs: r.dongs, names: r.names, rows: r.addr.sort((a, b) => b[7] - a[7]),
+        }));
+      }
+      console.log(`  지번 있는 거래 [단독,연립,오피스텔,아파트] ${r.seenJb.join(',')} / 전체 ${r.perType.join(',')}`);
       // 전국 비교용: 원룸(단독·연립·오피스텔, ~23㎡) 보증금 2천↓ 신규 월세 중간값, 월세 비중
       const one = r.rows.filter(x => x[0] !== 3 && x[2] <= 23 && x[8] !== 2);
       const lowW = one.filter(x => x[4] > 0 && x[3] <= 2000).map(x => x[4]).sort((p, q) => p - q);
