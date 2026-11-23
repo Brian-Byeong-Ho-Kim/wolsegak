@@ -229,7 +229,7 @@ const listHtml = head({
   title: '전국 대학가 자취방 월세 시세 — 학교별 원룸 중간 월세 | 월세각',
   desc: `전국 대학·전문대 ${pages.length}곳 근처 원룸 월세 시세. 국토교통부 전월세 실거래가(${period})로 본 학교별 중간 월세와 전국 비싼 곳·싼 곳 순위.`,
   path: '/u/',
-}) + `
+}).replace('<div class="wrap">', '<div class="wrap split">') + `
 <nav class="crumb"><a href="/">월세각</a> › 학교별 월세 시세</nav>
 <h1>전국 대학가 자취방 월세 시세</h1>
 <p class="lead">학교를 고르면 그 학교가 있는 시군구의 원룸 실거래 시세를 볼 수 있어요. ${period} 국토교통부 실거래가 기준.</p>

@@ -61,7 +61,7 @@ footer{margin-top:28px;font-size:12px;color:var(--sub);display:grid;gap:6px}
 .upop a{display:inline-block;margin-top:6px;background:#ff6b3d;color:#fff;border-radius:8px;padding:5px 10px;text-decoration:none;font-weight:700;font-size:13px}
 @media (min-width:1024px){
   :root{--lw:clamp(520px,44vw,700px)}
-  .wrap{max-width:none;margin:0;width:var(--lw);padding:0 22px 80px}
+  .wrap.split{max-width:none;margin:0;width:var(--lw);padding:0 22px 80px}
   #umapWrap{position:fixed;top:0;right:0;bottom:0;left:var(--lw);margin:0;z-index:1;background:var(--bg)}
   #umap{height:100%;border:0;border-radius:0}
   .ulegend{position:absolute;left:12px;bottom:58px;z-index:500;background:rgba(255,255,255,.95);padding:6px 10px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.2)}
