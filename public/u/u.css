@@ -157,6 +157,7 @@ body.mapfs{overflow:hidden}
 .mview button[aria-pressed=true]{background:var(--ink);color:#fff}
 .mvmsg{background:rgba(255,255,255,.95);border-radius:8px;padding:5px 9px;font:600 12px/1.3 "Pretendard Variable",sans-serif;box-shadow:0 1px 6px rgba(0,0,0,.2)}
 .mview .hide,.rvpanel.hide{display:none}
+.rvmk{position:relative;width:44px;height:44px;pointer-events:none}.rvmk i{position:absolute;inset:0;background:conic-gradient(from -30deg,rgba(220,38,38,.55) 0 60deg,transparent 60deg);border-radius:50%;-webkit-mask:radial-gradient(circle,transparent 0 8px,#000 9px);mask:radial-gradient(circle,transparent 0 8px,#000 9px)}.rvmk b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:#dc2626;border:2px solid #fff;font-size:12px;line-height:18px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.4)}
 .rvpanel{position:absolute;left:0;right:0;bottom:0;height:58%;z-index:600;background:#000;border-radius:14px 14px 0 0;overflow:hidden}
 .rvbox{width:100%;height:100%}
 .rvx{position:absolute;top:8px;right:8px;z-index:2;background:#fff;color:#1f1a17;border:0;border-radius:8px;padding:6px 10px;font:700 13px/1 "Pretendard Variable",sans-serif;cursor:pointer}

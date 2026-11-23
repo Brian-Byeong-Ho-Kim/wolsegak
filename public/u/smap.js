@@ -38,7 +38,7 @@
     const panel = document.createElement('div'); panel.className = 'rvpanel hide';
     panel.innerHTML = '<button type="button" class="rvx">✕ 닫기</button><div class="rvbox"></div>';
     wrap.appendChild(bar); wrap.appendChild(panel);
-    const msg = bar.querySelector('.mvmsg'); let rv = null, rvc = null;
+    const msg = bar.querySelector('.mvmsg'); let rv = null, rvc = null, mk = null, mkEl = null;
     const say = t => { msg.textContent = t || ''; msg.classList.toggle('hide', !t); };
     const openRv = ll => {
       if (!rvc) rvc = new kakao.maps.RoadviewClient();
@@ -46,6 +46,13 @@
         if (!id) { say('이 근처에는 로드뷰가 없어요. 다른 곳을 눌러 보세요.'); return; }
         say(''); panel.classList.remove('hide');
         if (!rv) rv = new kakao.maps.Roadview(panel.querySelector('.rvbox'));
+      if (!mk) {
+        mkEl = document.createElement('div'); mkEl.className = 'rvmk'; mkEl.innerHTML = '<i></i><b>🚶</b>';
+        mk = new kakao.maps.CustomOverlay({ content: mkEl, xAnchor: .5, yAnchor: .5, zIndex: 50 });
+        kakao.maps.event.addListener(rv, 'position_changed', () => { const p = rv.getPosition(); mk.setPosition(p); mk.setMap(map); });
+        kakao.maps.event.addListener(rv, 'viewpoint_changed', () => { mkEl.firstChild.style.transform = 'rotate(' + rv.getViewpoint().pan + 'deg)'; });
+      }
+      mk.setPosition(ll); mk.setMap(map);
         rv.setPanoId(id, ll); setTimeout(() => rv.relayout(), 50);
       });
     };
@@ -56,11 +63,11 @@
       else {
         window.__rvOn = on;
         if (on) { map.addOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW); say('지도의 파란 길을 눌러 보세요.'); }
-        else { map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW); say(''); }
+        else { map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW); say(''); panel.classList.add('hide'); if (mk) mk.setMap(null); }
       }
     });
     kakao.maps.event.addListener(map, 'click', e => { if (window.__rvOn) openRv(e.latLng); });
-    panel.querySelector('.rvx').onclick = () => panel.classList.add('hide');
+    panel.querySelector('.rvx').onclick = () => { panel.classList.add('hide'); if (mk) mk.setMap(null); };
   }
   // ===== 조작 버튼 (첫 화면 지도와 같은 모양·위치) =====
   const mk = (tag, id, html, attrs) => { const e = document.createElement(tag); if (id) e.id = id; e.innerHTML = html || ''; Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v)); wrap.appendChild(e); return e; };
