@@ -32,9 +32,9 @@
   for (const [rad, so, fo] of [[500, .7, .07], [1000, .5, .035]]) new kakao.maps.Circle({ center: spos, radius: rad, strokeWeight: 2, strokeColor: '#ff6b3d', strokeOpacity: so, strokeStyle: 'dashed', fillColor: '#ff6b3d', fillOpacity: fo, map });
   for (const [rad, t] of [[500, '500m'], [1000, '1km']]) new kakao.maps.CustomOverlay({ position: LL(lat + rad / 111320, lng), content: '<div class="rlab">' + t + '</div>', xAnchor: .5, yAnchor: .5, zIndex: 3, map });
   // 스카이뷰(위성사진)·로드뷰(거리 사진) 전환 — 카카오맵 기본 기능
-  function setupMapView(map, wrap) {
+  function setupMapView(map, wrap, onReset) {
     const bar = document.createElement('div'); bar.className = 'mview';
-    bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><span class="mvmsg hide"></span>';
+    bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><button type="button" data-v="reset" title="지도 설정(필터·스카이뷰·로드뷰·창 크기)을 처음 상태로">↺ 초기화</button><span class="mvmsg hide"></span>';
     const panel = document.createElement('div'); panel.className = 'rvpanel hide';
     panel.innerHTML = '<div class="rvgrip" title="위아래로 끌어서 로드뷰 크기 조절"></div><button type="button" class="rvx">✕ 닫기</button><div class="rvbox"></div>';
     wrap.appendChild(bar); wrap.appendChild(panel);
@@ -76,7 +76,17 @@
     };
     bar.addEventListener('click', e => {
       const b = e.target.closest('button[data-v]'); if (!b) return;
-      const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on);
+      if (b.dataset.v === 'reset') {
+        bar.querySelectorAll('button[aria-pressed]').forEach(x => x.setAttribute('aria-pressed', 'false'));
+        map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP); map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW);
+        window.__rvOn = false; say(''); panel.classList.add('hide'); panel.style.height = ''; if (mk) mk.setMap(null);
+        try { localStorage.removeItem('wsg-rvh'); localStorage.removeItem('wsg-lw'); } catch {}
+        document.documentElement.style.removeProperty('--lw');
+        if (onReset) onReset();
+        setTimeout(() => map.relayout(), 60); say('설정을 처음 상태로 돌렸어요.'); setTimeout(() => say(''), 2500);
+        return;
+      }
+        const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on);
       if (b.dataset.v === 'sky') map.setMapTypeId(on ? kakao.maps.MapTypeId.HYBRID : kakao.maps.MapTypeId.ROADMAP);
       else {
         window.__rvOn = on;
@@ -237,7 +247,13 @@
     dealMsg(dealShown.size ? '이 화면의 최근 12개월 실거래(전용 60㎡ 이하) ' + total.toLocaleString() + '건 중 ' + dealShown.size + '곳. 지도를 옮기면 새로 보여 드려요.' : '주소를 지도에서 찾지 못했어요.');
   }
   kakao.maps.event.addListener(map, 'idle', refreshDeals);
-  setupMapView(map, wrap);
+  setupMapView(map, wrap, () => {
+    dealKinds.clear(); dealKinds.add('w'); dealKinds.add('b'); pinTypes.clear(); [0, 4, 1, 2].forEach(t => pinTypes.add(t));
+    kinds.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', dealKinds.has(b.dataset.k)));
+    typesEl.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', pinTypes.has(+b.dataset.t)));
+    if (dealPop) { dealPop.setMap(null); dealPop = null; }
+    if (!dealOn) bDeals.onclick(); else drawDeals();
+  });
   kakao.maps.event.addListener(map, 'click', () => { if (Date.now() - lastPin < 400) return; if (dealPop) { dealPop.setMap(null); dealPop = null; } });
   kinds.addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (!b) return; const k = b.dataset.k; if (dealKinds.has(k)) { if (dealKinds.size === 1) return; dealKinds.delete(k); } else dealKinds.add(k); b.setAttribute('aria-pressed', dealKinds.has(k)); drawDeals(); });
   typesEl.addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if (!b) return; const t = +b.dataset.t; if (pinTypes.has(t)) { if (pinTypes.size === 1) return; pinTypes.delete(t); } else pinTypes.add(t); b.setAttribute('aria-pressed', pinTypes.has(t)); drawDeals(); });

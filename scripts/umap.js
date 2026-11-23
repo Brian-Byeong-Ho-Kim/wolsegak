@@ -216,5 +216,17 @@
       }, e => { b.disabled = false; b.textContent = '📍 내 위치'; hint.textContent = e && e.code === 1 ? '위치 권한이 꺼져 있어요. 브라우저 주소창의 위치 설정에서 허용해 주세요.' : '내 위치를 찾지 못했어요.'; }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
     };
   }
+  // 설정 초기화: 검색어 지우고 전국 보기로
+  {
+    const wrapEl = document.getElementById('umapWrap'), r = document.createElement('button');
+    r.type = 'button'; r.id = 'uReset'; r.textContent = '↺ 초기화'; wrapEl.appendChild(r);
+    r.onclick = () => {
+      const f = document.getElementById('f'); if (f && f.value) { f.value = ''; f.dispatchEvent(new Event('input')); }
+      document.querySelectorAll('.kpop').forEach(x => x.remove());
+      try { localStorage.removeItem('wsg-lw'); } catch {}
+      document.documentElement.style.removeProperty('--lw');
+      map.setLevel(13); map.setCenter(LL(36.4, 127.8)); setTimeout(() => map.relayout(), 60);
+    };
+  }
   setTimeout(() => map.relayout(), 100);
 })();

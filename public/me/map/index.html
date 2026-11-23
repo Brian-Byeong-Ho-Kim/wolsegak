@@ -63,6 +63,7 @@ input:focus{border-color:var(--brand)}
 .hide{display:none!important}
 #lsplit{display:none}
 @media (min-width:1024px){#lsplit{display:block;position:fixed;top:0;bottom:0;left:calc(var(--lw) - 6px);width:12px;cursor:col-resize;z-index:900;touch-action:none}#lsplit::after{content:"";position:absolute;left:4px;top:50%;width:4px;height:48px;margin-top:-24px;border-radius:3px;background:#a8a29e;opacity:.7}#lsplit:hover::after,#lsplit.on::after{background:#ff6b3d;opacity:1}body.mapfs #lsplit{display:none}}
+#mapReset{position:absolute;top:12px;right:12px;z-index:500;background:#fff;color:var(--ink);border:1.5px solid var(--ink);border-radius:10px;padding:7px 12px;font:600 14px/1 "Pretendard Variable",sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2)}
 </style>
 </head>
 <body>
@@ -127,6 +128,18 @@ let INDEX, GEO = {}, ME = null, SAVED = null, map, kGeo, kPlaces, overlays = [],
 
 const types = new Set([0, 4, 1, 2]);
 $('#types').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; const t = +b.dataset.v; if (types.has(t)) { if (types.size === 1) return; types.delete(t); } else types.add(t); b.setAttribute('aria-pressed', types.has(t)); if (last) apply(); });
+(function () {
+  const r = document.createElement('button'); r.type = 'button'; r.id = 'mapReset'; r.textContent = '↺ 초기화'; r.title = '지도 필터·창 너비를 처음 상태로 (예산 입력은 그대로)';
+  $('#mapBox').appendChild(r);
+  r.onclick = () => {
+    types.clear(); [0, 4, 1, 2].forEach(t => types.add(t)); setTypesUI();
+    $('#jn').setAttribute('aria-pressed', 'false');
+    try { localStorage.removeItem('wsg-lw'); } catch {}
+    document.documentElement.style.removeProperty('--lw');
+    if (typeof last !== 'undefined' && last) apply();
+    if (map) setTimeout(() => map.relayout(), 60);
+  };
+})();
 $('#jn').onclick = () => { const on = $('#jn').getAttribute('aria-pressed') !== 'true'; $('#jn').setAttribute('aria-pressed', on); if (last) apply(); };
 ['#dep', '#rent', '#fee'].forEach(s => $(s).addEventListener('change', () => { if (last) apply(); }));
 function setTypesUI() { $$('#types .chip').forEach(b => b.setAttribute('aria-pressed', types.has(+b.dataset.v))); }
