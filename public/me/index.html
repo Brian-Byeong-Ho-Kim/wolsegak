@@ -16,10 +16,10 @@ a{color:var(--brand-ink)}
 .wrap{max-width:760px;margin:0 auto;padding:0 18px 80px}
 header{padding:28px 0 8px;display:flex;align-items:center;gap:12px}
 header .logo{width:42px;height:42px;border-radius:12px;background:var(--brand);display:grid;place-items:center;flex:none}
-header h1{font-size:22px;margin:0;letter-spacing:-.02em}
+header h1{font-size:24px;margin:0;letter-spacing:-.02em}
 header p{margin:0;color:var(--sub);font-size:14px}
 header .back{margin-left:auto;font-size:14px;font-weight:600;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 14px;color:var(--ink)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin:14px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin:14px 0;box-shadow:0 1px 0 rgba(0,0,0,.02)}
 .card h2{font-size:17px;margin:0 0 4px;letter-spacing:-.01em}
 .card .desc{font-size:13px;color:var(--sub);margin:0 0 12px}
 label.f{display:block;font-size:13px;color:var(--sub);margin:14px 0 6px;font-weight:600}
@@ -133,7 +133,7 @@ input:focus,select:focus{border-color:var(--brand)}
   <section class="card" id="myFind">
     <h2>🗺 내 설정으로 지도 보기</h2>
     <p class="desc">위 「내 설정」에서 학교·지역과 집 종류·보증금·월세·관리비를 정해 두면, 조건에 맞는 최근 실거래를 지도와 목록으로 바로 볼 수 있어요.</p>
-    <div class="actions"><a class="btn" id="goMap" href="/?myMap=1" style="text-decoration:none">🗺 내 조건으로 지도 보기</a></div>
+    <div class="actions"><a class="btn" id="goMap" href="/me/map/" style="text-decoration:none">🗺 내 조건으로 지도 보기</a></div>
     <p class="desc" style="margin:8px 0 0">설정을 바꾼 뒤에는 「설정 저장」을 먼저 눌러 주세요.</p>
   </section>
 
