@@ -149,25 +149,30 @@
     const cen = await Promise.all(dongs.map(async i => ({ i, c: await kFind(d.name + ' ' + d.dongs[i]) })));
     if (gen !== dealGen) return;
     const near = cen.filter(x => x.c).map(x => ({ i: x.i, km: dist(sc, x.c) })).sort((a, b) => a.km - b.km).filter((x, n) => n < 3 || x.km < 1.5).slice(0, 5);
-    const ok = new Set(near.map(x => x.i));
+    const ok = new Set(near.map(x => x.i)), dkm = new Map(near.map(x => [x.i, x.km]));
     // 2) 그 동의 월세 거래(소형, 빌라·오피스텔·아파트)를 건물별로 묶는다
     const groups = new Map(); let total = 0;
     for (const r of d.rows) {
       if (!ok.has(r[1]) || !r[9] || r[2] > 60) continue;
       total++;
       const key = r[1] + '|' + r[9]; let g = groups.get(key);
-      if (!g) groups.set(key, g = { dong: d.dongs[r[1]], jb: r[9], nm: r[10] >= 0 ? d.names[r[10]] : '', deals: [] });
+      if (!g) groups.set(key, g = { dong: d.dongs[r[1]], jb: r[9], nm: r[10] >= 0 ? d.names[r[10]] : '', km: dkm.get(r[1]) || 9, deals: [] });
       g.deals.push(r);
     }
-    const list = [...groups.values()].sort((a, b) => b.deals[0][7] - a.deals[0][7]).slice(0, 120);
+    const list = [...groups.values()].sort((a, b) => a.km - b.km || b.deals[0][7] - a.deals[0][7]).slice(0, 150);   // 학교에서 가까운 동부터
     if (!list.length) { setMsg(o.name + ' 주변에는 최근 12개월 실거래(주소 있는 것)가 없어요. 원룸·다가구는 지번이 공개되지 않아 지도에 못 그려요.'); return; }
-    let i = 0, shown = 0;
+    // 학교에서 500m·1km 안을 원으로 표시 (가까운 곳 위주로 보도록)
+    for (const [rad, op] of [[500, .5], [1000, .3]]) dealOv.push(new kakao.maps.Circle({ center: o.pos, radius: rad, strokeWeight: 2, strokeColor: '#ff6b3d', strokeOpacity: op + .2, strokeStyle: 'dashed', fillColor: '#ff6b3d', fillOpacity: rad === 500 ? .06 : .03, map }));
+    const band = { 300: 0, 500: 0, 1000: 0 }, bandW = { 500: [], 1000: [] }; let i = 0, shown = 0;
     const work = async () => {
       while (i < list.length) {
         const g = list[i++];
         const c = (await kFind(d.name + ' ' + g.dong + ' ' + g.jb)) || (g.nm ? await kFind(d.name + ' ' + g.dong + ' ' + g.nm, 1) : null);
         if (gen !== dealGen) return;
         if (!c) continue;
+        const m = dist(sc, c) * 1000;
+        if (m > 1500) continue;   // 학교에서 너무 먼 곳은 그리지 않는다
+        for (const b of [300, 500, 1000]) if (m <= b) { band[b] += g.deals.length; if (bandW[b]) g.deals.forEach(r => { if (r[4] > 0) bandW[b].push(r[4]); }); }
         const pos = LL(c.lat, c.lng), d0 = g.deals[0];
         const el = document.createElement('div'); el.className = 'kdeal' + (d0[4] <= 0 ? ' jn' : '');
         el.innerHTML = (d0[4] <= 0 ? '전세 ' + eok(d0[3]) : d0[4] + '만') + (g.deals.length > 1 ? ' <small>외 ' + (g.deals.length - 1) + '</small>' : '');
@@ -177,7 +182,9 @@
     };
     await Promise.all(Array.from({ length: 6 }, work));
     if (gen !== dealGen) return;
-    setMsg(shown ? o.name + ' 주변 최근 12개월 실거래(월세·전세, 전용 60㎡ 이하) ' + total + '건 중 ' + shown + '곳. 숫자는 월세(만원), 점선 \'전세\'는 전세금이에요.' : '주소를 지도에서 찾지 못했어요.');
+    const md = a => a.length >= 3 ? ' · 월세 중간 ' + [...a].sort((x, y) => x - y)[a.length >> 1] + '만' : '';
+    dmsg.innerHTML = shown ? '<b>' + o.name.replace(/</g, '') + '에서 가까운 실거래</b> (최근 12개월, 60㎡ 이하)<br>300m 안 <b>' + band[300] + '건</b> · 500m 안 <b>' + band[500] + '건</b>' + md(bandW[500]) + ' · 1km 안 <b>' + band[1000] + '건</b>' + md(bandW[1000]) + '<br><small>숫자는 월세(만원), 점선 \'전세\'는 전세금. 지번 없는 원룸·다가구는 세지 못해요.</small>' : '주소를 지도에서 찾지 못했어요.';
+    dmsg.classList.remove('hide');
   }
   // 점을 누른 직후에 지도 클릭 이벤트가 따라와 말풍선을 바로 닫아 버리는 것을 막는다
   kakao.maps.event.addListener(map, 'click', () => { if (Date.now() - lastDot < 400) return; bov.setMap(null); if (dealPop) { dealPop.setMap(null); dealPop = null; } });
