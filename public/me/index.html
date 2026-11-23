@@ -77,18 +77,6 @@ input:focus,select:focus{border-color:var(--brand)}
     <input id="nick" maxlength="20" placeholder="카카오 닉네임을 그대로 쓰려면 비워 두세요" autocomplete="nickname">
   </section>
 
-  <section class="card" id="myFind">
-    <h2>🗺 내 조건 지도</h2>
-    <p class="desc">학교나 지역을 정하고 아래 「내 설정」의 집 종류·보증금·월세·관리비를 맞춰 두면, 조건에 맞는 최근 실거래를 지도와 목록으로 바로 볼 수 있어요.</p>
-    <label class="f" for="school">내 학교</label>
-    <input id="school" list="schoolList" placeholder="학교 이름 (예: 성균관대학교)" autocomplete="off">
-    <datalist id="schoolList"></datalist>
-    <label class="f" for="region">내 지역 <span style="font-weight:400">(학교 대신 동네·주소로 찾을 때)</span></label>
-    <input id="region" maxlength="60" placeholder="예: 명륜3가, 서울 종로구" autocomplete="off">
-    <div class="actions"><a class="btn" id="goMap" href="/me/map/" style="text-decoration:none">🗺 내 조건으로 지도 보기</a></div>
-    <p class="desc" style="margin:8px 0 0">설정을 바꾼 뒤에는 아래 「설정 저장」을 먼저 눌러 주세요.</p>
-  </section>
-
   <section class="card">
     <h2>⚙️ 내 설정</h2>
     <p class="desc">월세각을 열 때 이 설정으로 바로 시작해요. 공유 링크로 들어오면 그 링크의 조건이 먼저예요.</p>
@@ -115,6 +103,11 @@ input:focus,select:focus{border-color:var(--brand)}
       <button type="button" class="chip" aria-pressed="false" data-v="60-85">60~85㎡</button>
     </div>
 
+    <label class="f" for="school">내 학교</label>
+    <input id="school" list="schoolList" placeholder="학교 이름 (예: 성균관대학교)" autocomplete="off">
+    <datalist id="schoolList"></datalist>
+    <label class="f" for="region">내 지역 <span style="font-weight:400">(학교 대신 동네·주소로 찾을 때)</span></label>
+    <input id="region" maxlength="60" placeholder="예: 명륜3가, 서울 종로구" autocomplete="off">
     <label class="f" for="home">열자마자 보여줄 지역</label>
     <select id="home"><option value="">선택 안 함</option></select>
     <p class="desc" style="margin-top:6px">아래 「관심 지역」에 저장한 곳 중에서 고를 수 있어요.</p>
@@ -132,6 +125,13 @@ input:focus,select:focus{border-color:var(--brand)}
     <h2>⭐ 관심 지역</h2>
     <p class="desc">월세각에서 「☆ 관심 지역 저장」으로 담은 곳이에요.</p>
     <ul class="list" id="favs"></ul>
+  </section>
+
+  <section class="card" id="myFind">
+    <h2>🗺 내 설정으로 지도 보기</h2>
+    <p class="desc">위 「내 설정」에서 학교·지역과 집 종류·보증금·월세·관리비를 정해 두면, 조건에 맞는 최근 실거래를 지도와 목록으로 바로 볼 수 있어요.</p>
+    <div class="actions"><a class="btn" id="goMap" href="/me/map/" style="text-decoration:none">🗺 내 조건으로 지도 보기</a></div>
+    <p class="desc" style="margin:8px 0 0">설정을 바꾼 뒤에는 「설정 저장」을 먼저 눌러 주세요.</p>
   </section>
 
   <section class="card">
