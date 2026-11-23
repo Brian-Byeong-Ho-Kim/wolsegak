@@ -228,6 +228,7 @@ body.mapfs{overflow:hidden}
 .spop button.fv[aria-pressed=true]{background:var(--ink);color:#fff}
 .dlab{background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:2px 8px;font:600 12px/1.4 "Pretendard Variable",sans-serif;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.15)}
 .dlab.on{background:var(--ink);color:#fff}
+.rlab{font:700 11px/1 "Pretendard Variable",sans-serif;color:#c2410c;background:rgba(255,255,255,.9);border:1px solid #ffb089;border-radius:999px;padding:2px 6px;pointer-events:none}
 #bDeals tr.dealrow{cursor:pointer}
 #bDeals tr.dealrow:hover td,#bDeals tr.dealrow.pick td{background:var(--soft)}
 .dealflag{font-size:30px;line-height:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
@@ -1063,6 +1064,14 @@ function deals(sel, wolse) {
 // ===== 지도 (카카오맵) =====
 const KAKAO_JS_KEY = '6c67906fb926c31e6e09524a74d819c6';
 let lastOv = 0; // 겹침 클릭 방지
+let univCircles = [];
+function setUnivCircles(pos) {
+  univCircles.forEach(c => c.setMap(null)); univCircles = [];
+  if (!pos || !map) return;
+  for (const [rad, so, fo] of [[500, .7, .07], [1000, .5, .035]]) univCircles.push(new kakao.maps.Circle({ center: pos, radius: rad, strokeWeight: 2, strokeColor: '#ff6b3d', strokeOpacity: so, strokeStyle: 'dashed', fillColor: '#ff6b3d', fillOpacity: fo, map }));
+  // 거리 표시 (500m·1km)
+  for (const [rad, t] of [[500, '500m'], [1000, '1km']]) { const lat = pos.getLat() + rad / 111320; univCircles.push(new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(lat, pos.getLng()), content: '<div class="rlab">' + t + '</div>', xAnchor: .5, yAnchor: .5, zIndex: 3, map })); }
+}
 let map, mapP, clickMk, univMk, dongOv = [], dongMk = new Map(), geoGen = 0, kGeo, kPlaces;
 const isWide = () => matchMedia('(min-width:1024px)').matches;
 function loadKakao() {
@@ -1170,7 +1179,7 @@ async function onMapClick(e) {
   const parts = (await kRegion(e.lat, e.lng)) || [];
   const code = matchSgg(parts);
   if (!code) { $('#mapHint').textContent = '이 위치의 시·군·구를 찾지 못했어요. 조금 옆을 눌러 보세요.'; return; }
-  state.univ = null; $('#uq').value = '';
+  state.univ = null; $('#uq').value = ''; setUnivCircles(null);
   let dong = null;
   try { const s = await loadSgg(code); dong = dongIn(parts, s.dongs); } catch {}
   setPlaces([code], dong ? [dong] : []);
@@ -1186,6 +1195,7 @@ async function markUniv(u) {
   if (r) {
     if (univMk) univMk.setMap(null);
     univMk = new kakao.maps.CustomOverlay({ position: LL(r.lat, r.lng), content: `<div class="kuniv" title="${u.name}">🎓</div>`, yAnchor: 1, map });
+    setUnivCircles(LL(r.lat, r.lng));
     if (dongOv.length) fitSelected(); else { map.setCenter(LL(r.lat, r.lng)); map.setLevel(4); }
   }
 }

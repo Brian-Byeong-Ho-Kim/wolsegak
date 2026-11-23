@@ -28,6 +28,9 @@
   map.setMaxLevel(14);
   new kakao.maps.CustomOverlay({ position: spos, content: '<div style="font-size:26px;line-height:1;transform:translateY(-4px)" title="' + name.replace(/"/g, '') + '">🎓</div>', yAnchor: 1, map });
 
+  // 학교에서 500m·1km 거리 원
+  for (const [rad, so, fo] of [[500, .7, .07], [1000, .5, .035]]) new kakao.maps.Circle({ center: spos, radius: rad, strokeWeight: 2, strokeColor: '#ff6b3d', strokeOpacity: so, strokeStyle: 'dashed', fillColor: '#ff6b3d', fillOpacity: fo, map });
+  for (const [rad, t] of [[500, '500m'], [1000, '1km']]) new kakao.maps.CustomOverlay({ position: LL(lat + rad / 111320, lng), content: '<div class="rlab">' + t + '</div>', xAnchor: .5, yAnchor: .5, zIndex: 3, map });
   // ===== 조작 버튼 (첫 화면 지도와 같은 모양·위치) =====
   const mk = (tag, id, html, attrs) => { const e = document.createElement(tag); if (id) e.id = id; e.innerHTML = html || ''; Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v)); wrap.appendChild(e); return e; };
   const bFs = mk('button', 'mapFs', '⛶ 크게 보기', { type: 'button', 'aria-label': '지도 전체화면' });

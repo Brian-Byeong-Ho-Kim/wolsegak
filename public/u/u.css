@@ -146,3 +146,5 @@ body.mapfs{overflow:hidden}
 .upop .ufm{font-size:12px;color:#c2410c}
 
 .kpop{max-height:240px;overflow-y:auto}
+
+.rlab{font:700 11px/1 "Pretendard Variable",sans-serif;color:#c2410c;background:rgba(255,255,255,.9);border:1px solid #ffb089;border-radius:999px;padding:2px 6px;pointer-events:none}

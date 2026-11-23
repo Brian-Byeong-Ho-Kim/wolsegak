@@ -41,6 +41,7 @@ input:focus{border-color:var(--brand)}
 .kpop{position:relative;background:#fff;border:1.5px solid var(--ink);border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.5;min-width:190px;max-width:260px;box-shadow:0 4px 14px rgba(0,0,0,.25);transform:translateY(-18px)}
 .kpop{max-height:240px;overflow-y:auto}
 .kpop b{display:block;font-size:13.5px;padding-right:18px}.kpop .x{position:absolute;right:8px;top:6px;cursor:pointer;opacity:.6}
+.rlab{font:700 11px/1 "Pretendard Variable",sans-serif;color:#c2410c;background:rgba(255,255,255,.9);border:1px solid #ffb089;border-radius:999px;padding:2px 6px;pointer-events:none}
 .univ{font-size:26px;line-height:1;transform:translateY(-4px)}
 .ctr{width:14px;height:14px;border-radius:50%;background:#ff6b3d;border:3px solid #fff;box-shadow:0 0 0 2px #ff6b3d}
 .sum{font-size:14px;font-weight:600;margin:4px 2px}
@@ -191,6 +192,10 @@ async function apply() {
   const gen = ++runGen, { d, near, center, label, isUniv } = last;
   const depMax = num($('#dep').value), rentMax = num($('#rent').value), fee = num($('#fee').value), jn = $('#jn').getAttribute('aria-pressed') === 'true';
   clearMap();
+  if (isUniv) {
+    for (const [rad, so, fo] of [[500, .7, .07], [1000, .5, .035]]) overlays.push(new kakao.maps.Circle({ center: LL(center.lat, center.lng), radius: rad, strokeWeight: 2, strokeColor: '#ff6b3d', strokeOpacity: so, strokeStyle: 'dashed', fillColor: '#ff6b3d', fillOpacity: fo, map }));
+    for (const [rad, t] of [[500, '500m'], [1000, '1km']]) overlays.push(new kakao.maps.CustomOverlay({ position: LL(center.lat + rad / 111320, center.lng), content: '<div class="rlab">' + t + '</div>', xAnchor: .5, yAnchor: .5, zIndex: 3, map }));
+  }
   if (isUniv) overlays.push(new kakao.maps.CustomOverlay({ position: LL(center.lat, center.lng), content: '<div class="univ" title="' + esc(label) + '">🎓</div>', yAnchor: 1, map }));
   else overlays.push(new kakao.maps.CustomOverlay({ position: LL(center.lat, center.lng), content: '<div class="ctr"></div>', xAnchor: .5, yAnchor: .5, map }));
   const rows = d.rows.filter(r => near.has(r[1]) && types.has(r[0]) && r[2] <= 60 && (!depMax || r[3] <= depMax) && (r[4] > 0 ? (!rentMax || r[4] + fee <= rentMax) : jn));

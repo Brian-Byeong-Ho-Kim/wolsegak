@@ -163,6 +163,7 @@
     if (!list.length) { setMsg(o.name + ' 주변에는 최근 12개월 실거래(주소 있는 것)가 없어요. 원룸·다가구는 지번이 공개되지 않아 지도에 못 그려요.'); return; }
     // 학교에서 500m·1km 안을 원으로 표시 (가까운 곳 위주로 보도록)
     for (const [rad, op] of [[500, .5], [1000, .3]]) dealOv.push(new kakao.maps.Circle({ center: o.pos, radius: rad, strokeWeight: 2, strokeColor: '#ff6b3d', strokeOpacity: op + .2, strokeStyle: 'dashed', fillColor: '#ff6b3d', fillOpacity: rad === 500 ? .06 : .03, map }));
+    for (const [rad, t] of [[500, '500m'], [1000, '1km']]) dealOv.push(new kakao.maps.CustomOverlay({ position: LL(sc.lat + rad / 111320, sc.lng), content: '<div class="rlab">' + t + '</div>', xAnchor: .5, yAnchor: .5, zIndex: 3, map }));
     const band = { 300: 0, 500: 0, 1000: 0 }, bandW = { 500: [], 1000: [] }; let i = 0, shown = 0;
     const work = async () => {
       while (i < list.length) {
