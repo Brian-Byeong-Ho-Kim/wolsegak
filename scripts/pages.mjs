@@ -2,11 +2,15 @@
 // 이미 받아 둔 public/data/index.json, public/data/sgg/*.json 만 읽는다.
 // 사용: node scripts/pages.mjs   (build.mjs 다음에 실행)
 import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 
 const SITE = 'https://www.wolsegak.com';
 const root = new URL('../', import.meta.url);
 const pub = new URL('public/', root);
 const index = JSON.parse(await readFile(new URL('data/index.json', pub), 'utf8'));
+// 브라우저 캐시가 예전 css/js를 붙들지 않도록, 파일 내용 해시를 주소에 붙인다
+const hashOf = async f => createHash('md5').update(await readFile(new URL(f, root))).digest('hex').slice(0, 8);
+const ASSET_V = { css: await hashOf('scripts/u.css'), js: await hashOf('scripts/umap.js') };
 const TYPE_NAMES = ['원룸·다가구', '빌라', '오피스텔', '아파트'];
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -90,7 +94,7 @@ const head = ({ title, desc, path, extra = '' }) => `<!doctype html>
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="/u/u.css">
+<link rel="stylesheet" href="/u/u.css?v=${ASSET_V.css}">
 <script src="/visit.js" defer></script>
 ${extra}
 </head>
@@ -202,8 +206,9 @@ ${same.length ? `<section class="card"><h2>🎓 ${esc(place)}의 다른 학교</
 // ---- 실행 ----
 await rm(new URL('u/', pub), { recursive: true, force: true });
 await mkdir(new URL('u/', pub), { recursive: true });
-await writeFile(new URL('u/u.css', pub), await readFile(new URL('scripts/u.css', root)));
-await writeFile(new URL('u/map.js', pub), await readFile(new URL('scripts/umap.js', root)));
+const cssSrc = await readFile(new URL('scripts/u.css', root)), jsSrc = await readFile(new URL('scripts/umap.js', root));
+await writeFile(new URL('u/u.css', pub), cssSrc);
+await writeFile(new URL('u/map.js', pub), jsSrc);
 const univs = [...index.univ].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 const seen = new Set();
 for (const u of univs) { const s = slugOf(u); if (seen.has(s)) throw new Error('중복 주소: ' + s); seen.add(s); }
@@ -233,7 +238,7 @@ const listHtml = head({
 </div>
 <p class="hint">원룸형(전용 23㎡ 이하, 아파트 제외), 보증금 2천만원 이하 신규 월세 계약의 중간 월세. 거래 30건 이상인 ${ranked.length}개 시군구 비교.</p>
 ${sidoOrder.map(k => `<section class="card sido"><h2>${esc(k)} <small>${bySido.get(k).length}곳</small></h2><div class="links">${bySido.get(k).map(p => `<a href="${p.path}" data-n="${esc([p.full, ...(p.u.a || [])].join(' '))}" data-k="${esc(p.u.name + '|' + p.u.campus)}" data-addr="${esc(p.u.addr)}"${p.s.n >= 15 ? ` data-m="${Math.round(p.s.m)}"` : ''}>${esc(p.full)}${p.s.n >= 15 ? ` <small>${fmt(p.s.m)}만</small>` : ''}</a>`).join('')}</div></section>`).join('')}
-<script src="/u/map.js" defer></script>
+<script src="/u/map.js?v=${ASSET_V.js}" defer></script>
 <script>
 document.getElementById('f').addEventListener('input', e => {
   const nz = t => t.replace(/\\s/g, '').replace(/대학교|대학/g, '대').toLowerCase();
