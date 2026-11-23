@@ -41,6 +41,12 @@ li:last-child{border-bottom:0}
   <p style="margin:0 0 8px"><a href="/" style="display:inline-block;font:600 13px/1 inherit;text-decoration:none;border:1.5px solid #e7e2dd;border-radius:999px;padding:7px 12px;color:inherit;background:#fff">🏠 홈</a></p>
   <h1>월세각 방문 통계</h1>
   <p class="sub">쿠키 없이 센 조회수와 방문자 수, 「매물 검증하기」를 누른 횟수입니다. 같은 브라우저는 하루에 한 번만 방문자로 세고, 날짜는 한국 시간 기준입니다. 내 방문을 빼려면 <b>주소 뒤에 ?nocount=1</b>을 붙여 한 번 열어 두세요.</p>
+  <div class="card" id="skipCard">
+    <h2>내 방문 빼기</h2>
+    <p class="note" style="margin:0 0 10px" id="skipNote"></p>
+    <button type="button" id="skipBtn" style="font:700 14px/1 inherit;border:1.5px solid #1f1a17;background:#fff;color:#1f1a17;border-radius:10px;padding:10px 14px;cursor:pointer"></button>
+    <p class="note" style="margin:10px 0 0">이 브라우저(기기)에만 적용돼요. 지금까지 센 숫자는 그대로이고, 누른 뒤부터의 방문·검증·공유가 집계되지 않아요. 폰과 PC는 각각 눌러야 해요.</p>
+  </div>
   <p id="msg" class="note" role="status">불러오는 중…</p>
   <div id="body" hidden>
     <div class="card"><h2>방문</h2><div class="kpis" id="kpis"></div></div>
@@ -52,6 +58,18 @@ li:last-child{border-bottom:0}
     <div class="card"><h2>들어온 경로 <span class="note">(최근 30일 · share = 공유 링크, from:이름 = 주소에 ?from=이름을 붙여 뿌린 링크)</span></h2><ol id="refs"></ol></div>
   </div>
 </main>
+<script>
+(function () {
+  var K = 'ws-skip', btn = document.getElementById('skipBtn'), note = document.getElementById('skipNote');
+  function on() { try { return localStorage.getItem(K) === '1'; } catch (e) { return false; } }
+  function paint() {
+    if (on()) { note.innerHTML = '지금 <b>이 기기의 방문은 집계에서 빠지고 있어요.</b>'; btn.textContent = '🙈 다시 세기'; }
+    else { note.innerHTML = '지금 <b>이 기기의 방문도 집계되고 있어요.</b> 내가 열어 본 것까지 세지 않으려면 아래 버튼을 눌러 주세요.'; btn.textContent = '🙈 내 방문 빼기'; }
+  }
+  btn.onclick = function () { try { if (on()) localStorage.removeItem(K); else localStorage.setItem(K, '1'); } catch (e) { note.textContent = '이 브라우저에서는 설정을 저장하지 못했어요.'; return; } paint(); };
+  paint();
+})();
+</script>
 <script>
 (async function () {
   var $ = function (id) { return document.getElementById(id); };
