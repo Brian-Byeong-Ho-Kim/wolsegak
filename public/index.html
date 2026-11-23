@@ -1248,8 +1248,12 @@ $('#mapLoc').addEventListener('click', async () => {
     const pos = LL(p.coords.latitude, p.coords.longitude);
     if (meMk) meMk.setMap(null);
     meMk = new kakao.maps.CustomOverlay({ position: pos, content: '<div class="medot" title="내 위치"></div>', xAnchor: .5, yAnchor: .5, zIndex: 8, map });
-    map.setLevel(4); map.panTo(pos);
-    hint.textContent = '내 위치예요. 근처 동네를 눌러 시세를 볼 수 있어요.';
+    map.setLevel(4); map.setCenter(pos);
+    hint.textContent = '내 위치의 동네를 찾는 중…';
+    // 내 위치의 동네를 자동으로 골라 시세(동별 월세·실거래 핀)를 바로 보여 준다
+    onMapClick({ lat: p.coords.latitude, lng: p.coords.longitude }).then(() => {
+      setTimeout(() => { const c = $('#statsCard'); if (c && !c.classList.contains('hide')) { c.open = true; c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } }, 1800);
+    });
   }, e => {
     b.disabled = false; b.textContent = '📍 내 위치';
     hint.textContent = e && e.code === 1 ? '위치 권한이 꺼져 있어요. 브라우저 주소창의 위치 설정에서 허용해 주세요.' : '내 위치를 찾지 못했어요. 잠시 뒤 다시 눌러 보세요.';
