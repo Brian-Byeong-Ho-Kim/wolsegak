@@ -97,3 +97,46 @@ footer{margin-top:28px;font-size:12px;color:var(--sub);display:grid;gap:6px}
 .favbtn{border:1.5px solid var(--ink);background:#fff;color:var(--ink);font:600 14px/1 "Pretendard Variable",sans-serif;padding:9px 14px;border-radius:999px;cursor:pointer;margin:6px 8px 0 0}
 .favbtn[aria-pressed=true]{background:var(--ink);color:#fff}
 .favmsg{font-size:13px;color:#c2410c}
+
+/* ===== 학교 시세 페이지 지도: 첫 화면 지도와 같은 조작 버튼 ===== */
+#umapWrap.sm #mapFs,#umapWrap.sm #mapDeals,#umapWrap.sm #mapLoc{position:absolute;z-index:500;background:#fff;color:var(--ink);border:1.5px solid var(--ink);border-radius:10px;padding:7px 12px;font:600 14px/1 "Pretendard Variable",sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2)}
+#umapWrap.sm #mapDeals[aria-pressed=true]{background:var(--ink);color:#fff}
+#umapWrap.sm #mapLoc:disabled{opacity:.6}
+#umapWrap.sm #mapFs{top:10px;right:10px}
+#umapWrap.sm #mapDeals{top:52px;right:10px}
+#umapWrap.sm #mapLoc{top:94px;right:10px}
+#umapWrap.sm #dealKinds,#umapWrap.sm #dealTypes{position:absolute;left:10px;z-index:500;display:flex;background:#fff;border:1.5px solid var(--ink);border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.2)}
+#umapWrap.sm #dealKinds{top:10px}
+#umapWrap.sm #dealTypes{top:52px}
+#umapWrap.sm #dealKinds.hide,#umapWrap.sm #dealTypes.hide{display:none}
+#umapWrap.sm #dealKinds button,#umapWrap.sm #dealTypes button{border:0;background:#fff;color:var(--ink);font:600 13px/1 "Pretendard Variable",sans-serif;padding:8px 11px;cursor:pointer}
+#umapWrap.sm #dealTypes button{font-size:12px;padding:8px 8px}
+#umapWrap.sm #dealKinds button+button,#umapWrap.sm #dealTypes button+button{border-left:1px solid #d6d3d1}
+#umapWrap.sm #dealKinds button[aria-pressed=true],#umapWrap.sm #dealTypes button[aria-pressed=true]{background:var(--ink);color:#fff}
+#umapWrap.sm #dealMsg{position:absolute;left:10px;top:96px;z-index:500;background:rgba(255,255,255,.95);border:1px solid #d6d3d1;border-radius:8px;padding:6px 10px;font:500 12.5px/1.4 "Pretendard Variable",sans-serif;max-width:calc(100% - 150px)}
+#umapWrap.sm #dealMsg.hide{display:none}
+#umapWrap.sm .kdeal.jn{border-color:#2563eb}
+#umapWrap.sm .kdeal.bj{border-color:#0891b2}
+#umapWrap.sm .kdeal.ok{border-color:#16a34a}
+#umapWrap.sm .kdeal.no{border-color:#a8a29e;color:#78716c}
+#umapWrap.sm.fs{position:fixed;inset:0;left:0;z-index:3000;background:#fff;margin:0}
+#umapWrap.sm.fs #umap{height:100%;border:0;border-radius:0}
+#umapWrap.sm.fs #umapHint{position:absolute;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));z-index:500;margin:0;background:rgba(255,255,255,.95);padding:8px 12px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.2)}
+#umapWrap.sm.fs #mapFs{top:max(12px,env(safe-area-inset-top));right:12px}
+#umapWrap.sm.fs #mapDeals{top:max(12px,env(safe-area-inset-top));right:104px}
+#umapWrap.sm.fs #mapLoc{top:calc(max(12px,env(safe-area-inset-top)) + 46px);right:12px}
+#umapWrap.sm.fs #dealKinds{top:calc(max(12px,env(safe-area-inset-top)) + 46px)}
+#umapWrap.sm.fs #dealTypes{top:calc(max(12px,env(safe-area-inset-top)) + 92px)}
+#umapWrap.sm.fs #dealMsg{top:calc(max(12px,env(safe-area-inset-top)) + 136px);max-width:calc(100% - 24px)}
+body.mapfs{overflow:hidden}
+@media (min-width:1024px){
+  #umapWrap.sm:not(.fs) #mapFs{top:12px;right:12px}
+  #umapWrap.sm:not(.fs) #mapDeals{top:12px;right:118px}
+  #umapWrap.sm:not(.fs) #mapLoc{top:52px;right:12px}
+  #umapWrap.sm #dealKinds{top:12px}
+  #umapWrap.sm #dealTypes{top:56px}
+  #umapWrap.sm #dealKinds button{font-size:14px;padding:8px 12px}
+  #umapWrap.sm #dealTypes button{font-size:13px;padding:8px 10px}
+  #umapWrap.sm:not(.fs) #dealMsg{top:100px;max-width:80%}
+  #umapWrap.sm.fs #dealKinds{top:12px}#umapWrap.sm.fs #dealTypes{top:56px}#umapWrap.sm.fs #dealMsg{top:100px}
+}
