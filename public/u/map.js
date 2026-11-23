@@ -140,7 +140,8 @@
     const o = byKey.get(k); if (!o) return;
     picked = k; clearDeals();
     const gen = dealGen, code = o.a.dataset.s, sc = { lat: o.pos.getLat(), lng: o.pos.getLng() };
-    map.setLevel(4); map.panTo(o.pos);
+    map.setLevel(4); map.setCenter(o.pos);
+    setTimeout(() => { try { map.panBy(0, Math.round(document.getElementById('umap').clientHeight * 0.24)); } catch (e) {} }, 120);   // 아래 상자들이 보이도록 학교를 위쪽으로
     setMsg(o.name + ' 주변 실거래 찾는 중…');
     const d = await loadAddr(code);
     if (gen !== dealGen) return;
