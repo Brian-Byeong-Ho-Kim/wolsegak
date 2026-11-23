@@ -190,45 +190,28 @@
     const want = new Set(list.map(g => g.key));
     for (const [k, v] of [...dealShown]) if (!want.has(k) || !inView(v.pos, 1)) { v.ov.setMap(null); dealShown.delete(k); }
     const style = (el, d0) => { const jn = d0[4] <= 0, ok = B ? (jn ? d0[3] <= B.dep : (d0[3] <= B.dep && d0[4] <= B.rent)) : null; el.className = 'kdeal' + (jn ? ' jn' : d0[3] > 5000 ? ' bj' : '') + (ok === true ? ' ok' : ok === false ? ' no' : ''); };
-    // 원룸·투룸(단독·다가구)은 지번이 없어서 동네(동) 단위로 묶어 보여 준다
-    for (const [k, v] of [...dealShown]) if (v.dg) { v.ov.setMap(null); dealShown.delete(k); }
-    const dgs = new Map();
-    const sg = await (sggCache.get(code) || sggCache.set(code, fetch('/data/sgg/' + code + '.json').then(r => r.ok ? r.json() : null).catch(() => null)).get(code)); if (gen !== dealGen) return;
-    const nmIdx = new Map(d.dongs.map((n, i) => [n, i]));
-    for (const r0 of (sg ? sg.rows : [])) {
-      if (r0[0] !== 0) continue;
-      const di = nmIdx.get(sg.dongs[r0[1]]); if (di === undefined || !okDong.has(di)) continue;
-      const r = r0.slice(); r[1] = di;
-      if (r[2] > 60 || !pinTypes.has(catOf(r)) || !dealKinds.has(kindOf(r))) continue;
-      let g = dgs.get(di); if (!g) dgs.set(di, g = { dong: d.dongs[di], c: { 0: [], 4: [] } });
-      g.c[catOf(r)].push(r);
-    }
-    const kdWrap = (e, t) => { const w = document.createElement('div'); w.style.cssText = 'padding-top:40px;pointer-events:none;' + (t === 0 ? 'padding-right:3px' : 'padding-left:3px'); w.appendChild(e); return w; };
-    const medOf = a => { const x = a.slice().sort((p, q) => p - q); return x[x.length >> 1]; };
-    let dgCount = 0;
-    // 원룸·투룸(단독·다가구)은 지번이 없어 정확한 위치를 알 수 없다 → 거래마다 동네 중심 둘레에 하나씩 펼쳐 보여 준다
+    // 원룸·투룸(단독·다가구)은 지번이 없어 건물을 구분할 수 없다 → 동네·종류별로 한 묶음 핀으로 보여 준다
     const proj = map.getProjection();
     for (const [i, g] of dgs) {
       const c = dongPos.get(i); if (!c || !inView(c, 1)) continue;
       const ctrPt = proj.containerPointFromCoords(LL(c.lat, c.lng));
-      const rows = [...g.c[0], ...g.c[4]].sort((p, q) => q[7] - p[7]).slice(0, 60);
-      rows.forEach((r, k) => {
-        const ang = k * 2.39996, rad = 34 * Math.sqrt(k + 0.6);   // 해바라기 모양으로 펼치기
-        const pos = proj.coordsFromContainerPoint(new kakao.maps.Point(ctrPt.x + rad * Math.cos(ang), ctrPt.y + rad * Math.sin(ang) * 0.62));
-        const t = catOf(r), el = document.createElement('div');
+      for (const t of [0, 4]) {
+        const rs = g.c[t].slice().sort((p, q) => q[7] - p[7]); if (!rs.length) continue;
+        const r = rs[0], el = document.createElement('div');
+        const pos = proj.coordsFromContainerPoint(new kakao.maps.Point(ctrPt.x + (t === 0 ? -38 : 38), ctrPt.y + 52));
         style(el, r); el.className += ' dz t' + t;
-        el.innerHTML = '<small>' + TN[t].charAt(0) + '</small> ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[4] > 0 && r[3] > 5000 ? '반 ' + eok(r[3]) + '/' + r[4] : r[4] + '만');
+        el.innerHTML = '<small>' + TN[t] + '</small> ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3] > 5000 ? '반 ' + eok(r[3]) + '/' + r[4] : r[4] + '만') + (rs.length > 1 ? ' <small>외 ' + (rs.length - 1) + '</small>' : '');
         el.onclick = ev => {
           ev.stopPropagation(); lastPin = Date.now();
           if (dealPop) dealPop.setMap(null);
           const pe = document.createElement('div'); pe.className = 'kpop';
-          pe.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.dong) + ' ' + TN[t] + '</b><div style="opacity:.65">단독·다가구 · 지번이 없어 정확한 위치가 아니라 동네 안에 펼쳐 표시해요</div><div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>';
+          pe.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.dong) + ' ' + TN[t] + ' ' + rs.length + '건</b><div style="opacity:.65">단독·다가구 · 지번이 없어 건물은 구분되지 않고, 동네 단위로 묶어 보여 드려요</div>' + rs.slice(0, 30).map(x => '<div>' + dd(x[7]) + ' · ' + (x[4] <= 0 ? '전세 ' + eok(x[3]) : x[3].toLocaleString() + '/' + x[4] + '만') + ' · ' + Math.round(x[2]) + '㎡ · ' + fl(x[5]) + '층' + (x[8] === 2 ? ' · 갱신' : '') + '</div>').join('') + (rs.length > 30 ? '<div style="opacity:.6">… 외 ' + (rs.length - 30) + '건</div>' : '');
           pe.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
           dealPop = new kakao.maps.CustomOverlay({ position: pos, content: pe, yAnchor: 1, clickable: true, zIndex: 10, map });
         };
-        dealShown.set('dg|' + i + '|' + k, { ov: new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 12, map }), el, dg: 1, pos: { lat: pos.getLat(), lng: pos.getLng() } });
+        dealShown.set('dg|' + i + '|' + t, { ov: new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 12, map }), el, dg: 1, pos: { lat: pos.getLat(), lng: pos.getLng() } });
         dgCount++;
-      });
+      }
     }
     for (const v of dealShown.values()) if (!v.dg) style(v.el, v.g.deals[0]);
     const todo = list.filter(g => !dealShown.has(g.key));
