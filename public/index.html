@@ -1047,7 +1047,11 @@ function fitMap() { if (!map) return; map.relayout(); if (dongOv.length || (univ
 function fitSelected() {
   if (!map || $('#mapWrap').classList.contains('hide')) return;
   const sel = [...dongMk].filter(([d]) => state.dongs.has(d)).map(([, o]) => o);
-  const ovs = sel.length ? sel : dongOv;
+  let ovs = sel.length ? sel : dongOv;
+  if (!sel.length && univMk && state.univ && dongOv.length > 4) {   // 학교를 골랐으면 학교 가까운 동 위주로 맞춘다
+    const ref = univMk.getPosition(), d2 = o => { const p = o.getPosition(); return (p.getLng() - ref.getLng()) ** 2 + (p.getLat() - ref.getLat()) ** 2; };
+    ovs = [...dongOv].sort((x, y) => d2(x) - d2(y)).slice(0, 4);
+  }
   const pts = ovs.map(o => o.getPosition());
   if (univMk && state.univ) pts.push(univMk.getPosition());
   if (!pts.length) return;
