@@ -87,7 +87,7 @@ body.mapfs{overflow:hidden}
   }
   #mapWrap #dealKinds,#mapWrap #dealTypes{display:grid}
   #dealKinds{grid-template-columns:repeat(3,minmax(0,1fr))}
-  #dealTypes{grid-template-columns:repeat(5,minmax(0,1fr))}
+  #dealTypes{grid-template-columns:repeat(4,minmax(0,1fr))}
   #mapWrap #dealKinds button,#mapWrap #dealTypes button{
     min-height:44px;padding:4px 1px;font-size:clamp(11px,3.6vw,14px);line-height:1.2;white-space:normal;word-break:keep-all
   }
