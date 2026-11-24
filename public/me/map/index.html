@@ -80,8 +80,8 @@ input:focus{border-color:var(--brand)}
 #dealKinds button[aria-pressed=true],#dealTypes button[aria-pressed=true]{background:var(--ink);color:#fff}
 #mapWrap{border:0;background:transparent;overflow:visible}
 </style>
-<link rel="stylesheet" href="/map-controls.css?v=20261123">
-<script src="/map-controls.js?v=20261123"></script>
+<link rel="stylesheet" href="/map-controls.css?v=20261124">
+<script src="/map-controls.js?v=20261124"></script>
 </head>
 <body>
 <div class="wrap">
@@ -127,14 +127,20 @@ input:focus{border-color:var(--brand)}
   <p style="font-size:12px;color:var(--sub);margin:6px 2px 0">월세는 <b>관리비를 더한 한 달 부담</b>이 입력한 월세 이하인 거래만 보여요. 관리비는 실거래 자료에 없어서 입력한 예상 금액을 더해 계산해요. 최근 12개월, 전용 60㎡ 이하 거래예요.</p>
 </section>
 
-<div id="mapWrap"><div id="map" role="application" aria-label="조건에 맞는 실거래 지도"></div>
+<div id="mapWrap">
+  <div class="map-toolbar">
+    <div class="map-actions" role="group" aria-label="지도 조작">
       <button type="button" id="mapFs" aria-label="지도 전체화면">⛶ 크게 보기</button>
-      <button type="button" id="mapDeals" aria-pressed="true" aria-label="실거래 핀 보기">📍 실거래 끄기</button>
+      <button type="button" id="mapDeals" aria-pressed="true" aria-label="실거래 핀 보기">실거래 끄기</button>
       <button type="button" id="mapLoc" aria-label="내 위치 찾기">📍 내 위치</button>
-
-<div id="dealKinds" role="group" aria-label="거래 종류"><button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button></div>
-<div id="dealTypes" role="group" aria-label="집 종류"><button type="button" data-t="0" aria-pressed="true" title="원룸 (단독·다가구 23㎡ 이하)">원룸</button><button type="button" data-t="4" aria-pressed="true" title="투룸 (단독·다가구 23㎡ 초과)">투룸</button><button type="button" data-t="1" aria-pressed="false" title="빌라 = 연립·다세대 건물 (원룸·투룸 포함)">빌라</button><button type="button" data-t="2" aria-pressed="false">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button></div>
-<p class="hint" id="mapHint">저장된 조건에 맞는 실거래를 표시해요. 핀을 누르면 거래 내역을 볼 수 있어요.</p>
+    </div>
+    <div id="dealKinds" role="group" aria-label="거래 종류"><button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button></div>
+    <div id="dealTypes" role="group" aria-label="집 종류"><button type="button" data-t="0" aria-pressed="true" title="원룸 (단독·다가구 23㎡ 이하)">원룸</button><button type="button" data-t="4" aria-pressed="true" title="투룸 (단독·다가구 23㎡ 초과)">투룸</button><button type="button" data-t="1" aria-pressed="false" title="빌라 = 연립·다세대 건물 (원룸·투룸 포함)">빌라</button><button type="button" data-t="2" aria-pressed="false">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button></div>
+  </div>
+  <div class="map-canvas"><div id="map" role="application" aria-label="조건에 맞는 실거래 지도"></div></div>
+  <div class="map-footer">
+    <p class="hint" id="mapHint">저장된 조건에 맞는 실거래를 표시해요. 핀을 누르면 거래 내역을 볼 수 있어요.</p>
+  </div>
 </div>
 <div class="sum" id="sum"></div>
 <section class="card"><h2>📋 조건에 맞는 실거래</h2><ul class="list" id="list"><li class="empty">학교나 지역을 검색해 보세요.</li></ul></section>
@@ -216,7 +222,7 @@ async function pool(items, fn, n) { let i = 0; await Promise.all(Array.from({ le
 let mapP = null, meMk = null, dealOn = true, dealPins = [];
 function syncDealToggle() {
   $('#mapDeals').setAttribute('aria-pressed', dealOn);
-  $('#mapDeals').textContent = dealOn ? '📍 실거래 끄기' : '📍 실거래 보기';
+  $('#mapDeals').textContent = dealOn ? '실거래 끄기' : '실거래 보기';
   $('#dealKinds').classList.toggle('hide', !dealOn);
   $('#dealTypes').classList.toggle('hide', !dealOn);
   dealPins.forEach(o => o.setMap(dealOn ? map : null));

@@ -195,25 +195,8 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
 @media (max-width:520px){.stats{grid-template-columns:1fr 1fr}.verdict .big{font-size:26px}}
 /* ===== 모바일 정리 ===== */
-@media (max-width:1023px){
-  #mapWrap:not(.fs) #mapFs{top:10px;right:10px}
-  #mapWrap:not(.fs) #mapDeals{top:52px;right:10px}
-  #mapWrap:not(.fs) #mapLoc{top:94px;right:10px}
-  #dealKinds{top:10px;left:10px}
-  #dealKinds button{font-size:13px;padding:8px 11px}
-  #dealTypes{top:52px;left:10px}
-  #dealTypes button{font-size:12px;padding:8px 8px}
-  #mapWrap:not(.fs) #dealMsg{top:96px;max-width:calc(100% - 150px)}
-  #mapWrap.fs #dealKinds{top:calc(max(12px,env(safe-area-inset-top)) + 46px)}
-  #mapWrap.fs #dealTypes{top:calc(max(12px,env(safe-area-inset-top)) + 92px)}
-  #mapWrap.fs #dealMsg{top:calc(max(12px,env(safe-area-inset-top)) + 136px);max-width:calc(100% - 24px)}
-}
 @media (max-width:700px){
   .topr .goHome{display:none}
-  .vtabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-  .vtabs::-webkit-scrollbar{display:none}
-  .vtabs button{flex:0 0 auto;white-space:nowrap;padding:12px 13px;font-size:15px}
-  .vtabs button.go{font-size:14px}
 }
 @media (max-width:520px){
   .brand p{display:none}
@@ -221,8 +204,8 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
   .topr .toplink{padding:6px 10px;font-size:13px}
 }
 </style>
-<link rel="stylesheet" href="/map-controls.css?v=20261123">
-<script src="/map-controls.js?v=20261123"></script>
+<link rel="stylesheet" href="/map-controls.css?v=20261124">
+<script src="/map-controls.js?v=20261124"></script>
 </head>
 <body>
 <div class="wrap">
@@ -284,15 +267,21 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
       <div class="hide"><select id="sido" aria-label="시도"></select><select id="sgg" aria-label="시군구"></select></div>
     </div>
     <div id="mapWrap" class="hide">
-      <div id="map" role="application" aria-label="지도"></div>
-      <button type="button" id="mapFs" aria-label="지도 전체화면">⛶ 크게 보기</button>
-      <button type="button" id="mapDeals" aria-pressed="true" aria-label="실거래 핀 보기">📍 실거래 끄기</button>
-      <button type="button" id="mapLoc" aria-label="내 위치 찾기">📍 내 위치</button>
-      <div id="dealKinds" role="group" aria-label="거래 종류"><button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button></div>
-      <div id="dealTypes" role="group" aria-label="집 종류"><button type="button" data-t="0" aria-pressed="true" title="원룸 (단독·다가구 23㎡ 이하 · 지번이 없어 동네 단위로 묶어 보여 드려요)">원룸</button><button type="button" data-t="4" aria-pressed="true" title="투룸 (단독·다가구 23㎡ 초과 · 지번이 없어 동네 단위로 묶어 보여 드려요)">투룸</button><button type="button" data-t="1" aria-pressed="false" title="빌라 = 연립·다세대 건물 (원룸·투룸 포함)">빌라</button><button type="button" data-t="2" aria-pressed="false">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button></div>
-      <div id="dealMsg" class="hide"></div>
-      <div class="mlegend" aria-label="학교 점 색 설명"><span><i style="background:#16a34a"></i>35만 미만</span><span><i style="background:#2563eb"></i>35~45만</span><span><i style="background:#d97706"></i>45~55만</span><span><i style="background:#dc2626"></i>55만 이상</span><span><i style="background:#78716c"></i>거래 적음</span></div>
-      <p class="hint" id="mapHint">점은 대학교예요(색 = 원룸 중간 월세). 눌러서 그 학교 근처 월세를 볼 수 있어요.</p>
+      <div class="map-toolbar">
+        <div class="map-actions" role="group" aria-label="지도 조작">
+          <button type="button" id="mapFs" aria-label="지도 전체화면">⛶ 크게 보기</button>
+          <button type="button" id="mapDeals" aria-pressed="true" aria-label="실거래 핀 보기">실거래 끄기</button>
+          <button type="button" id="mapLoc" aria-label="내 위치 찾기">📍 내 위치</button>
+        </div>
+        <div id="dealKinds" role="group" aria-label="거래 종류"><button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button></div>
+        <div id="dealTypes" role="group" aria-label="집 종류"><button type="button" data-t="0" aria-pressed="true" title="원룸 (단독·다가구 23㎡ 이하 · 지번이 없어 동네 단위로 묶어 보여 드려요)">원룸</button><button type="button" data-t="4" aria-pressed="true" title="투룸 (단독·다가구 23㎡ 초과 · 지번이 없어 동네 단위로 묶어 보여 드려요)">투룸</button><button type="button" data-t="1" aria-pressed="false" title="빌라 = 연립·다세대 건물 (원룸·투룸 포함)">빌라</button><button type="button" data-t="2" aria-pressed="false">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button></div>
+        <div id="dealMsg" class="hide"></div>
+      </div>
+      <div class="map-canvas"><div id="map" role="application" aria-label="지도"></div></div>
+      <div class="map-footer">
+        <div class="mlegend" aria-label="학교 점 색 설명"><span><i style="background:#16a34a"></i>35만 미만</span><span><i style="background:#2563eb"></i>35~45만</span><span><i style="background:#d97706"></i>45~55만</span><span><i style="background:#dc2626"></i>55만 이상</span><span><i style="background:#78716c"></i>거래 적음</span></div>
+        <p class="hint" id="mapHint">점은 대학교예요(색 = 원룸 중간 월세). 눌러서 그 학교 근처 월세를 볼 수 있어요.</p>
+      </div>
     </div>
     <div class="place" id="places"></div>
     <button type="button" class="chip hide" id="favBtn">☆ 관심 지역 저장</button>
@@ -1428,7 +1417,7 @@ async function drawDeals() {
   for (const v of dealShown.values()) if (!v.dg) style(v.el, v.g.deals[0]);
   const todo = list.filter(g => !dealShown.has(g.key));
   if (!list.length && !dgCount) { dealMsg('이 화면에는 조건에 맞는 최근 실거래(주소 있는 것)가 없어요. 단독·다가구는 지번이 없어 동 숫자로만 보여요.'); return; }
-  dealMsg(todo.length ? '실거래 불러오는 중…' : '');
+  if (todo.length && $('#dealMsg').classList.contains('hide')) dealMsg('실거래 불러오는 중…');
   await pool(todo, async g => {
     if (gen !== dealGen) return;
     const c = (await kFind(`${g.sgg} ${g.dong} ${g.jb}`)) || (g.nm ? await kFind(`${g.sgg} ${g.dong} ${g.nm}`, 'kw') : null);
@@ -1477,7 +1466,7 @@ $('#mapDeals').addEventListener('click', async () => {
   $('#dealKinds').classList.toggle('hide', !dealOn);
   $('#dealTypes').classList.toggle('hide', !dealOn);
   $('#mapDeals').setAttribute('aria-pressed', dealOn);
-  $('#mapDeals').textContent = dealOn ? '📍 실거래 끄기' : '📍 실거래 보기';
+  $('#mapDeals').textContent = dealOn ? '실거래 끄기' : '실거래 보기';
   if (dealOn) { try { await initMap(); } catch { return; } }
   drawDeals();
 });
