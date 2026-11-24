@@ -204,6 +204,9 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
   .topr{gap:5px}
   .topr .toplink{padding:6px 10px;font-size:13px}
 }
+#viewTabs .guide-tab{display:flex;align-items:center;justify-content:center;padding:6px;color:var(--sub);font-weight:600;text-decoration:none;border-radius:9px;white-space:nowrap}
+#viewTabs .guide-tab:hover{background:var(--soft)}
+@media(max-width:700px){.wrap #viewTabs{display:flex;flex-wrap:wrap}.wrap #viewTabs>*{flex:1 1 auto}.wrap #viewTabs .guide-tab{font-size:13px;min-height:44px}}
 </style>
 <link rel="stylesheet" href="/map-controls.css?v=20261124b">
 <script src="/map-controls.js?v=20261124"></script>
@@ -245,6 +248,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
     <button type="button" class="go goHome" aria-label="홈으로">🏠 홈</button>
     <button role="tab" aria-selected="true" data-view="check">🔍 이 방 비싸요?</button>
     <button role="tab" aria-selected="false" data-view="budget">💰 내 예산으로 찾기</button>
+    <a class="guide-tab" href="/guide/lease/">계약 가이드</a>
     <button type="button" class="go" data-go="map">🗺 지도 크게</button>
   </div>
   <a class="myTip" id="myTip" href="/me/" hidden></a>
