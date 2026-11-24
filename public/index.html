@@ -195,25 +195,8 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
 @media (max-width:520px){.stats{grid-template-columns:1fr 1fr}.verdict .big{font-size:26px}}
 /* ===== 모바일 정리 ===== */
-@media (max-width:1023px){
-  #mapWrap:not(.fs) #mapFs{top:10px;right:10px}
-  #mapWrap:not(.fs) #mapDeals{top:52px;right:10px}
-  #mapWrap:not(.fs) #mapLoc{top:94px;right:10px}
-  #dealKinds{top:10px;left:10px}
-  #dealKinds button{font-size:13px;padding:8px 11px}
-  #dealTypes{top:52px;left:10px}
-  #dealTypes button{font-size:12px;padding:8px 8px}
-  #mapWrap:not(.fs) #dealMsg{top:96px;max-width:calc(100% - 150px)}
-  #mapWrap.fs #dealKinds{top:calc(max(12px,env(safe-area-inset-top)) + 46px)}
-  #mapWrap.fs #dealTypes{top:calc(max(12px,env(safe-area-inset-top)) + 92px)}
-  #mapWrap.fs #dealMsg{top:calc(max(12px,env(safe-area-inset-top)) + 136px);max-width:calc(100% - 24px)}
-}
 @media (max-width:700px){
   .topr .goHome{display:none}
-  .vtabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-  .vtabs::-webkit-scrollbar{display:none}
-  .vtabs button{flex:0 0 auto;white-space:nowrap;padding:12px 13px;font-size:15px}
-  .vtabs button.go{font-size:14px}
 }
 @media (max-width:520px){
   .brand p{display:none}
@@ -221,8 +204,8 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
   .topr .toplink{padding:6px 10px;font-size:13px}
 }
 </style>
-<link rel="stylesheet" href="/map-controls.css?v=20261123">
-<script src="/map-controls.js?v=20261123"></script>
+<link rel="stylesheet" href="/map-controls.css?v=20261124b">
+<script src="/map-controls.js?v=20261124"></script>
 </head>
 <body>
 <div class="wrap">
@@ -284,15 +267,21 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
       <div class="hide"><select id="sido" aria-label="시도"></select><select id="sgg" aria-label="시군구"></select></div>
     </div>
     <div id="mapWrap" class="hide">
-      <div id="map" role="application" aria-label="지도"></div>
-      <button type="button" id="mapFs" aria-label="지도 전체화면">⛶ 크게 보기</button>
-      <button type="button" id="mapDeals" aria-pressed="true" aria-label="실거래 핀 보기">📍 실거래 끄기</button>
-      <button type="button" id="mapLoc" aria-label="내 위치 찾기">📍 내 위치</button>
-      <div id="dealKinds" role="group" aria-label="거래 종류"><button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button></div>
-      <div id="dealTypes" role="group" aria-label="집 종류"><button type="button" data-t="0" aria-pressed="true" title="원룸 (단독·다가구 23㎡ 이하 · 지번이 없어 동네 단위로 묶어 보여 드려요)">원룸</button><button type="button" data-t="4" aria-pressed="true" title="투룸 (단독·다가구 23㎡ 초과 · 지번이 없어 동네 단위로 묶어 보여 드려요)">투룸</button><button type="button" data-t="1" aria-pressed="false" title="빌라 = 연립·다세대 건물 (원룸·투룸 포함)">빌라</button><button type="button" data-t="2" aria-pressed="false">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button></div>
-      <div id="dealMsg" class="hide"></div>
-      <div class="mlegend" aria-label="학교 점 색 설명"><span><i style="background:#16a34a"></i>35만 미만</span><span><i style="background:#2563eb"></i>35~45만</span><span><i style="background:#d97706"></i>45~55만</span><span><i style="background:#dc2626"></i>55만 이상</span><span><i style="background:#78716c"></i>거래 적음</span></div>
-      <p class="hint" id="mapHint">점은 대학교예요(색 = 원룸 중간 월세). 눌러서 그 학교 근처 월세를 볼 수 있어요.</p>
+      <div class="map-toolbar">
+        <div class="map-actions" role="group" aria-label="지도 조작">
+          <button type="button" id="mapFs" aria-label="지도 전체화면">⛶ 크게 보기</button>
+          <button type="button" id="mapDeals" aria-pressed="true" aria-label="실거래 핀 보기">실거래 끄기</button>
+          <button type="button" id="mapLoc" aria-label="내 위치 찾기">📍 내 위치</button>
+        </div>
+        <div id="dealKinds" role="group" aria-label="거래 종류"><button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button></div>
+        <div id="dealTypes" role="group" aria-label="집 종류"><button type="button" data-t="0" aria-pressed="true" title="단독·다가구 실거래">원/투룸</button><button type="button" data-t="1" aria-pressed="false">연립-다세대</button><button type="button" data-t="2" aria-pressed="false">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button></div>
+        <div id="dealMsg" class="hide"></div>
+      </div>
+      <div class="map-canvas"><div id="map" role="application" aria-label="지도"></div></div>
+      <div class="map-footer">
+        <div class="mlegend" aria-label="학교 점 색 설명"><span><i style="background:#16a34a"></i>35만 미만</span><span><i style="background:#2563eb"></i>35~45만</span><span><i style="background:#d97706"></i>45~55만</span><span><i style="background:#dc2626"></i>55만 이상</span><span><i style="background:#78716c"></i>거래 적음</span></div>
+        <p class="hint" id="mapHint">점은 대학교예요(색 = 원룸 중간 월세). 눌러서 그 학교 근처 월세를 볼 수 있어요.</p>
+      </div>
     </div>
     <div class="place" id="places"></div>
     <button type="button" class="chip hide" id="favBtn">☆ 관심 지역 저장</button>
@@ -328,7 +317,7 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
     <details class="more" id="moreBox" open>
       <summary>더 정확하게 <span>(집 종류·층·관리비)</span></summary>
       <div class="row">
-        <div><label class="f" for="ckType">집 종류</label><select id="ckType"><option value="">상관없음</option><option value="0">원룸</option><option value="4">투룸</option><option value="1">빌라(연립·다세대)</option><option value="2">오피스텔</option><option value="3">아파트</option></select></div>
+        <div><label class="f" for="ckType">집 종류</label><select id="ckType"><option value="">상관없음</option><option value="0">원/투룸</option><option value="1">연립-다세대</option><option value="2">오피스텔</option><option value="3">아파트</option></select></div>
         <div><label class="f" for="ckFloor">층</label><input id="ckFloor" placeholder="3, 반지하"></div>
       </div>
       <div class="row">
@@ -422,13 +411,12 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
     <h2>🏠 어떤 집을 찾으세요?</h2>
     <label class="f">집 종류 (여러 개 선택 가능)</label>
     <div class="chips" id="types">
-      <button class="chip" aria-pressed="true" data-v="0">원룸</button>
-      <button class="chip" aria-pressed="true" data-v="4">투룸</button>
-      <button class="chip" aria-pressed="true" data-v="1">빌라(연립·다세대)</button>
+      <button class="chip" aria-pressed="true" data-v="0">원/투룸</button>
+      <button class="chip" aria-pressed="true" data-v="1">연립-다세대</button>
       <button class="chip" aria-pressed="true" data-v="2">오피스텔</button>
       <button class="chip" aria-pressed="false" data-v="3">아파트</button>
     </div>
-    <p class="hint" style="margin:6px 2px 0">원룸·투룸은 국토교통부 「단독/다가구」를 전용면적으로 나눈 거예요. 빌라·오피스텔 안의 원룸은 각각 빌라·오피스텔에 들어가요. <a href="/guide/types/">구분 기준 자세히 →</a></p>
+    <p class="hint" style="margin:6px 2px 0">원/투룸은 국토교통부 단독·다가구 실거래예요. 연립-다세대와 오피스텔의 원룸·투룸은 해당 건물 유형에 포함돼요. <a href="/guide/types/">구분 기준 자세히 →</a></p>
     <label class="f">크기</label>
     <div class="chips" id="areas">
       <button class="chip" aria-pressed="true" data-v="0-23">~23㎡ <small>(~7평, 원룸)</small></button>
@@ -492,9 +480,8 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
 const BASE_RATE = 3.00;          // 한국은행 기준금리(%) — 2026-10-22 금통위 기준. 바뀌면 여기만 고치세요.
 const LEGAL_CAP = Math.min(10, BASE_RATE + 2) / 100; // 주택임대차보호법 시행령 제9조
 const DEFAULT_RATE = 0.06;       // 보증금 차이를 월세로 환산할 때 쓰는 기본 전환율(연). 화면에서 바꿀 수 있음
-// 집 종류 구분 번호: 0 원룸 · 1 빌라 · 2 오피스텔 · 3 아파트 · 4 투룸 (원룸·투룸 = 국토부 '단독/다가구' 중 전용 23㎡ 이하 / 초과). 설명: /guide/types/
-const TYPE_NAMES = ['원룸', '빌라', '오피스텔', '아파트', '투룸'];
-const catOf = r => r[0] === 0 ? (r[2] <= 23 ? 0 : 4) : r[0];
+// 국토부 건물 유형 코드: 0 단독·다가구, 1 연립·다세대, 2 오피스텔, 3 아파트.
+const TYPE_NAMES = ['원/투룸', '연립-다세대', '오피스텔', '아파트'];
 const DATA = './data/';
 
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
@@ -505,7 +492,7 @@ const q = (a, p) => { if (!a.length) return NaN; const s = [...a].sort((x, y) =>
 $('#baseRate').textContent = BASE_RATE.toFixed(2);
 
 let INDEX = null;
-const state = { places: [], dongs: new Set(), types: new Set([0, 4, 1, 2]), areas: new Set(['0-23']), mode: 'wolse', univ: null, rate: DEFAULT_RATE };
+const state = { places: [], dongs: new Set(), types: new Set([0, 1, 2]), areas: new Set(['0-23']), mode: 'wolse', univ: null, rate: DEFAULT_RATE };
 const cache = new Map();
 
 async function loadIndex() {
@@ -765,7 +752,7 @@ async function onPaste() {
   if (r.area != null) { $('#myArea').value = r.area; areaHint(); got.push(`${r.area}㎡`); }
   if (r.floor != null) { $('#ckFloor').value = r.floor; got.push(r.floor === '반지하' ? '반지하' : r.floor + '층'); }
   if (r.fee != null) { $('#ckFee').value = r.fee; got.push(`관리비 ${fmt(r.fee)}만원`); }
-  if (r.type != null) { const ct = r.type === 0 ? (r.area ? (r.area <= 23 ? 0 : 4) : null) : r.type; if (ct != null) { $('#ckType').value = ct; got.push(TYPE_NAMES[ct]); } }
+  if (r.type != null) { $('#ckType').value = r.type; got.push(TYPE_NAMES[r.type]); }
   const a = await parseAddr(r.addr);
   if (a) { const nm = shortName(a.code) + (a.dong ? ' ' + a.dong : ''); state.univ = null; $('#uq').value = nm; setPlaces([a.code], a.dong ? [a.dong] : []); got.unshift('📍 ' + nm); }
   const miss = [!a && '위치', r.dep == null && '보증금', !r.jeonse && r.rent == null && '월세', r.area == null && '면적'].filter(Boolean);
@@ -842,7 +829,7 @@ async function run() {
   // 같은 조건 전체(동 무관) / 선택 동
   const base = [];
   for (const s of sets) for (const r of s.rows) {
-    if (!types.has(catOf(r)) || !inArea(r[2])) continue;
+    if (!types.has(r[0]) || !inArea(r[2])) continue;
     if (onlyNew && r[8] === 2) continue;
     base.push({ r, dong: s.dongs[r[1]], sgg: s.code });
   }
@@ -1011,7 +998,7 @@ function deals(sel, wolse) {
   const list = [...sel].sort((a, b) => b.r[7] - a.r[7]).slice(0, 25);
   const dt = n => { const s = String(n).padStart(6, '0'); return `${s.slice(0, 2)}.${s.slice(2, 4)}.${s.slice(4)}`; };
   $('#deals').innerHTML = `<tr><th>계약일</th><th>동</th><th>종류</th><th>면적</th><th>층</th><th>${wolse ? '보증금/월세' : '보증금'}</th><th>준공</th></tr>` +
-    list.map(({ r, dong }, i) => `<tr class="dealrow" data-i="${i}" title="누르면 지도에 표시해요"><td>${dt(r[7])}</td><td>${dong}</td><td>${TYPE_NAMES[catOf(r)]}</td><td>${r[2]}㎡</td><td>${fl(r[5])}</td><td>${wolse ? `${fmt(r[3])}/${fmt(r[4])}` : won(r[3])}</td><td>${r[6] || '-'}</td></tr>`).join('') +
+    list.map(({ r, dong }, i) => `<tr class="dealrow" data-i="${i}" title="누르면 지도에 표시해요"><td>${dt(r[7])}</td><td>${dong}</td><td>${TYPE_NAMES[r[0]]}</td><td>${r[2]}㎡</td><td>${fl(r[5])}</td><td>${wolse ? `${fmt(r[3])}/${fmt(r[4])}` : won(r[3])}</td><td>${r[6] || '-'}</td></tr>`).join('') +
     (list.length ? '' : '<tr><td colspan="7">해당 조건의 거래가 없어요.</td></tr>');
 }
 
@@ -1174,7 +1161,7 @@ let dongSets = [];
 function dongMedian(dong) {
   const ranges = areaRanges(), onlyNew = $('#onlyNew').checked, v = [];
   for (const s of dongSets) for (const r of s.rows) {
-    if (s.dongs[r[1]] !== dong || !state.types.has(catOf(r)) || r[4] <= 0 || r[3] > 2000) continue;
+    if (s.dongs[r[1]] !== dong || !state.types.has(r[0]) || r[4] <= 0 || r[3] > 2000) continue;
     if (onlyNew && r[8] === 2) continue;
     if (!ranges.some(([lo, hi]) => r[2] > lo && r[2] <= hi)) continue;
     v.push(r[4]);
@@ -1324,7 +1311,7 @@ $('#mapLoc').addEventListener('click', async () => {
 // ===== 지도 실거래 핀 (주소 기반) =====
 // 카카오 좌표는 저장·캐시하지 않고 화면에 그릴 때만 실시간 조회한다 (카카오 정책).
 const dealKinds = new Set(['w', 'b']);   // 전세는 기본 꺼짐 (누르면 나옴)
-const pinTypes = new Set([0, 4]);   // 기본: 원룸·투룸
+const pinTypes = new Set([0]);   // 기본: 원/투룸
 const kindOf = r => r[4] <= 0 ? 'j' : r[3] > 5000 ? 'b' : 'w';
 let dealOn = true, dealOv = [], dealGen = 0, dealPop = null;
 const addrCache = new Map();
@@ -1371,7 +1358,7 @@ async function drawDeals() {
   [...dk].sort((x, y) => x[1] - y[1]).slice(0, 3).forEach(([i]) => okDong.add(i));
   const B = budget(), groups = new Map(); let total = 0;
   for (const r of d.rows) {
-    if (!okDong.has(r[1]) || !r[9] || !pinTypes.has(catOf(r)) || r[2] > 60) continue;
+    if (!okDong.has(r[1]) || !r[9] || !pinTypes.has(r[0]) || r[2] > 60) continue;
     if (!dealKinds.has(kindOf(r))) continue;
     total++;
     const key = r[1] + '|' + r[9];
@@ -1396,39 +1383,37 @@ async function drawDeals() {
     if (r0[0] !== 0) continue;
     const di = nmIdx.get(sg.dongs[r0[1]]); if (di === undefined || !okDong.has(di)) continue;
     const r = r0.slice(); r[1] = di;
-    if (r[2] > 60 || !pinTypes.has(catOf(r)) || !dealKinds.has(kindOf(r))) continue;
-    let g = dgs.get(di); if (!g) dgs.set(di, g = { dong: d.dongs[di], c: { 0: [], 4: [] } });
-    g.c[catOf(r)].push(r);
+    if (r[2] > 60 || !pinTypes.has(r[0]) || !dealKinds.has(kindOf(r))) continue;
+    let g = dgs.get(di); if (!g) dgs.set(di, g = { dong: d.dongs[di], rows: [] });
+    g.rows.push(r);
   }
   let dgCount = 0;
-  // 원룸·투룸(단독·다가구)은 지번이 없어 건물을 구분할 수 없다 → 동네·종류별 상자 하나로 (원룸은 왼쪽, 투룸은 오른쪽)
-  const kdWrap = (e, t) => { const w = document.createElement('div'); w.style.cssText = 'padding-top:40px;pointer-events:none;' + (t === 0 ? 'padding-right:3px' : 'padding-left:3px'); w.appendChild(e); return w; };
+  // 지번이 없는 단독·다가구는 동네별로 묶어 표시한다.
+  const kdWrap = (e) => { const w = document.createElement('div'); w.style.cssText = 'padding-top:40px;pointer-events:none;'; w.appendChild(e); return w; };
   const medOf = a => { const x = a.slice().sort((p, q) => p - q); return x[x.length >> 1]; };
   for (const [i, g] of dgs) {
     const c = dongPos.get(i); if (!c || !inView(c, 1)) continue;
     const pos = LL(c.lat, c.lng);
-    for (const t of [0, 4]) {
-      const rs = g.c[t]; if (!rs.length) continue;
-      const rr = rs.filter(r => r[4] > 0);
-      const el = document.createElement('div'); el.className = 'kdong t' + t;
-      el.innerHTML = '<b>' + TYPE_NAMES[t] + '</b> ' + rs.length + '건<div>' + (rr.length ? '월세 ' + medOf(rr.map(r => r[4])) + '만' : '전세 ' + won(medOf(rs.map(r => r[3])))) + '</div><small>동네 중간값</small>';
-      el.onclick = ev => {
-        ev.stopPropagation(); lastOv = Date.now();
-        if (dealPop) dealPop.setMap(null);
-        const all = rs.slice().sort((p, q) => q[7] - p[7]).slice(0, 30);
-        const pe = document.createElement('div'); pe.className = 'kpop';
-        pe.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.dong) + ' ' + TYPE_NAMES[t] + ' ' + rs.length + '건</b><div style="opacity:.65">단독·다가구 · 지번이 없어 건물은 구분되지 않고, 동네 단위로 묶어 보여 드려요</div>' + all.map(r => '<div>' + dealDate(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + won(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('') + (rs.length > 30 ? '<div style="opacity:.6">… 외 ' + (rs.length - 30) + '건</div>' : '');
-        pe.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
-        dealPop = new kakao.maps.CustomOverlay({ position: pos, content: pe, yAnchor: 1, clickable: true, zIndex: 40, map });
-      };
-      dealShown.set('dg|' + i + '|' + t, { ov: new kakao.maps.CustomOverlay({ position: pos, content: kdWrap(el, t), xAnchor: t === 0 ? 1 : 0, yAnchor: 0, clickable: true, zIndex: 15, map }), el, dg: 1, pos: c });
-      dgCount++;
-    }
+    const rs = g.rows;
+    const rr = rs.filter(r => r[4] > 0);
+    const el = document.createElement('div'); el.className = 'kdong t0';
+    el.innerHTML = '<b>' + TYPE_NAMES[0] + '</b> ' + rs.length + '건<div>' + (rr.length ? '월세 ' + medOf(rr.map(r => r[4])) + '만' : '전세 ' + won(medOf(rs.map(r => r[3])))) + '</div><small>동네 중간값</small>';
+    el.onclick = ev => {
+      ev.stopPropagation(); lastOv = Date.now();
+      if (dealPop) dealPop.setMap(null);
+      const all = rs.slice().sort((p, q) => q[7] - p[7]).slice(0, 30);
+      const pe = document.createElement('div'); pe.className = 'kpop';
+      pe.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.dong) + ' ' + TYPE_NAMES[0] + ' ' + rs.length + '건</b><div style="opacity:.65">단독·다가구 · 지번이 없어 건물은 구분되지 않고, 동네 단위로 묶어 보여 드려요</div>' + all.map(r => '<div>' + dealDate(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + won(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('') + (rs.length > 30 ? '<div style="opacity:.6">… 외 ' + (rs.length - 30) + '건</div>' : '');
+      pe.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
+      dealPop = new kakao.maps.CustomOverlay({ position: pos, content: pe, yAnchor: 1, clickable: true, zIndex: 40, map });
+    };
+    dealShown.set('dg|' + i, { ov: new kakao.maps.CustomOverlay({ position: pos, content: kdWrap(el), xAnchor: .5, yAnchor: 0, clickable: true, zIndex: 15, map }), el, dg: 1, pos: c });
+    dgCount++;
   }
   for (const v of dealShown.values()) if (!v.dg) style(v.el, v.g.deals[0]);
   const todo = list.filter(g => !dealShown.has(g.key));
   if (!list.length && !dgCount) { dealMsg('이 화면에는 조건에 맞는 최근 실거래(주소 있는 것)가 없어요. 단독·다가구는 지번이 없어 동 숫자로만 보여요.'); return; }
-  dealMsg(todo.length ? '실거래 불러오는 중…' : '');
+  if (todo.length && $('#dealMsg').classList.contains('hide')) dealMsg('실거래 불러오는 중…');
   await pool(todo, async g => {
     if (gen !== dealGen) return;
     const c = (await kFind(`${g.sgg} ${g.dong} ${g.jb}`)) || (g.nm ? await kFind(`${g.sgg} ${g.dong} ${g.nm}`, 'kw') : null);
@@ -1446,13 +1431,13 @@ function showDealPop(g, pos) {
   if (dealPop) dealPop.setMap(null);
   const el = document.createElement('div'); el.className = 'kpop';
   const rows = g.deals.map(r => `<div>${dealDate(r[7])} · ${r[4] <= 0 ? '전세 ' + won(r[3]) : `${r[3].toLocaleString()}/${r[4]}만`} · ${Math.round(r[2])}㎡ · ${fl(r[5])}층${r[8] === 2 ? ' · 갱신' : ''}</div>`).join('');
-  el.innerHTML = `<span class="x" aria-label="닫기">✕</span><b>${escH(g.nm || (g.dong + ' ' + g.jb))}</b><div style="opacity:.65">${escH(g.dong + ' ' + g.jb)} · ${TYPE_NAMES[catOf(g.deals[0])]}</div>${rows}`;
+  el.innerHTML = `<span class="x" aria-label="닫기">✕</span><b>${escH(g.nm || (g.dong + ' ' + g.jb))}</b><div style="opacity:.65">${escH(g.dong + ' ' + g.jb)} · ${TYPE_NAMES[g.deals[0][0]]}</div>${rows}`;
   el.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
   dealPop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 40, map });
 }
 function resetDealUI() {
   dealKinds.clear(); dealKinds.add('w'); dealKinds.add('b');
-  pinTypes.clear(); [0, 4].forEach(t => pinTypes.add(t));
+  pinTypes.clear(); pinTypes.add(0);
   document.querySelectorAll('#dealKinds button').forEach(b => b.setAttribute('aria-pressed', dealKinds.has(b.dataset.k)));
   document.querySelectorAll('#dealTypes button').forEach(b => b.setAttribute('aria-pressed', pinTypes.has(+b.dataset.t)));
   if (dealPop) { dealPop.setMap(null); dealPop = null; }
@@ -1477,7 +1462,7 @@ $('#mapDeals').addEventListener('click', async () => {
   $('#dealKinds').classList.toggle('hide', !dealOn);
   $('#dealTypes').classList.toggle('hide', !dealOn);
   $('#mapDeals').setAttribute('aria-pressed', dealOn);
-  $('#mapDeals').textContent = dealOn ? '📍 실거래 끄기' : '📍 실거래 보기';
+  $('#mapDeals').textContent = dealOn ? '실거래 끄기' : '실거래 보기';
   if (dealOn) { try { await initMap(); } catch { return; } }
   drawDeals();
 });
@@ -1515,7 +1500,7 @@ function renderBudget() {
   const inArea = a => ranges.some(([lo, hi]) => a > lo && a <= hi);
   const base = [];  // 집 종류·신규 조건만 (크기·동은 아래에서 따로)
   for (const s of statSets) for (const r of s.rows) {
-    if (!state.types.has(catOf(r)) || (onlyNew && r[8] === 2)) continue;
+    if (!state.types.has(r[0]) || (onlyNew && r[8] === 2)) continue;
     base.push({ r, dong: s.dongs[r[1]], s });
   }
   const inDong = x => !state.dongs.size || state.dongs.has(x.dong);
@@ -1562,7 +1547,7 @@ function renderBudget() {
   const dt = n => { const s = String(n).padStart(6, '0'); return `${s.slice(0, 2)}.${s.slice(2, 4)}.${s.slice(4)}`; };
   const list = [...ok].sort((a, b) => b.r[7] - a.r[7]).slice(0, 20);
   $('#bDeals').innerHTML = `<tr><th>계약일</th><th>동</th><th>종류</th><th>면적</th><th>층</th><th>보증금/월세</th><th>준공</th></tr>` +
-    list.map(({ r, dong }) => `<tr><td>${dt(r[7])}</td><td>${dong}</td><td>${TYPE_NAMES[catOf(r)]}</td><td>${r[2]}㎡</td><td>${fl(r[5])}</td><td>${r[4] > 0 ? `${fmt(r[3])}/${fmt(r[4])}` : '전세 ' + won(r[3])}</td><td>${r[6] || '-'}</td></tr>`).join('') +
+    list.map(({ r, dong }) => `<tr><td>${dt(r[7])}</td><td>${dong}</td><td>${TYPE_NAMES[r[0]]}</td><td>${r[2]}㎡</td><td>${fl(r[5])}</td><td>${r[4] > 0 ? `${fmt(r[3])}/${fmt(r[4])}` : '전세 ' + won(r[3])}</td><td>${r[6] || '-'}</td></tr>`).join('') +
     (list.length ? '' : '<tr><td colspan="7">예산 안에 들어온 거래가 없어요. 위 표에서 예산을 늘렸을 때를 확인해 보세요.</td></tr>');
   bDealList = list;
   refreshDongLabels();
@@ -1591,7 +1576,7 @@ $('#bDeals').addEventListener('click', async e => {
   bDealMk = new kakao.maps.CustomOverlay({ position: pos, content: '<div class="dealflag">📍</div>', xAnchor: .5, yAnchor: 1, zIndex: 35, map });
   const nm = row && row[10] >= 0 && d.names[row[10]] ? d.names[row[10]] : '';
   const pop = document.createElement('div'); pop.className = 'kpop';
-  pop.innerHTML = `<span class="x" aria-label="닫기">✕</span><b>${escH(nm || (dong + (row && row[9] ? ' ' + row[9] : '')))}</b><div style="opacity:.65">${escH(dong)} · ${TYPE_NAMES[catOf(r)]}</div><div>${dealDate(r[7])} · ${r[4] > 0 ? `${r[3].toLocaleString()}/${r[4]}만` : '전세 ' + won(r[3])} · ${Math.round(r[2])}㎡ · ${fl(r[5])}층</div>${exact ? '' : '<div style="opacity:.6;white-space:normal">지번이 없어 동네 위치로 보여요</div>'}`;
+  pop.innerHTML = `<span class="x" aria-label="닫기">✕</span><b>${escH(nm || (dong + (row && row[9] ? ' ' + row[9] : '')))}</b><div style="opacity:.65">${escH(dong)} · ${TYPE_NAMES[r[0]]}</div><div>${dealDate(r[7])} · ${r[4] > 0 ? `${r[3].toLocaleString()}/${r[4]}만` : '전세 ' + won(r[3])} · ${Math.round(r[2])}㎡ · ${fl(r[5])}층</div>${exact ? '' : '<div style="opacity:.6;white-space:normal">지번이 없어 동네 위치로 보여요</div>'}`;
   pop.querySelector('.x').onclick = () => { bDealPop.setMap(null); bDealPop = null; };
   bDealPop = new kakao.maps.CustomOverlay({ position: pos, content: pop, yAnchor: 1, clickable: true, zIndex: 40, map });
   map.setLevel(exact ? 3 : 5); map.setCenter(pos);
@@ -1612,18 +1597,18 @@ function renderStats() {
     if (onlyNew && r[8] === 2) continue;
     all.push(r);
   }
-  const sel = all.filter(r => state.types.has(catOf(r)) && inArea(r[2]));
+  const sel = all.filter(r => state.types.has(r[0]) && inArea(r[2]));
   const wol = sel.filter(r => r[4] > 0), jeon = sel.filter(r => r[4] === 0);
   const low = wol.filter(r => r[3] <= 2000);
   const selPrev = [];
   for (const s of statPrev) for (const r of s.rows) {
     if (state.dongs.size && !state.dongs.has(s.dongs[r[1]])) continue;
     if (onlyNew && r[8] === 2) continue;
-    if (state.types.has(catOf(r)) && inArea(r[2])) selPrev.push(r);
+    if (state.types.has(r[0]) && inArea(r[2])) selPrev.push(r);
   }
   const where = (state.dongs.size ? [...state.dongs].slice(0, 3).join('·') + (state.dongs.size > 3 ? ` 외 ${state.dongs.size - 3}곳` : '') : state.places.map(shortName).join(' + '));
   $('#stTitle').textContent = `${where} 전월세 실거래 통계`;
-  const typeTxt = [0, 4, 1, 2, 3].filter(t => state.types.has(t)).map(t => TYPE_NAMES[t]).join('·');
+  const typeTxt = [0, 1, 2, 3].filter(t => state.types.has(t)).map(t => TYPE_NAMES[t]).join('·');
   const areaTxt = (state.view === 'check' && areaVal() > 0 ? `${areaVal()}㎡ 안팎` : [...state.areas].sort((a, b) => parseFloat(a) - parseFloat(b)).map(a => a.replace('-', '~').replace(/^0~/, '~') + '㎡').join(', '));
   $('#stSub').textContent = `${typeTxt} · ${areaTxt}${onlyNew ? ' · 신규 계약' : ''} · 계약 ${INDEX.from ? INDEX.from.slice(2, 4) + '.' + INDEX.from.slice(4) : ''}~${INDEX.to ? INDEX.to.slice(2, 4) + '.' + INDEX.to.slice(4) : ''}`;
   const share = sel.length ? wol.length / sel.length : NaN;
@@ -1667,9 +1652,9 @@ function renderStats() {
   const row = (label, rs) => { const w = rs.filter(r => r[4] > 0), l = w.filter(r => r[3] <= 2000), j = rs.filter(r => r[4] === 0);
     return `<tr><td>${label}</td><td>${rs.length.toLocaleString()}</td><td>${rs.length ? Math.round(w.length / rs.length * 100) + '%' : '-'}</td><td>${l.length >= 3 ? fmt(q(l.map(r => r[4]), .5)) + '만' : '-'}</td><td>${j.length >= 3 ? won(q(j.map(r => r[3]), .5)) : '-'}</td><td>${rs.length ? fmt(q(rs.map(r => r[2]), .5)) + '㎡' : '-'}</td></tr>`; };
   const head = `<tr><th></th><th>거래</th><th>월세 비중</th><th>월세 중간</th><th>전세 중간</th><th>면적 중간</th></tr>`;
-  $('#stTypes').innerHTML = head + [0, 4, 1, 2, 3].map(t => row(TYPE_NAMES[t], all.filter(r => catOf(r) === t && inArea(r[2])))).join('');
+  $('#stTypes').innerHTML = head + [0, 1, 2, 3].map(t => row(TYPE_NAMES[t], all.filter(r => r[0] === t && inArea(r[2])))).join('');
   const bands = [[0, 23, '~23㎡'], [23, 36, '23~36㎡'], [36, 60, '36~60㎡'], [60, 85, '60~85㎡']];
-  $('#stAreas').innerHTML = head + bands.map(([lo, hi, l]) => row(l, all.filter(r => state.types.has(catOf(r)) && r[2] > lo && r[2] <= hi))).join('');
+  $('#stAreas').innerHTML = head + bands.map(([lo, hi, l]) => row(l, all.filter(r => state.types.has(r[0]) && r[2] > lo && r[2] <= hi))).join('');
   // 전국 비교 (index에 통계가 있을 때)
   const ranked = (INDEX.sgg || []).filter(s => s.m1 != null && s.c1 >= 30).sort((a, b) => b.m1 - a.m1);
   $('#stRankWrap').classList.toggle('hide', ranked.length < 10);
@@ -1739,7 +1724,7 @@ $('#cmpList').addEventListener('click', e => {
   if (state.mode !== st.mode) $$(`[data-mode=${st.mode}]`)[0].click();
   state.univ = st.univ && INDEX ? INDEX.univ.find(u => u.name === st.univ) || null : null;
   $('#uq').value = st.uq || '';
-  ['dep', 'rent', 'myArea', 'ckType', 'ckFloor', 'ckFee'].forEach((id, i) => $('#' + id).value = [st.dep, st.rent, st.area, st.type, st.floor, st.fee][i] || '');
+  ['dep', 'rent', 'myArea', 'ckType', 'ckFloor', 'ckFee'].forEach((id, i) => $('#' + id).value = [st.dep, st.rent, st.area, [0, 4, '4'].includes(st.type) ? '0' : st.type, st.floor, st.fee][i] || '');
   $('#onlyNew').checked = st.onlyNew !== false; areaHint();
   setPlaces(st.places, st.dongs); run();
   $('#verdict').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1803,14 +1788,14 @@ function readHash() {
   const p = new URLSearchParams(fromShare ? location.search.slice(1) : location.hash.slice(1));
   // 공유 링크로 들어온 경우: 집 종류·크기·조건을 먼저 맞춘다
   const nums = (v, ok) => (v || '').split(',').filter(x => x !== '' && ok(x));
-  const ty = nums(p.get('ty'), x => /^[0-4]$/.test(x)).map(Number);
+  const ty = nums(p.get('ty'), x => /^[0-4]$/.test(x)).map(t => t === '4' ? 0 : +t);
   if (ty.length) { state.types.clear(); ty.forEach(t => state.types.add(t)); $$('#types [data-v]').forEach(b => b.setAttribute('aria-pressed', state.types.has(+b.dataset.v))); }
   const ar = nums(p.get('ar'), x => /^[0-9]+-[0-9]+$/.test(x) && $(`#areas [data-v="${x}"]`));
   if (ar.length) { state.areas.clear(); ar.forEach(a => state.areas.add(a)); $$('#areas [data-v]').forEach(b => b.setAttribute('aria-pressed', state.areas.has(b.dataset.v))); }
   const numIn = (k, sel) => { const v = p.get(k); if (v && /^[0-9]+(\.[0-9]+)?$/.test(v)) $(sel).value = v; };
   if (p.get('m') === 'jeonse') $$('[data-mode=jeonse]')[0].click();
   numIn('dep', '#dep'); numIn('rent', '#rent'); numIn('a', '#myArea'); numIn('fee', '#ckFee');
-  if (/^[0-4]$/.test(p.get('t') || '')) $('#ckType').value = p.get('t');
+  if (/^[0-4]$/.test(p.get('t') || '')) $('#ckType').value = p.get('t') === '4' ? '0' : p.get('t');
   if (p.get('f')) $('#ckFloor').value = p.get('f').slice(0, 10);
   if (p.get('all') === '1') $('#onlyNew').checked = false;
   if (p.get('v') === 'b') setView('budget', true);
@@ -1835,7 +1820,7 @@ function savePrefsLocal() { try { localStorage.setItem('wsg-pref', JSON.stringif
 // 주소(#...)나 공유 링크로 들어오지 않았을 때만 내 설정을 먼저 적용한다
 function applyPrefs() {
   if (location.hash.length > 1 || new URLSearchParams(location.search).has('s')) return;
-  if (prefs.types.length) { state.types.clear(); prefs.types.forEach(t => state.types.add(+t)); $$('#types [data-v]').forEach(b => b.setAttribute('aria-pressed', state.types.has(+b.dataset.v))); }
+  if (prefs.types.length) { state.types.clear(); prefs.types.forEach(t => state.types.add(+t === 4 ? 0 : +t)); $$('#types [data-v]').forEach(b => b.setAttribute('aria-pressed', state.types.has(+b.dataset.v))); }
   if (prefs.areas.length) { state.areas.clear(); prefs.areas.forEach(a => state.areas.add(a)); $$('#areas [data-v]').forEach(b => b.setAttribute('aria-pressed', state.areas.has(b.dataset.v))); }
   if (prefs.view === 'budget') setView('budget', true);
   const f = prefs.home && favs.find(x => favKey(x) === prefs.home);

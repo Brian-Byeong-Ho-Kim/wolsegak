@@ -3,7 +3,18 @@ function setupMapView(map, wrap, onReset) {
   bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><button type="button" data-v="reset" title="지도 설정(필터·스카이뷰·로드뷰·창 크기)을 처음 상태로">↺ 초기화</button><span class="mvmsg hide"></span>';
   const panel = document.createElement('div'); panel.className = 'rvpanel hide';
   panel.innerHTML = '<div class="rvgrip" title="위아래로 끌어서 로드뷰 크기 조절"></div><button type="button" class="rvx">✕ 닫기</button><div class="rvbox"></div>';
-  wrap.appendChild(bar); wrap.appendChild(panel);
+  wrap.querySelector('.map-footer').prepend(bar);
+  const canvas = wrap.querySelector('.map-canvas');
+  canvas.appendChild(panel);
+  // In fullscreen, a status message can change the map height without resizing the window.
+  const mapElement = canvas.querySelector('#map');
+  let width = mapElement.clientWidth, height = mapElement.clientHeight;
+  new ResizeObserver(() => {
+    const nextWidth = mapElement.clientWidth, nextHeight = mapElement.clientHeight;
+    if (nextWidth === width && nextHeight === height) return;
+    width = nextWidth; height = nextHeight;
+    if (width && height) map.relayout();
+  }).observe(mapElement);
 
   // 로드뷰 창 높이 조절 (위쪽 손잡이를 위아래로 끌기)
   const grip = panel.querySelector('.rvgrip'), RK = 'wsg-rvh';
@@ -11,7 +22,7 @@ function setupMapView(map, wrap, onReset) {
   try { const v = +localStorage.getItem(RK); if (v) setH(v); } catch {}
   grip.addEventListener('pointerdown', e => { grip.setPointerCapture(e.pointerId); grip.dataset.on = 1; e.preventDefault(); });
   grip.addEventListener('pointermove', e => {
-    if (!grip.dataset.on) return; const r = wrap.getBoundingClientRect();
+    if (!grip.dataset.on) return; const r = panel.offsetParent.getBoundingClientRect();
     setH((r.bottom - e.clientY) / r.height); if (rv) rv.relayout();
   });
   const gEnd = () => { if (!grip.dataset.on) return; delete grip.dataset.on; try { localStorage.setItem(RK, parseFloat(panel.style.height) / 100); } catch {} if (rv) rv.relayout(); };

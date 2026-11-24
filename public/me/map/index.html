@@ -80,8 +80,8 @@ input:focus{border-color:var(--brand)}
 #dealKinds button[aria-pressed=true],#dealTypes button[aria-pressed=true]{background:var(--ink);color:#fff}
 #mapWrap{border:0;background:transparent;overflow:visible}
 </style>
-<link rel="stylesheet" href="/map-controls.css?v=20261123">
-<script src="/map-controls.js?v=20261123"></script>
+<link rel="stylesheet" href="/map-controls.css?v=20261124b">
+<script src="/map-controls.js?v=20261124"></script>
 </head>
 <body>
 <div class="wrap">
@@ -104,9 +104,8 @@ input:focus{border-color:var(--brand)}
   <h2>🏠 어떤 집인가요?</h2>
   <label class="f">집 종류</label>
   <div class="chips" id="types">
-    <button type="button" class="chip" aria-pressed="true" data-v="0">원룸</button>
-    <button type="button" class="chip" aria-pressed="true" data-v="4">투룸</button>
-    <button type="button" class="chip" aria-pressed="false" data-v="1">빌라</button>
+    <button type="button" class="chip" aria-pressed="true" data-v="0">원/투룸</button>
+    <button type="button" class="chip" aria-pressed="false" data-v="1">연립-다세대</button>
     <button type="button" class="chip" aria-pressed="false" data-v="2">오피스텔</button>
     <button type="button" class="chip" aria-pressed="false" data-v="3">아파트</button>
   </div>
@@ -127,14 +126,20 @@ input:focus{border-color:var(--brand)}
   <p style="font-size:12px;color:var(--sub);margin:6px 2px 0">월세는 <b>관리비를 더한 한 달 부담</b>이 입력한 월세 이하인 거래만 보여요. 관리비는 실거래 자료에 없어서 입력한 예상 금액을 더해 계산해요. 최근 12개월, 전용 60㎡ 이하 거래예요.</p>
 </section>
 
-<div id="mapWrap"><div id="map" role="application" aria-label="조건에 맞는 실거래 지도"></div>
+<div id="mapWrap">
+  <div class="map-toolbar">
+    <div class="map-actions" role="group" aria-label="지도 조작">
       <button type="button" id="mapFs" aria-label="지도 전체화면">⛶ 크게 보기</button>
-      <button type="button" id="mapDeals" aria-pressed="true" aria-label="실거래 핀 보기">📍 실거래 끄기</button>
+      <button type="button" id="mapDeals" aria-pressed="true" aria-label="실거래 핀 보기">실거래 끄기</button>
       <button type="button" id="mapLoc" aria-label="내 위치 찾기">📍 내 위치</button>
-
-<div id="dealKinds" role="group" aria-label="거래 종류"><button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button></div>
-<div id="dealTypes" role="group" aria-label="집 종류"><button type="button" data-t="0" aria-pressed="true" title="원룸 (단독·다가구 23㎡ 이하)">원룸</button><button type="button" data-t="4" aria-pressed="true" title="투룸 (단독·다가구 23㎡ 초과)">투룸</button><button type="button" data-t="1" aria-pressed="false" title="빌라 = 연립·다세대 건물 (원룸·투룸 포함)">빌라</button><button type="button" data-t="2" aria-pressed="false">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button></div>
-<p class="hint" id="mapHint">저장된 조건에 맞는 실거래를 표시해요. 핀을 누르면 거래 내역을 볼 수 있어요.</p>
+    </div>
+    <div id="dealKinds" role="group" aria-label="거래 종류"><button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button></div>
+    <div id="dealTypes" role="group" aria-label="집 종류"><button type="button" data-t="0" aria-pressed="true" title="단독·다가구 실거래">원/투룸</button><button type="button" data-t="1" aria-pressed="false">연립-다세대</button><button type="button" data-t="2" aria-pressed="false">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button></div>
+  </div>
+  <div class="map-canvas"><div id="map" role="application" aria-label="조건에 맞는 실거래 지도"></div></div>
+  <div class="map-footer">
+    <p class="hint" id="mapHint">저장된 조건에 맞는 실거래를 표시해요. 핀을 누르면 거래 내역을 볼 수 있어요.</p>
+  </div>
 </div>
 <div class="sum" id="sum"></div>
 <section class="card"><h2>📋 조건에 맞는 실거래</h2><ul class="list" id="list"><li class="empty">학교나 지역을 검색해 보세요.</li></ul></section>
@@ -145,8 +150,7 @@ input:focus{border-color:var(--brand)}
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const KEY = '6c67906fb926c31e6e09524a74d819c6';
 const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const TN = ['원룸', '빌라', '오피스텔', '아파트', '투룸'];
-const catOf = r => r[0] === 0 ? (r[2] <= 23 ? 0 : 4) : r[0];
+const TN = ['원/투룸', '연립-다세대', '오피스텔', '아파트'];
 const SIDO_SHORT = { 서울특별시: '서울', 부산광역시: '부산', 대구광역시: '대구', 인천광역시: '인천', 대전광역시: '대전', 울산광역시: '울산', 세종특별자치시: '세종', 경기도: '경기', 충청북도: '충북', 충청남도: '충남', 경상북도: '경북', 경상남도: '경남', 제주특별자치도: '제주', 강원특별자치도: '강원', 전북특별자치도: '전북', 전남광주통합특별시: '전남광주' };
 const SIDO_LONG = Object.fromEntries(Object.entries(SIDO_SHORT).map(([l, sh]) => [sh, l]));
 Object.assign(SIDO_LONG, { 광주: '전남광주통합특별시', 전남: '전남광주통합특별시', 광주광역시: '전남광주통합특별시', 전라남도: '전남광주통합특별시', 강원도: '강원특별자치도', 전라북도: '전북특별자치도', 제주도: '제주특별자치도' });
@@ -158,12 +162,12 @@ const num = s => { const v = parseFloat(String(s).replace(/,/g, '')); return isF
 const dist = (a, b) => { const d = Math.PI / 180, x = (b.lng - a.lng) * d * Math.cos((a.lat + b.lat) / 2 * d), y = (b.lat - a.lat) * d; return 6371 * Math.hypot(x, y); };
 let INDEX, GEO = {}, ME = null, SAVED = null, map, kGeo, kPlaces, overlays = [], pop = null, runGen = 0, lastPin = 0;
 
-const types = new Set([0, 4]);
+const types = new Set([0]);
 const dealKinds = new Set(['w', 'b']);
 const kindOf = r => r[4] <= 0 ? 'j' : r[3] > 5000 ? 'b' : 'w';
 $('#types').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; const t = +b.dataset.v; if (types.has(t)) { if (types.size === 1) return; types.delete(t); } else types.add(t); setTypesUI(); if (last) apply(); });
 function resetPersonalMap() {
-  types.clear(); [0, 4].forEach(t => types.add(t)); setTypesUI();
+  types.clear(); types.add(0); setTypesUI();
   dealKinds.clear(); dealKinds.add('w'); dealKinds.add('b'); setKindsUI();
   dealOn = true; syncDealToggle();
   if (last) apply();
@@ -216,7 +220,7 @@ async function pool(items, fn, n) { let i = 0; await Promise.all(Array.from({ le
 let mapP = null, meMk = null, dealOn = true, dealPins = [];
 function syncDealToggle() {
   $('#mapDeals').setAttribute('aria-pressed', dealOn);
-  $('#mapDeals').textContent = dealOn ? '📍 실거래 끄기' : '📍 실거래 보기';
+  $('#mapDeals').textContent = dealOn ? '실거래 끄기' : '실거래 보기';
   $('#dealKinds').classList.toggle('hide', !dealOn);
   $('#dealTypes').classList.toggle('hide', !dealOn);
   dealPins.forEach(o => o.setMap(dealOn ? map : null));
@@ -316,16 +320,16 @@ async function apply() {
   }
   if (isUniv) overlays.push(new kakao.maps.CustomOverlay({ position: LL(center.lat, center.lng), content: '<div class="univ" title="' + esc(label) + '">🎓</div>', yAnchor: 1, map }));
   else overlays.push(new kakao.maps.CustomOverlay({ position: LL(center.lat, center.lng), content: '<div class="ctr"></div>', xAnchor: .5, yAnchor: .5, map }));
-  const rows = d.rows.filter(r => near.has(r[1]) && types.has(catOf(r)) && dealKinds.has(kindOf(r)) && r[2] <= 60 && (!depMax || r[3] <= depMax) && (r[4] <= 0 || !rentMax || r[4] + fee <= rentMax));
+  const rows = d.rows.filter(r => near.has(r[1]) && types.has(r[0]) && dealKinds.has(kindOf(r)) && r[2] <= 60 && (!depMax || r[3] <= depMax) && (r[4] <= 0 || !rentMax || r[4] + fee <= rentMax));
   const wRows = rows.filter(r => r[4] > 0).map(r => r[4]).sort((a, b) => a - b);
   const med = wRows.length ? wRows[Math.floor(wRows.length / 2)] : null;
   $('#sum').textContent = rows.length ? label + ' 주변 조건에 맞는 거래 ' + rows.length + '건' + (med ? ' · 월세 중간값 ' + med + '만원' : '') : '';
   // 핀 (지번 있는 것만)
   const groups = new Map();
   for (const r of rows) {
-    const approximate = !r[9], k = r[1] + '|' + (approximate ? 'dong-' + catOf(r) : r[9]);
+    const approximate = !r[9], k = r[1] + '|' + (approximate ? 'dong-' + r[0] : r[9]);
     let g = groups.get(k);
-    if (!g) groups.set(k, g = { dong: d.dongs[r[1]], jb: r[9] || '', nm: approximate ? d.dongs[r[1]] + ' ' + TN[catOf(r)] + ' 실거래' : (r[10] >= 0 ? d.names[r[10]] : ''), approximate, deals: [], pos: null });
+    if (!g) groups.set(k, g = { dong: d.dongs[r[1]], jb: r[9] || '', nm: approximate ? d.dongs[r[1]] + ' ' + TN[r[0]] + ' 실거래' : (r[10] >= 0 ? d.names[r[10]] : ''), approximate, deals: [], pos: null });
     g.deals.push(r);
   }
   const gl = [...groups.values()].slice(0, 100);
@@ -336,9 +340,9 @@ async function apply() {
     const c = (await kFind(d.name + ' ' + g.dong + ' ' + g.jb)) || (g.nm ? await kFind(d.name + ' ' + g.dong + ' ' + g.nm, 'kw') : null);
     if (!c || gen !== runGen) return;
     g.pos = LL(c.lat, c.lng); const d0 = g.deals[0];
-    const el = document.createElement('div'); el.className = g.approximate ? 'kdong t' + catOf(d0) : 'kdeal' + (d0[4] <= 0 ? ' jn' : kindOf(d0) === 'b' ? ' bj' : '');
+    const el = document.createElement('div'); el.className = g.approximate ? 'kdong t' + d0[0] : 'kdeal' + (d0[4] <= 0 ? ' jn' : kindOf(d0) === 'b' ? ' bj' : '');
     el.innerHTML = (d0[4] <= 0 ? '전세 ' + eok(d0[3]) : d0[4] + '만') + (g.deals.length > 1 ? ' <small>외 ' + (g.deals.length - 1) + '</small>' : '');
-    if (g.approximate) el.innerHTML = '<div>' + esc(TN[catOf(d0)]) + ' · ' + g.deals.length + '건</div><small>동네 단위 · 건물 위치 아님</small>';
+    if (g.approximate) el.innerHTML = '<div>' + esc(TN[d0[0]]) + ' · ' + g.deals.length + '건</div><small>동네 단위 · 건물 위치 아님</small>';
     el.onclick = ev => { ev.stopPropagation(); lastPin = Date.now(); if (window.__rvOn && window.__rvOpen) window.__rvOpen(g.pos); else showPop(g, fee); };
     const pin = new kakao.maps.CustomOverlay({ position: g.pos, content: el, yAnchor: 1, clickable: true, map: dealOn ? map : null });
     overlays.push(pin); dealPins.push(pin);
@@ -351,7 +355,7 @@ function dealLine(r, fee) { return r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLo
 function showPop(g, fee) {
   closePop();
   const el = document.createElement('div'); el.className = 'kpop';
-  el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + esc(g.nm || g.dong + ' ' + g.jb) + '</b><div style="opacity:.65">' + esc(g.dong + ' ' + g.jb) + ' · ' + TN[catOf(g.deals[0])] + '</div>' + g.deals.map(r => '<div>' + dd(r[7]) + ' · ' + dealLine(r, fee) + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층</div>').join('');
+  el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + esc(g.nm || g.dong + ' ' + g.jb) + '</b><div style="opacity:.65">' + esc(g.dong + ' ' + g.jb) + ' · ' + TN[g.deals[0][0]] + '</div>' + g.deals.map(r => '<div>' + dd(r[7]) + ' · ' + dealLine(r, fee) + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층</div>').join('');
   el.querySelector('.x').onclick = closePop;
   pop = new kakao.maps.CustomOverlay({ position: g.pos, content: el, yAnchor: 1, clickable: true, zIndex: 30, map });
 }
@@ -359,7 +363,7 @@ function renderList(rows, byRow, fee) {
   const show = rows.slice(0, 120);
   $('#list').innerHTML = show.length ? show.map((r, i) => {
     const g = byRow.get(r), nm = r[10] >= 0 ? last.d.names[r[10]] : '';
-    return '<li class="' + (g ? 'pin' : '') + '" data-i="' + i + '"><div class="p">' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4]) + '</div><div class="t"><b>' + esc(TN[catOf(r)]) + ' · ' + esc(last.d.dongs[r[1]]) + (nm ? ' · ' + esc(nm) : '') + '</b><small>' + dd(r[7]) + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[4] > 0 && fee ? ' · 관리비 포함 월 ' + (r[4] + fee) + '만' : '') + (r[8] === 2 ? ' · 갱신' : '') + '</small></div>' + (g ? '<span class="tag">📍 지도</span>' : '') + '</li>';
+    return '<li class="' + (g ? 'pin' : '') + '" data-i="' + i + '"><div class="p">' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4]) + '</div><div class="t"><b>' + esc(TN[r[0]]) + ' · ' + esc(last.d.dongs[r[1]]) + (nm ? ' · ' + esc(nm) : '') + '</b><small>' + dd(r[7]) + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[4] > 0 && fee ? ' · 관리비 포함 월 ' + (r[4] + fee) + '만' : '') + (r[8] === 2 ? ' · 갱신' : '') + '</small></div>' + (g ? '<span class="tag">📍 지도</span>' : '') + '</li>';
   }).join('') + (rows.length > 120 ? '<li class="empty">최근 거래 120건까지만 보여 드려요. 조건을 좁혀 보세요.</li>' : '') : '';
 }
 
@@ -387,7 +391,7 @@ $('#saveMine').onclick = saveMine;
   if (!ME) $('#guestTip').classList.remove('hide');
   if (ME) { try { const r = await fetch('/api/saved', { cache: 'no-store' }); if (r.ok) { const d = (await r.json()).data; prefs = d.prefs || {}; budget = d.budget; } } catch (e) {} }
   else { try { prefs = JSON.parse(localStorage.getItem('wsg-pref') || '{}'); budget = JSON.parse(localStorage.getItem('wsg:budget') || 'null'); } catch (e) {} }
-  if (prefs.types && prefs.types.length) { types.clear(); prefs.types.forEach(t => types.add(+t)); setTypesUI(); }
+  if (prefs.types && prefs.types.length) { types.clear(); prefs.types.forEach(t => types.add(+t === 4 ? 0 : +t)); setTypesUI(); }
   if (budget) { if (budget.dep) $('#dep').value = budget.dep; if (budget.rent) $('#rent').value = budget.rent; }
   if (prefs.fee) $('#fee').value = prefs.fee;
   const qs = new URLSearchParams(location.search).get('q');
