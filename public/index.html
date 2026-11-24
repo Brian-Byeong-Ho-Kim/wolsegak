@@ -412,7 +412,8 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
       <div><label class="f" for="bRent">월세는 최대</label><div class="unit"><input id="bRent" inputmode="numeric" placeholder="예: 50"><span>만원</span></div>
         <div class="chips qk" data-for="bRent"><button class="chip" data-v="35">35</button><button class="chip" data-v="45">45</button><button class="chip" data-v="55">55</button><button class="chip" data-v="65">65</button><button class="chip" data-v="80">80</button></div></div>
     </div>
-    <p class="hint" id="bHint"></p>
+    <button class="btn" id="applyBudget" type="button">반영하기</button>
+    <p class="hint" id="bHint" role="status"></p>
   </section>
 
   <section class="card">
@@ -551,9 +552,10 @@ function setView(v, quiet) {
   $('#statsCard').open = v === 'budget';
   syncMapVis(); renderStats(); refreshDongLabels();
   if (v === 'budget' && !$('#bDep').value && !$('#bRent').value && $('#dep').value && state.mode === 'wolse') {
-    $('#bDep').value = $('#dep').value; $('#bRent').value = $('#rent').value; onBudget();
+    $('#bDep').value = $('#dep').value; $('#bRent').value = $('#rent').value; renderBudgetInputs();
   }
-  if (v === 'check' && !$('#dep').value && $('#bDep').value) { $('#dep').value = $('#bDep').value; if (!$('#rent').value) $('#rent').value = $('#bRent').value; }
+  const applied = budget();
+  if (v === 'check' && !$('#dep').value && applied) { $('#dep').value = applied.dep; if (!$('#rent').value) $('#rent').value = applied.rent; }
   if (!quiet) writeHash();
 }
 $$('[data-view]').forEach(b => b.onclick = () => setView(b.dataset.view));
@@ -1477,27 +1479,52 @@ $('#mapDeals').addEventListener('click', async () => {
 
 // ===== 내 예산 (개인화) =====
 const BKEY = 'wsg:budget';
-function budget() {
-  const d = parseFloat(($('#bDep').value || '').replace(/,/g, '')), r = parseFloat(($('#bRent').value || '').replace(/,/g, ''));
-  return d >= 0 && r > 0 ? { dep: d, rent: r } : null;
+let appliedBudget = null;
+function budget() { return appliedBudget; }
+function budgetFromInputs() {
+  const dep = $('#bDep').value.replace(/,/g, '').trim();
+  const rent = $('#bRent').value.replace(/,/g, '').trim();
+  const d = Number(dep), r = Number(rent);
+  return dep && Number.isFinite(d) && d >= 0 && Number.isFinite(r) && r > 0 ? { dep: d, rent: r } : null;
 }
-try { const b = JSON.parse(localStorage.getItem(BKEY) || 'null'); if (b) { $('#bDep').value = b.dep; $('#bRent').value = b.rent; } } catch {}
-$$('.qk .chip').forEach(c => c.onclick = () => { const t = $('#' + c.closest('.qk').dataset.for); t.value = c.dataset.v; onBudget(); });
-['#bDep', '#bRent'].forEach(s => $(s).addEventListener('input', () => { clearTimeout(onBudget.t); onBudget.t = setTimeout(onBudget, 250); }));
-function onBudget() {
-  const B = budget();
-  try { B ? localStorage.setItem(BKEY, JSON.stringify(B)) : localStorage.removeItem(BKEY); } catch {}
+try {
+  const saved = JSON.parse(localStorage.getItem(BKEY) || 'null');
+  if (saved) {
+    $('#bDep').value = saved.dep;
+    $('#bRent').value = saved.rent;
+    appliedBudget = budgetFromInputs();
+  }
+} catch {}
+const budgetChips = $$('.qk .chip');
+function renderBudgetInputs() {
+  budgetChips.forEach(c => c.setAttribute('aria-pressed', $('#' + c.closest('.qk').dataset.for).value === c.dataset.v));
+}
+budgetChips.forEach(c => c.onclick = () => {
+  $('#' + c.closest('.qk').dataset.for).value = c.dataset.v;
+  renderBudgetInputs();
+});
+['#bDep', '#bRent'].forEach(s => $(s).addEventListener('input', renderBudgetInputs));
+$('#applyBudget').onclick = () => {
+  const B = budgetFromInputs();
+  if (!B) {
+    $('#bHint').textContent = '보증금은 0 이상, 월세는 0보다 큰 금액을 입력해 주세요.';
+    return;
+  }
+  appliedBudget = B;
+  try { localStorage.setItem(BKEY, JSON.stringify(B)); } catch {}
   syncLater();
-  // 3단계 입력칸이 비어 있으면 예산을 그대로 넣어 둔다
-  if (B && !$('#dep').value && !$('#rent').value) { $('#dep').value = B.dep; $('#rent').value = B.rent; }
+  if (!$('#dep').value && !$('#rent').value) { $('#dep').value = B.dep; $('#rent').value = B.rent; }
   renderBudget();
-}
+  refreshDeals();
+  const result = $('#budgetCard');
+  if (!result.classList.contains('hide')) result.scrollIntoView({ block: 'start' });
+};
 let budgetDong = new Map();
 const fits = (r, B) => r[4] > 0 ? (r[3] <= B.dep && r[4] <= B.rent) : r[3] <= B.dep; // 월세는 보증금·월세 모두 예산 안, 전세는 보증금만
 function renderBudget() {
   const card = $('#budgetCard');
   const B = budget();
-  $$('.qk .chip').forEach(c => c.setAttribute('aria-pressed', $('#' + c.closest('.qk').dataset.for).value === c.dataset.v));
+  renderBudgetInputs();
   $('#bHint').textContent = B ? (state.places.length ? '아래 「내 예산으로 보면」에서 결과를 확인하세요.' : '이제 학교나 동네를 골라 주세요.') : '';
   budgetDong = new Map();
   const show = B && statSets.length && state.places.length;
@@ -1894,7 +1921,15 @@ async function pullSaved() {
   try { localStorage.setItem('wsg-synced', '1'); } catch (e) {}
   if (data.prefs) { prefs = { ...prefs, ...data.prefs }; savePrefsLocal(); renderMe(); }
   try { localStorage.setItem('wsg-fav', JSON.stringify(favs)); localStorage.setItem('wsg-cmp', JSON.stringify(cmpList)); } catch (e) {}
-  if (!budget() && data.budget && data.budget.rent > 0) { $('#bDep').value = data.budget.dep; $('#bRent').value = data.budget.rent; try { localStorage.setItem(BKEY, JSON.stringify(data.budget)); } catch (e) {} renderBudget(); }
+  if (!budget() && data.budget && data.budget.dep >= 0 && data.budget.rent > 0) {
+    appliedBudget = data.budget;
+    if (!$('#bDep').value && !$('#bRent').value) {
+      $('#bDep').value = appliedBudget.dep;
+      $('#bRent').value = appliedBudget.rent;
+    }
+    try { localStorage.setItem(BKEY, JSON.stringify(appliedBudget)); } catch (e) {}
+    renderBudget();
+  }
   renderFavs(); renderCompare(); pushSaved();
 }
 function renderMyTip() {
