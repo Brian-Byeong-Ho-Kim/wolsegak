@@ -129,6 +129,7 @@
   const catOf = r => r[0] === 0 ? (r[2] <= 23 ? 0 : 4) : r[0];
   const escH = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let __nl = {}; fetch('/data/naver_layers.json').then(r => r.json()).then(j => { __nl = j; }).catch(() => {});
+  window.__zcopy = window.__zcopy || function () { var t = window.__nvLabel || ''; try { navigator.clipboard.writeText(t); } catch (e) {} var d = document.createElement('div'); d.textContent = '직방 검색창에 붙여넣기: ' + (t || '지역명'); d.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1c1917;color:#fff;padding:9px 14px;border-radius:10px;font:600 13px Pretendard Variable,sans-serif;z-index:99999'; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 3500); };
   const nLand = (p, z) => 'https://fin.land.naver.com/map?zoom=' + (z || 16) + '&tradeTypes=B1-B2&realEstateTypes=A05-A06-A07-C02-A02' + (__nl[window.__nvCode] ? '&layer=' + __nl[window.__nvCode] : '');
   const dLand = (p, z) => 'https://www.dabangapp.com/map/onetwo?m_lat=' + p.getLat().toFixed(6) + '&m_lng=' + p.getLng().toFixed(6) + '&m_zoom=' + (z || 16);
   const zLand = (p, z) => 'https://www.zigbang.com/home/oneroom/map';
@@ -145,7 +146,7 @@
   async function openSchool(k) {
     const o = byKey.get(k); if (!o) return;
     picked = k; clearDeals();
-    const gen = dealGen, code = (window.__nvCode = o.a.dataset.s), sc = { lat: o.pos.getLat(), lng: o.pos.getLng() };
+    const gen = dealGen, code = (window.__nvCode = o.a.dataset.s, window.__nvLabel = (((IDX && IDX.sgg) || []).find(x => x.code === o.a.dataset.s) || {}).name || '', o.a.dataset.s), sc = { lat: o.pos.getLat(), lng: o.pos.getLng() };
     map.setLevel(4); map.setCenter(o.pos);
     setTimeout(() => { try { map.panBy(0, Math.round(document.getElementById('umap').clientHeight * 0.24)); } catch (e) {} }, 120);   // 아래 상자들이 보이도록 학교를 위쪽으로
     setMsg(o.name + ' 주변 실거래 찾는 중…');

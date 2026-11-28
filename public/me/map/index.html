@@ -80,8 +80,8 @@ input:focus{border-color:var(--brand)}
 #dealKinds button[aria-pressed=true],#dealTypes button[aria-pressed=true]{background:var(--ink);color:#fff}
 #mapWrap{border:0;background:transparent;overflow:visible}
 </style>
-<link rel="stylesheet" href="/map-controls.css?v=20261203">
-<script src="/map-controls.js?v=20261203"></script>
+<link rel="stylesheet" href="/map-controls.css?v=20261204">
+<script src="/map-controls.js?v=20261204"></script>
 </head>
 <body>
 <div class="wrap">
@@ -291,7 +291,7 @@ async function search(q, centerOverride) {
     if (gen !== runGen) return;
     const d = await fetch('/data/addr/' + code + '.json').then(r => r.ok ? r.json() : null).catch(() => null);
     if (!d) { flash('이 지역은 실거래 데이터가 아직 없어요.'); return; }
-    window.__nvCode = code;
+    window.__nvCode = code; window.__nvLabel = d.name || '';
     map.setLevel(4); map.setCenter(LL(center.lat, center.lng));
     flash('주변 동네 위치 찾는 중…');
     const dongs = [...new Set(d.rows.map(r => r[1]))], cen = [];
