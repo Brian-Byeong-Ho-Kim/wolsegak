@@ -11,14 +11,12 @@ function utmk(lat, lng) {
 }
 const enc6 = v => { let s = ''; for (let i = 0; i < 6; i++) { s = A64[v % 64] + s; v = Math.floor(v / 64); } return s; };
 function naverCenter(lat, lng) { const [x, y] = utmk(lat, lng); return enc6(Math.round(x * 100) + OFF_X) + '-' + enc6(Math.round(y * 100) + OFF_Y); }
-window.__zcopy = function (fb, force) { var sg = ((window.__nvLabel || '').split(' ').slice(1).join(' ') || window.__nvLabel || ''), dg = window.__nvDong || window.__nvDong0 || '', t = (force && fb) ? fb : dg ? (sg + ' ' + dg).trim() : (fb || sg); try { navigator.clipboard.writeText(t); } catch (e) {} var d = document.createElement('div'); d.textContent = '직방 검색창에 붙여넣기: ' + (t || '지역명'); d.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1c1917;color:#fff;padding:9px 14px;border-radius:10px;font:600 13px Pretendard Variable,sans-serif;z-index:99999'; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 3500); };
 const nLand = (p, z) => 'https://fin.land.naver.com/map?center=' + naverCenter(p.getLat(), p.getLng()) + '&zoom=' + Math.min(z || 15, 15.5) + '&tradeTypes=B1-B2&realEstateTypes=A05-A06-A07-C02-A02';
 const dLand = (p, z) => 'https://www.dabangapp.com/map/onetwo?m_lat=' + p.getLat().toFixed(6) + '&m_lng=' + p.getLng().toFixed(6) + '&m_zoom=' + (z || 16);
-const zLand = (p, z) => 'https://www.zigbang.com/home/oneroom/map';
-const nLink = (p, z) => '<div class="nlinks">매물보기 : <a class="nlink" title="네이버 부동산: 이 위치 주변으로 열려요" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버</a>, <a class="nlink" title="다방: 이 위치로 열려요" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방</a>, <a class="nlink" title="직방: 지도만 열려요. 동 이름이 복사되니 검색창에 붙여넣어 주세요" onclick="window.__zcopy()" href="' + zLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">직방</a></div>';
+const nLink = (p, z) => '<div class="nlinks">매물보기 : <a class="nlink" title="네이버 부동산: 이 위치 주변으로 열려요" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버</a>, <a class="nlink" title="다방: 이 위치로 열려요" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방</a></div>';
 function setupMapView(map, wrap, onReset) {
   const bar = document.createElement('div'); bar.className = 'mview';
-  bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><button type="button" data-v="naver" title="네이버 부동산을 이 위치 주변으로 열어요">🏘 네이버 매물</button><button type="button" data-v="dabang" title="다방에서 이 지도 위치의 매물 보기">다방</button><button type="button" data-v="zig" title="직방 지도를 열어요 (위치 이동은 지원하지 않아 검색창에 지역명을 입력해 주세요)">직방</button><button type="button" data-v="reset" title="지도 설정(필터·스카이뷰·로드뷰·창 크기)을 처음 상태로">↺ 초기화</button><span class="mvmsg hide"></span>';
+  bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><button type="button" data-v="naver" title="네이버 부동산을 이 위치 주변으로 열어요">🏘 네이버 매물</button><button type="button" data-v="dabang" title="다방에서 이 지도 위치의 매물 보기">다방</button><button type="button" data-v="reset" title="지도 설정(필터·스카이뷰·로드뷰·창 크기)을 처음 상태로">↺ 초기화</button><span class="mvmsg hide"></span>';
   const panel = document.createElement('div'); panel.className = 'rvpanel hide';
   panel.innerHTML = '<div class="rvgrip" title="위아래로 끌어서 로드뷰 크기 조절"></div><button type="button" class="rvx">✕ 닫기</button><div class="rvbox"></div>';
   wrap.querySelector('.map-footer').prepend(bar);
@@ -71,8 +69,7 @@ function setupMapView(map, wrap, onReset) {
   };
   bar.addEventListener('click', e => {
     const b = e.target.closest('button[data-v]'); if (!b) return;
-    if (b.dataset.v === 'zig') window.__zcopy();
-    if (b.dataset.v === 'naver' || b.dataset.v === 'zig' || b.dataset.v === 'dabang') { const z = Math.max(10, Math.min(19, 20 - map.getLevel())); window.open((b.dataset.v === 'naver' ? nLand : b.dataset.v === 'zig' ? zLand : dLand)(map.getCenter(), z), '_blank', 'noopener'); return; }
+    if (b.dataset.v === 'naver' || b.dataset.v === 'dabang') { const z = Math.max(10, Math.min(19, 20 - map.getLevel())); window.open((b.dataset.v === 'naver' ? nLand : dLand)(map.getCenter(), z), '_blank', 'noopener'); return; }
     if (b.dataset.v === 'reset') {
       bar.querySelectorAll('button[aria-pressed]').forEach(x => x.setAttribute('aria-pressed', 'false'));
       map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP); map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW);
