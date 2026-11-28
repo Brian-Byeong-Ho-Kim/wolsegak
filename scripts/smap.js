@@ -32,15 +32,27 @@
   for (const [rad, so, fo] of [[500, .7, .07], [1000, .5, .035]]) new kakao.maps.Circle({ center: spos, radius: rad, strokeWeight: 2, strokeColor: '#ff6b3d', strokeOpacity: so, strokeStyle: 'dashed', fillColor: '#ff6b3d', fillOpacity: fo, map });
   for (const [rad, t] of [[500, '500m'], [1000, '1km']]) new kakao.maps.CustomOverlay({ position: LL(lat + rad / 111320, lng), content: '<div class="rlab">' + t + '</div>', xAnchor: .5, yAnchor: .5, zIndex: 3, map });
   // 스카이뷰(위성사진)·로드뷰(거리 사진) 전환 — 카카오맵 기본 기능
-  let __nl = {}; fetch('/data/naver_layers.json').then(r => r.json()).then(j => { __nl = j; }).catch(() => {});
-  window.__zcopy = window.__zcopy || function () { var t = window.__nvLabel || ''; try { navigator.clipboard.writeText(t); } catch (e) {} var d = document.createElement('div'); d.textContent = '직방 검색창에 붙여넣기: ' + (t || '지역명'); d.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1c1917;color:#fff;padding:9px 14px;border-radius:10px;font:600 13px Pretendard Variable,sans-serif;z-index:99999'; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 3500); };
-  const nLand = (p, z) => 'https://fin.land.naver.com/map?zoom=' + (z || 16) + '&tradeTypes=B1-B2&realEstateTypes=A05-A06-A07-C02-A02' + (__nl[window.__nvCode] ? '&layer=' + __nl[window.__nvCode] : '');
+  const A64 = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
+  const OFF_X = 59382133607, OFF_Y = 58233041641;
+  function utmk(lat, lng) {
+    const a = 6378137, f = 1 / 298.257222101, e2 = 2 * f - f * f, ep2 = e2 / (1 - e2), k0 = 0.9996, d = Math.PI / 180;
+    const phi = lat * d, lam = (lng - 127.5) * d, phi0 = 38 * d;
+    const M = p => a * ((1 - e2 / 4 - 3 * e2 * e2 / 64 - 5 * e2 ** 3 / 256) * p - (3 * e2 / 8 + 3 * e2 * e2 / 32 + 45 * e2 ** 3 / 1024) * Math.sin(2 * p) + (15 * e2 * e2 / 256 + 45 * e2 ** 3 / 1024) * Math.sin(4 * p) - (35 * e2 ** 3 / 3072) * Math.sin(6 * p));
+    const N = a / Math.sqrt(1 - e2 * Math.sin(phi) ** 2), T = Math.tan(phi) ** 2, C = ep2 * Math.cos(phi) ** 2, Aa = lam * Math.cos(phi);
+    const x = 1000000 + k0 * N * (Aa + (1 - T + C) * Aa ** 3 / 6 + (5 - 18 * T + T * T + 72 * C - 58 * ep2) * Aa ** 5 / 120);
+    const y = 2000000 + k0 * (M(phi) - M(phi0) + N * Math.tan(phi) * (Aa * Aa / 2 + (5 - T + 9 * C + 4 * C * C) * Aa ** 4 / 24 + (61 - 58 * T + T * T + 600 * C - 330 * ep2) * Aa ** 6 / 720));
+    return [x, y];
+  }
+  const enc6 = v => { let s = ''; for (let i = 0; i < 6; i++) { s = A64[v % 64] + s; v = Math.floor(v / 64); } return s; };
+  function naverCenter(lat, lng) { const [x, y] = utmk(lat, lng); return enc6(Math.round(x * 100) + OFF_X) + '-' + enc6(Math.round(y * 100) + OFF_Y); }
+  window.__zcopy = function (fb) { var sg = ((window.__nvLabel || '').split(' ').slice(1).join(' ') || window.__nvLabel || ''), dg = window.__nvDong || window.__nvDong0 || '', t = dg ? (sg + ' ' + dg).trim() : (fb || sg); try { navigator.clipboard.writeText(t); } catch (e) {} var d = document.createElement('div'); d.textContent = '직방 검색창에 붙여넣기: ' + (t || '지역명'); d.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1c1917;color:#fff;padding:9px 14px;border-radius:10px;font:600 13px Pretendard Variable,sans-serif;z-index:99999'; document.body.appendChild(d); setTimeout(function () { d.remove(); }, 3500); };
+  const nLand = (p, z) => 'https://fin.land.naver.com/map?center=' + naverCenter(p.getLat(), p.getLng()) + '&zoom=' + Math.min(z || 15, 15.5) + '&tradeTypes=B1-B2&realEstateTypes=A05-A06-A07-C02-A02';
   const dLand = (p, z) => 'https://www.dabangapp.com/map/onetwo?m_lat=' + p.getLat().toFixed(6) + '&m_lng=' + p.getLng().toFixed(6) + '&m_zoom=' + (z || 16);
   const zLand = (p, z) => 'https://www.zigbang.com/home/oneroom/map';
-  const nLink = (p, z) => '<span class="nlinks"><a class="nlink" title="네이버 부동산: 이 지역(시군구)으로 열려요" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버↗</a><a class="nlink" title="직방: 지도만 열려요. 지역명이 복사되니 검색창에 붙여넣어 주세요" onclick="window.__zcopy()" href="' + zLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">직방↗</a><a class="nlink" title="다방: 이 위치로 열려요" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방↗</a></span>';
+  const nLink = (p, z) => '<span class="nlinks"><a class="nlink" title="네이버 부동산: 이 위치 주변으로 열려요" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버↗</a><a class="nlink" title="직방: 지도만 열려요. 동 이름이 복사되니 검색창에 붙여넣어 주세요" onclick="window.__zcopy()" href="' + zLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">직방↗</a><a class="nlink" title="다방: 이 위치로 열려요" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방↗</a></span>';
   function setupMapView(map, wrap, onReset) {
     const bar = document.createElement('div'); bar.className = 'mview';
-    bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><button type="button" data-v="naver" title="네이버 부동산을 이 지역(시군구) 기준으로 열어요">🏘 네이버 매물</button><button type="button" data-v="zig" title="직방 지도를 열어요 (위치 이동은 지원하지 않아 검색창에 지역명을 입력해 주세요)">직방</button><button type="button" data-v="dabang" title="다방에서 이 지도 위치의 매물 보기">다방</button><button type="button" data-v="reset" title="지도 설정(필터·스카이뷰·로드뷰·창 크기)을 처음 상태로">↺ 초기화</button><span class="mvmsg hide"></span>';
+    bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><button type="button" data-v="naver" title="네이버 부동산을 이 위치 주변으로 열어요">🏘 네이버 매물</button><button type="button" data-v="zig" title="직방 지도를 열어요 (위치 이동은 지원하지 않아 검색창에 지역명을 입력해 주세요)">직방</button><button type="button" data-v="dabang" title="다방에서 이 지도 위치의 매물 보기">다방</button><button type="button" data-v="reset" title="지도 설정(필터·스카이뷰·로드뷰·창 크기)을 처음 상태로">↺ 초기화</button><span class="mvmsg hide"></span>';
     const panel = document.createElement('div'); panel.className = 'rvpanel hide';
     panel.innerHTML = '<div class="rvgrip" title="위아래로 끌어서 로드뷰 크기 조절"></div><button type="button" class="rvx">✕ 닫기</button><div class="rvbox"></div>';
     wrap.appendChild(bar); wrap.appendChild(panel);
@@ -155,6 +167,7 @@
     const el = document.createElement('div'); el.className = 'kpop';
     const rows = g.deals.map(r => '<div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('');
     el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.nm || (g.dong + ' ' + g.jb)) + '</b><div style="opacity:.65">' + escH(g.dong + ' ' + g.jb) + ' · ' + TN[g.deals[0][0]] + '</div>' + rows;
+    window.__nvDong = g.dong;
     el.querySelector('b').insertAdjacentHTML('afterend', nLink(pos));
     el.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
     dealPop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 10, map });
@@ -170,6 +183,7 @@
     const parts = await kRegion(ctr.getLat(), ctr.getLng());
     if (gen !== dealGen) return;
     const code = (parts && matchSgg(parts)) || wrap.dataset.s || null;
+    window.__nvDong = ''; window.__nvDong0 = ((parts || []).filter(t => /[동가읍면리]$/.test(t)).pop()) || '';
     window.__nvCode = code; window.__nvLabel = (((INDEX && INDEX.sgg) || []).find(x => x.code === code) || {}).name || '';
     if (!code) { hideDeals(); dealMsg('이 위치의 시·군·구를 찾지 못했어요.'); return; }
     const d = await loadAddr(code);
@@ -228,6 +242,7 @@
         const all = rs.slice().sort((p, q) => q[7] - p[7]).slice(0, 30);
         const pe = document.createElement('div'); pe.className = 'kpop';
         pe.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.dong) + ' ' + TN[0] + ' ' + rs.length + '건</b><div style="opacity:.65">단독·다가구 · 지번이 없어 건물은 구분되지 않고, 동네 단위로 묶어 보여 드려요</div>' + all.map(r => '<div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('') + (rs.length > 30 ? '<div style="opacity:.6">… 외 ' + (rs.length - 30) + '건</div>' : '');
+        window.__nvDong = g.dong;
         pe.querySelector('b').insertAdjacentHTML('afterend', nLink(pos, 16));
         pe.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
         dealPop = new kakao.maps.CustomOverlay({ position: pos, content: pe, yAnchor: 1, clickable: true, zIndex: 10, map });
