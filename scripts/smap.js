@@ -109,11 +109,11 @@
   const bDeals = mk('button', 'mapDeals', '📍 실거래 끄기', { type: 'button', 'aria-pressed': 'true', 'aria-label': '실거래 핀 보기' });
   const bLoc = mk('button', 'mapLoc', '📍 내 위치', { type: 'button', 'aria-label': '내 위치 찾기' });
   const kinds = mk('div', 'dealKinds', '<button type="button" data-k="w" aria-pressed="true" title="보증금 5천만원 이하 월세">월세</button><button type="button" data-k="b" aria-pressed="true" title="보증금 5천만원 초과 월세(반전세)">반전세</button><button type="button" data-k="j" aria-pressed="false" title="월세 없는 전세">전세</button>', { role: 'group', 'aria-label': '거래 종류' });
-  const typesEl = mk('div', 'dealTypes', '<button type="button" data-t="0" aria-pressed="true" title="단독·다가구 실거래">원/투룸</button><button type="button" data-t="1" aria-pressed="true">연립-다세대</button><button type="button" data-t="2" aria-pressed="true">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button>', { role: 'group', 'aria-label': '집 종류' });
+  const typesEl = mk('div', 'dealTypes', '<button type="button" data-t="0" aria-pressed="true" title="단독·다가구 실거래">원/투룸</button><button type="button" data-t="1" aria-pressed="false">연립-다세대</button><button type="button" data-t="2" aria-pressed="false">오피스텔</button><button type="button" data-t="3" aria-pressed="false">아파트</button>', { role: 'group', 'aria-label': '집 종류' });
   const msgEl = mk('div', 'dealMsg', '', {}); msgEl.classList.add('hide');
   const dealMsg = t => { msgEl.textContent = t || ''; msgEl.classList.toggle('hide', !t); };
 
-  const dealKinds = new Set(['w', 'b']), pinTypes = new Set([0, 1, 2]);
+  const dealKinds = new Set(['w', 'b']), pinTypes = new Set([0]);
   const kindOf = r => r[4] <= 0 ? 'j' : r[3] > 5000 ? 'b' : 'w';
   let dealOn = true;
   const eok = m => m >= 10000 ? Math.floor(m / 10000) + '억' + (m % 10000 ? ' ' + (m % 10000).toLocaleString() : '') : m.toLocaleString() + '만';
@@ -250,7 +250,7 @@
   }
   kakao.maps.event.addListener(map, 'idle', refreshDeals);
   setupMapView(map, wrap, () => {
-    dealKinds.clear(); dealKinds.add('w'); dealKinds.add('b'); pinTypes.clear(); [0, 1, 2].forEach(t => pinTypes.add(t));
+    dealKinds.clear(); dealKinds.add('w'); dealKinds.add('b'); pinTypes.clear(); pinTypes.add(0);
     kinds.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', dealKinds.has(b.dataset.k)));
     typesEl.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', pinTypes.has(+b.dataset.t)));
     if (dealPop) { dealPop.setMap(null); dealPop = null; }
