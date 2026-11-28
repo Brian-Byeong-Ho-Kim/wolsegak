@@ -10,7 +10,7 @@ export async function onRequestGet({ request }) {
   const u = new URL(request.url).searchParams.get('url') || '';
   let target;
   try { target = new URL(u); } catch { return json({ error: '링크 형식이 아니에요' }, 400); }
-  if (!/^https?:$/.test(target.protocol) || !ALLOW.some(r => r.test(target.hostname))) return json({ error: '직방·다방·피터팬 링크만 읽을 수 있어요. 네이버 부동산은 매물 글을 복사해 붙여 넣어 주세요' }, 400);
+  if (!/^https?:$/.test(target.protocol) || !ALLOW.some(r => r.test(target.hostname))) return json({ error: '직방·다방 링크만 붙여 넣을 수 있어요' }, 400);
 
   const cache = caches.default, key = new Request('https://wolsegak.com/api/preview?u=' + encodeURIComponent(target.href));
   const hit = await cache.match(key);

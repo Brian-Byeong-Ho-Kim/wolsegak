@@ -308,10 +308,10 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
   <section class="card" id="ckCard">
     <h2>🏠 어떤 방이에요?</h2>
     <details class="paste" id="pasteBox" open>
-      <summary>📋 네이버·직방·다방에서 본 매물 글 붙여넣기</summary>
-      <textarea id="ckPaste" rows="4" placeholder="네이버 부동산·직방·다방에서 본 매물 글을 복사해 붙여 넣어 주세요&#10;(직방·다방은 링크만 붙여도 돼요)&#10;예: 명륜3가 원룸 500/45 전용 19.8㎡ 3층 관리비 7만원"></textarea>
-      <p class="hint">💡 네이버 부동산에서 본 방은 월세각이 매물을 가져오지 않아요. 매물 화면의 글(가격·면적·층)을 <b>복사해 붙여 넣으면</b> 실거래와 바로 비교해 드려요.</p>
-      <p class="hint" id="ckParsed">링크나 매물 글을 붙여 넣으면 칸이 자동으로 채워져요. 글은 이 브라우저 안에서만 읽고, 링크는 제목만 미리 읽어 와요.</p>
+      <summary>🔗 직방·다방에서 본 매물 링크 붙여넣기</summary>
+      <textarea id="ckPaste" rows="4" placeholder="직방·다방에서 본 매물 링크를 붙여 넣어 주세요&#10;예: https://www.dabangapp.com/room/…"></textarea>
+      <p class="hint">💡 직방·다방 매물 링크를 붙여 넣으면 보증금·월세·면적을 읽어 칸을 채우고 실거래와 바로 비교해 드려요. 링크에서 못 읽은 값은 아래에 직접 넣어 주세요.</p>
+      <p class="hint" id="ckParsed">직방·다방 링크를 붙여 넣으면 칸이 자동으로 채워져요. 링크는 제목·설명만 미리 읽어 와요.</p>
     </details>
     <input id="ckAddr" type="hidden">
     <div class="tabs" role="tablist" id="modeTabs">
@@ -766,10 +766,10 @@ async function onPaste() {
     $('#ckParsed').textContent = '링크 미리보기를 읽는 중…';
     try {
       const pv = await (await fetch('/api/preview?url=' + encodeURIComponent(link[0]))).json();
-      if (pv.error) { $('#ckParsed').textContent = pv.error + ' 매물 화면의 글을 복사해 붙여넣거나 아래에 직접 넣어 주세요.'; return; }
+      if (pv.error) { $('#ckParsed').textContent = pv.error + ' 아래에 직접 넣어 주세요.'; return; }
       const txt = [pv.title, pv.description].filter(Boolean).join(' ');
       raw = raw.replace(link[0], ' ') + ' ' + txt; r = parseListing(raw); via = txt;
-    } catch { $('#ckParsed').textContent = '링크를 읽지 못했어요. 매물 화면의 글을 복사해 붙여넣어 주세요.'; return; }
+    } catch { $('#ckParsed').textContent = '링크를 읽지 못했어요. 아래에 직접 넣어 주세요.'; return; }
   }
   const got = [];
   if (r.jeonse) { $$('[data-mode=jeonse]')[0].click(); got.push('전세'); } else if (r.rent != null) { $$('[data-mode=wolse]')[0].click(); }
@@ -1788,7 +1788,7 @@ $('#cmpList').addEventListener('click', e => {
 });
 $('#againBtn').onclick = () => {
   ['dep', 'rent', 'myArea', 'ckFloor', 'ckFee', 'ckPaste'].forEach(id => $('#' + id).value = '');
-  areaHint(); $('#ckParsed').textContent = '링크나 매물 글을 붙여 넣으면 칸이 자동으로 채워져요. 글은 이 브라우저 안에서만 읽고, 링크는 제목만 미리 읽어 와요.';
+  areaHint(); $('#ckParsed').textContent = '직방·다방 링크를 붙여 넣으면 칸이 자동으로 채워져요. 링크는 제목·설명만 미리 읽어 와요.';
   $('#goHint').textContent = '위치는 그대로예요. 다음 방의 가격과 크기를 넣어 주세요.';
   $('#ckCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
   setTimeout(() => $('#dep').focus(), 350);
