@@ -80,8 +80,8 @@ input:focus{border-color:var(--brand)}
 #dealKinds button[aria-pressed=true],#dealTypes button[aria-pressed=true]{background:var(--ink);color:#fff}
 #mapWrap{border:0;background:transparent;overflow:visible}
 </style>
-<link rel="stylesheet" href="/map-controls.css?v=20261124b">
-<script src="/map-controls.js?v=20261124"></script>
+<link rel="stylesheet" href="/map-controls.css?v=20261128">
+<script src="/map-controls.js?v=20261128"></script>
 </head>
 <body>
 <div class="wrap">
@@ -356,6 +356,7 @@ function showPop(g, fee) {
   closePop();
   const el = document.createElement('div'); el.className = 'kpop';
   el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + esc(g.nm || g.dong + ' ' + g.jb) + '</b><div style="opacity:.65">' + esc(g.dong + ' ' + g.jb) + ' · ' + TN[g.deals[0][0]] + '</div>' + g.deals.map(r => '<div>' + dd(r[7]) + ' · ' + dealLine(r, fee) + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층</div>').join('');
+  el.insertAdjacentHTML('beforeend', nLink(g.pos));
   el.querySelector('.x').onclick = closePop;
   pop = new kakao.maps.CustomOverlay({ position: g.pos, content: el, yAnchor: 1, clickable: true, zIndex: 30, map });
 }

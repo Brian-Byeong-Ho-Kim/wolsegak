@@ -32,9 +32,11 @@
   for (const [rad, so, fo] of [[500, .7, .07], [1000, .5, .035]]) new kakao.maps.Circle({ center: spos, radius: rad, strokeWeight: 2, strokeColor: '#ff6b3d', strokeOpacity: so, strokeStyle: 'dashed', fillColor: '#ff6b3d', fillOpacity: fo, map });
   for (const [rad, t] of [[500, '500m'], [1000, '1km']]) new kakao.maps.CustomOverlay({ position: LL(lat + rad / 111320, lng), content: '<div class="rlab">' + t + '</div>', xAnchor: .5, yAnchor: .5, zIndex: 3, map });
   // 스카이뷰(위성사진)·로드뷰(거리 사진) 전환 — 카카오맵 기본 기능
+  const nLand = (p, z) => 'https://new.land.naver.com/rooms?ms=' + p.getLat().toFixed(6) + ',' + p.getLng().toFixed(6) + ',' + (z || 17);
+  const nLink = p => '<a class="nlink" href="' + nLand(p) + '" target="_blank" rel="noopener noreferrer">네이버 부동산에서 이 주변 매물 보기 ↗</a>';
   function setupMapView(map, wrap, onReset) {
     const bar = document.createElement('div'); bar.className = 'mview';
-    bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><button type="button" data-v="reset" title="지도 설정(필터·스카이뷰·로드뷰·창 크기)을 처음 상태로">↺ 초기화</button><span class="mvmsg hide"></span>';
+    bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><button type="button" data-v="naver" title="지금 보는 곳 주변 매물을 네이버 부동산에서 열어요 (새 창)">🏘 네이버 매물</button><button type="button" data-v="reset" title="지도 설정(필터·스카이뷰·로드뷰·창 크기)을 처음 상태로">↺ 초기화</button><span class="mvmsg hide"></span>';
     const panel = document.createElement('div'); panel.className = 'rvpanel hide';
     panel.innerHTML = '<div class="rvgrip" title="위아래로 끌어서 로드뷰 크기 조절"></div><button type="button" class="rvx">✕ 닫기</button><div class="rvbox"></div>';
     wrap.appendChild(bar); wrap.appendChild(panel);
@@ -76,7 +78,8 @@
     };
     bar.addEventListener('click', e => {
       const b = e.target.closest('button[data-v]'); if (!b) return;
-      if (b.dataset.v === 'reset') {
+      if (b.dataset.v === 'naver') { window.open(nLand(map.getCenter(), Math.max(10, Math.min(19, 20 - map.getLevel()))), '_blank', 'noopener'); return; }
+    if (b.dataset.v === 'reset') {
         bar.querySelectorAll('button[aria-pressed]').forEach(x => x.setAttribute('aria-pressed', 'false'));
         map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP); map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW);
         window.__rvOn = false; say(''); panel.classList.add('hide'); panel.style.height = ''; if (mk) mk.setMap(null);
@@ -147,6 +150,7 @@
     const el = document.createElement('div'); el.className = 'kpop';
     const rows = g.deals.map(r => '<div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('');
     el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.nm || (g.dong + ' ' + g.jb)) + '</b><div style="opacity:.65">' + escH(g.dong + ' ' + g.jb) + ' · ' + TN[g.deals[0][0]] + '</div>' + rows;
+    el.insertAdjacentHTML('beforeend', nLink(pos));
     el.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
     dealPop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 10, map });
   }
@@ -218,6 +222,7 @@
         const all = rs.slice().sort((p, q) => q[7] - p[7]).slice(0, 30);
         const pe = document.createElement('div'); pe.className = 'kpop';
         pe.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.dong) + ' ' + TN[0] + ' ' + rs.length + '건</b><div style="opacity:.65">단독·다가구 · 지번이 없어 건물은 구분되지 않고, 동네 단위로 묶어 보여 드려요</div>' + all.map(r => '<div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('') + (rs.length > 30 ? '<div style="opacity:.6">… 외 ' + (rs.length - 30) + '건</div>' : '');
+        pe.insertAdjacentHTML('beforeend', nLink(pos));
         pe.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
         dealPop = new kakao.maps.CustomOverlay({ position: pos, content: pe, yAnchor: 1, clickable: true, zIndex: 10, map });
       };
