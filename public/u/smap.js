@@ -32,20 +32,10 @@
   for (const [rad, so, fo] of [[500, .7, .07], [1000, .5, .035]]) new kakao.maps.Circle({ center: spos, radius: rad, strokeWeight: 2, strokeColor: '#ff6b3d', strokeOpacity: so, strokeStyle: 'dashed', fillColor: '#ff6b3d', fillOpacity: fo, map });
   for (const [rad, t] of [[500, '500m'], [1000, '1km']]) new kakao.maps.CustomOverlay({ position: LL(lat + rad / 111320, lng), content: '<div class="rlab">' + t + '</div>', xAnchor: .5, yAnchor: .5, zIndex: 3, map });
   // 스카이뷰(위성사진)·로드뷰(거리 사진) 전환 — 카카오맵 기본 기능
-  const A64 = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
-  const OFF_X = 59382133607, OFF_Y = 58233041641;
-  function utmk(lat, lng) {
-    const a = 6378137, f = 1 / 298.257222101, e2 = 2 * f - f * f, ep2 = e2 / (1 - e2), k0 = 0.9996, d = Math.PI / 180;
-    const phi = lat * d, lam = (lng - 127.5) * d, phi0 = 38 * d;
-    const M = p => a * ((1 - e2 / 4 - 3 * e2 * e2 / 64 - 5 * e2 ** 3 / 256) * p - (3 * e2 / 8 + 3 * e2 * e2 / 32 + 45 * e2 ** 3 / 1024) * Math.sin(2 * p) + (15 * e2 * e2 / 256 + 45 * e2 ** 3 / 1024) * Math.sin(4 * p) - (35 * e2 ** 3 / 3072) * Math.sin(6 * p));
-    const N = a / Math.sqrt(1 - e2 * Math.sin(phi) ** 2), T = Math.tan(phi) ** 2, C = ep2 * Math.cos(phi) ** 2, Aa = lam * Math.cos(phi);
-    const x = 1000000 + k0 * N * (Aa + (1 - T + C) * Aa ** 3 / 6 + (5 - 18 * T + T * T + 72 * C - 58 * ep2) * Aa ** 5 / 120);
-    const y = 2000000 + k0 * (M(phi) - M(phi0) + N * Math.tan(phi) * (Aa * Aa / 2 + (5 - T + 9 * C + 4 * C * C) * Aa ** 4 / 24 + (61 - 58 * T + T * T + 600 * C - 330 * ep2) * Aa ** 6 / 720));
-    return [x, y];
-  }
-  const enc6 = v => { let s = ''; for (let i = 0; i < 6; i++) { s = A64[v % 64] + s; v = Math.floor(v / 64); } return s; };
-  function naverCenter(lat, lng) { const [x, y] = utmk(lat, lng); return enc6(Math.round(x * 100) + OFF_X) + '-' + enc6(Math.round(y * 100) + OFF_Y); }
-  const nLand = (p, z) => 'https://fin.land.naver.com/map?center=' + naverCenter(p.getLat(), p.getLng()) + '&zoom=' + Math.min(z || 15, 15.5) + '&tradeTypes=B1-B2&realEstateTypes=A05-A06-A07-C02-A02';
+  const nB62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const nTok = v => { let n = Math.round(v * 1e7) + 2e9, s = ''; while (n > 0) { s = nB62[n % 62] + s; n = Math.floor(n / 62); } return s || '0'; };
+  function naverCenter(lat, lng) { return nTok(lng) + '-' + nTok(lat); }
+  const nLand = (p, z) => 'https://fin.land.naver.com/map?center=' + naverCenter(p.getLat(), p.getLng()) + '&zoom=' + Math.max(12, Math.min(z || 17, 18)) + '&tradeTypes=B1-B2&realEstateTypes=A05-A06-A07-C02-A02';
   const dLand = (p, z) => 'https://www.dabangapp.com/map/onetwo?m_lat=' + p.getLat().toFixed(6) + '&m_lng=' + p.getLng().toFixed(6) + '&m_zoom=' + (z || 16);
   const nLink = (p, z) => '<div class="nlinks">매물보기 : <a class="nlink" title="네이버 부동산: 이 위치 주변으로 열려요" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버</a>, <a class="nlink" title="다방: 이 위치로 열려요" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방</a></div>';
   function setupMapView(map, wrap, onReset) {
