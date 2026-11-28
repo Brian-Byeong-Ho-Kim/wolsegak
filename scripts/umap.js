@@ -128,10 +128,11 @@
   const TN = ['원룸', '빌라', '오피스텔', '아파트', '투룸'];
   const catOf = r => r[0] === 0 ? (r[2] <= 23 ? 0 : 4) : r[0];
   const escH = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const nLand = (p, z) => 'https://fin.land.naver.com/map?zoom=' + (z || 16) + '&tradeTypes=A1-B1&realEstateTypes=A01-A04-B01';
+  let __nl = {}; fetch('/data/naver_layers.json').then(r => r.json()).then(j => { __nl = j; }).catch(() => {});
+  const nLand = (p, z) => 'https://fin.land.naver.com/map?zoom=' + (z || 16) + '&tradeTypes=B1-B2&realEstateTypes=A05-A06-A07-C02-A02' + (__nl[window.__nvCode] ? '&layer=' + __nl[window.__nvCode] : '');
   const dLand = (p, z) => 'https://www.dabangapp.com/map/onetwo?m_lat=' + p.getLat().toFixed(6) + '&m_lng=' + p.getLng().toFixed(6) + '&m_zoom=' + (z || 16);
   const zLand = (p, z) => 'https://www.zigbang.com/home/oneroom/map';
-  const nLink = (p, z) => '<span class="nlinks"><a class="nlink" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버 ↗</a><a class="nlink" href="' + zLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">직방 ↗</a><a class="nlink" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방 ↗</a> <small>· 다방은 이 위치로 열려요. 네이버·직방은 위치 이동을 지원하지 않아, 열린 뒤 검색창에 동 이름을 입력해 주세요</small></span>';
+  const nLink = (p, z) => '<span class="nlinks"><a class="nlink" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버 ↗</a><a class="nlink" href="' + zLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">직방 ↗</a><a class="nlink" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방 ↗</a> <small>· 다방은 이 위치로 열려요. 네이버는 이 지역(시군구)으로, 직방은 위치 이동을 지원하지 않아 열린 뒤 검색창에 지역명을 입력해 주세요</small></span>';
   function showDealPop(g, pos) {
     if (dealPop) dealPop.setMap(null);
     const el = document.createElement('div'); el.className = 'kpop';
@@ -144,7 +145,7 @@
   async function openSchool(k) {
     const o = byKey.get(k); if (!o) return;
     picked = k; clearDeals();
-    const gen = dealGen, code = o.a.dataset.s, sc = { lat: o.pos.getLat(), lng: o.pos.getLng() };
+    const gen = dealGen, code = (window.__nvCode = o.a.dataset.s), sc = { lat: o.pos.getLat(), lng: o.pos.getLng() };
     map.setLevel(4); map.setCenter(o.pos);
     setTimeout(() => { try { map.panBy(0, Math.round(document.getElementById('umap').clientHeight * 0.24)); } catch (e) {} }, 120);   // 아래 상자들이 보이도록 학교를 위쪽으로
     setMsg(o.name + ' 주변 실거래 찾는 중…');

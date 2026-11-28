@@ -208,8 +208,8 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
 #viewTabs .guide-tab:hover{background:var(--soft)}
 @media(max-width:700px){.wrap #viewTabs{display:flex;flex-wrap:wrap}.wrap #viewTabs>*{flex:1 1 auto}.wrap #viewTabs .guide-tab{font-size:13px;min-height:44px}}
 </style>
-<link rel="stylesheet" href="/map-controls.css?v=20261201">
-<script src="/map-controls.js?v=20261201"></script>
+<link rel="stylesheet" href="/map-controls.css?v=20261202">
+<script src="/map-controls.js?v=20261202"></script>
 </head>
 <body>
 <div class="wrap">
@@ -1370,6 +1370,7 @@ async function drawDeals() {
   const d = await loadAddr(code);
   if (gen !== dealGen) return;
   if (!d) { hideDeals(); dealMsg('이 지역은 주소가 있는 실거래 데이터가 아직 없어요. 동별 숫자를 참고해 주세요.'); return; }
+  window.__nvCode = code;
   if (dealCode !== code) { hideDeals(); dongPos = null; dealCode = code; }
   if (!dongPos) {
     dealMsg('동네 위치 찾는 중…');

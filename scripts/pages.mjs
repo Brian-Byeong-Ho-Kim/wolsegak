@@ -3,6 +3,7 @@
 // 사용: node scripts/pages.mjs   (build.mjs 다음에 실행)
 import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 
 const SITE = 'https://www.wolsegak.com';
 const root = new URL('../', import.meta.url);
@@ -141,6 +142,7 @@ ${mo.map((m, i) => `<text x="${x(i).toFixed(1)}" y="${H - 8}" font-size="13" fil
 <div class="legend"><span><i style="background:#fed7aa"></i>거래 건수</span><span><i style="background:#c2410c"></i>중간 월세(만원)</span>${pv.length > 1 ? '<span><i style="background:#a8a29e"></i>작년 같은 달</span>' : ''}<span>최근 달은 신고가 덜 들어와 적게 보여요</span></div>`;
 }
 
+const NLAYER = JSON.parse(readFileSync(new URL('../public/data/naver_layers.json', import.meta.url), 'utf8'));
 const bar = (v, max) => `<span class="bar"><i style="width:${Math.max(4, Math.round(v / max * 100))}%"></i></span>`;
 
 // ---- 학교 페이지 ----
@@ -180,7 +182,7 @@ async function univPage(u, all) {
 <h1>${esc(full)} 자취방 월세 시세</h1>${aka ? `\n<p class="aka">${esc((u.a || []).join(' · '))}</p>` : ''}
 <p class="lead">${esc(u.addr)} · <b>${esc(s.name)}</b> 실거래 기준 · ${period}</p>
 <a class="cta" href="/#${esc(hash)}">📊 시세 보기 · 내 월세 비교하기 →</a>
-${GEO[u.name + '|' + u.campus] ? `<a class="nbtn" href="https://fin.land.naver.com/map?zoom=16&tradeTypes=A1-B1&realEstateTypes=A01-A04-B01" target="_blank" rel="noopener noreferrer">🏘 네이버 부동산 ↗</a> <a class="nbtn" href="https://www.zigbang.com/home/oneroom/map" target="_blank" rel="noopener noreferrer">직방 ↗</a> <a class="nbtn" href="https://www.dabangapp.com/map/onetwo?m_lat=${GEO[u.name + '|' + u.campus][0]}&m_lng=${GEO[u.name + '|' + u.campus][1]}&m_zoom=16" target="_blank" rel="noopener noreferrer">다방 ↗</a> <small style="opacity:.6">(새 창 · 다방은 학교 위치로 열려요. 네이버·직방은 위치 이동을 지원하지 않아 열린 뒤 학교·동 이름을 검색해 주세요 · 각 업체와 제휴 관계가 없는 외부 링크예요)</small>\n` : ''}<button type="button" class="favbtn" id="favSchool" data-u="${esc(u.name)}" data-s="${esc(u.sgg)}" data-l="${esc(u.name.replace(/대학교/, '대') + ' · ' + place)}">☆ 관심 지역에 저장</button><span class="favmsg" id="favMsg" role="status"></span>
+${GEO[u.name + '|' + u.campus] ? `<a class="nbtn" href="https://fin.land.naver.com/map?zoom=14&tradeTypes=B1-B2&realEstateTypes=A05-A06-A07-C02-A02${NLAYER[u.sgg] ? '&layer=' + NLAYER[u.sgg] : ''}" target="_blank" rel="noopener noreferrer">🏘 네이버 부동산 ↗</a> <a class="nbtn" href="https://www.zigbang.com/home/oneroom/map" target="_blank" rel="noopener noreferrer">직방 ↗</a> <a class="nbtn" href="https://www.dabangapp.com/map/onetwo?m_lat=${GEO[u.name + '|' + u.campus][0]}&m_lng=${GEO[u.name + '|' + u.campus][1]}&m_zoom=16" target="_blank" rel="noopener noreferrer">다방 ↗</a> <small style="opacity:.6">(새 창 · 다방은 학교 위치로 열려요. 네이버는 이 지역(시군구)으로, 직방은 위치 이동을 지원하지 않아 열린 뒤 검색해 주세요 · 각 업체와 제휴 관계가 없는 외부 링크예요)</small>\n` : ''}<button type="button" class="favbtn" id="favSchool" data-u="${esc(u.name)}" data-s="${esc(u.sgg)}" data-l="${esc(u.name.replace(/대학교/, '대') + ' · ' + place)}">☆ 관심 지역에 저장</button><span class="favmsg" id="favMsg" role="status"></span>
 <script>
 (function(){var b=document.getElementById('favSchool'),m=document.getElementById('favMsg');if(!b)return;
 var f={places:[b.dataset.s],dongs:[],univ:b.dataset.u,label:b.dataset.l},k=function(x){return (x.places||[]).join(',')+'|'+(x.dongs||[]).join(',')};
