@@ -208,8 +208,8 @@ h3.sub{font-size:14px;margin:20px 0 8px;color:var(--ink)}
 #viewTabs .guide-tab:hover{background:var(--soft)}
 @media(max-width:700px){.wrap #viewTabs{display:flex;flex-wrap:wrap}.wrap #viewTabs>*{flex:1 1 auto}.wrap #viewTabs .guide-tab{font-size:13px;min-height:44px}}
 </style>
-<link rel="stylesheet" href="/map-controls.css?v=20261206">
-<script src="/map-controls.js?v=20261206"></script>
+<link rel="stylesheet" href="/map-controls.css?v=20261207">
+<script src="/map-controls.js?v=20261207"></script>
 </head>
 <body>
 <div class="wrap">
@@ -1433,7 +1433,7 @@ async function drawDeals() {
       const pe = document.createElement('div'); pe.className = 'kpop';
       pe.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.dong) + ' ' + TYPE_NAMES[0] + ' ' + rs.length + '건</b><div style="opacity:.65">단독·다가구 · 지번이 없어 건물은 구분되지 않고, 동네 단위로 묶어 보여 드려요</div>' + all.map(r => '<div>' + dealDate(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + won(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('') + (rs.length > 30 ? '<div style="opacity:.6">… 외 ' + (rs.length - 30) + '건</div>' : '');
       window.__nvDong = g.dong;
-      pe.querySelector('b').insertAdjacentHTML('afterend', nLink(pos, 16));
+      pe.querySelector('b').nextElementSibling.insertAdjacentHTML('afterend', nLink(pos, 16));
       pe.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
       dealPop = new kakao.maps.CustomOverlay({ position: pos, content: pe, yAnchor: 1, clickable: true, zIndex: 40, map });
     };
@@ -1463,7 +1463,7 @@ function showDealPop(g, pos) {
   const rows = g.deals.map(r => `<div>${dealDate(r[7])} · ${r[4] <= 0 ? '전세 ' + won(r[3]) : `${r[3].toLocaleString()}/${r[4]}만`} · ${Math.round(r[2])}㎡ · ${fl(r[5])}층${r[8] === 2 ? ' · 갱신' : ''}</div>`).join('');
   el.innerHTML = `<span class="x" aria-label="닫기">✕</span><b>${escH(g.nm || (g.dong + ' ' + g.jb))}</b><div style="opacity:.65">${escH(g.dong + ' ' + g.jb)} · ${TYPE_NAMES[g.deals[0][0]]}</div>${rows}`;
   window.__nvDong = g.dong;
-  el.querySelector('b').insertAdjacentHTML('afterend', nLink(pos));
+  el.querySelector('b').nextElementSibling.insertAdjacentHTML('afterend', nLink(pos));
   el.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
   dealPop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 40, map });
 }

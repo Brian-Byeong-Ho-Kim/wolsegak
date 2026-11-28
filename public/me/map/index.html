@@ -44,7 +44,7 @@ input:focus{border-color:var(--brand)}
 .kdeal small{font-weight:500;opacity:.7}.kdeal.jn{border-style:dashed}
 .kpop{position:relative;background:#fff;border:1.5px solid var(--ink);border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.5;min-width:190px;max-width:260px;box-shadow:0 4px 14px rgba(0,0,0,.25);transform:translateY(-18px)}
 .kpop{max-height:240px;overflow-y:auto}
-.kpop b{display:inline-block;vertical-align:middle;font-size:13.5px}.kpop .x{position:absolute;right:8px;top:6px;cursor:pointer;opacity:.6}
+.kpop b{display:block;font-size:13.5px;padding-right:18px}.kpop .x{position:absolute;right:8px;top:6px;cursor:pointer;opacity:.6}
 .rlab{font:700 11px/1 "Pretendard Variable",sans-serif;color:#c2410c;background:rgba(255,255,255,.9);border:1px solid #ffb089;border-radius:999px;padding:2px 6px;pointer-events:none}
 .univ{font-size:26px;line-height:1;transform:translateY(-4px)}
 .ctr{width:14px;height:14px;border-radius:50%;background:#ff6b3d;border:3px solid #fff;box-shadow:0 0 0 2px #ff6b3d}
@@ -80,8 +80,8 @@ input:focus{border-color:var(--brand)}
 #dealKinds button[aria-pressed=true],#dealTypes button[aria-pressed=true]{background:var(--ink);color:#fff}
 #mapWrap{border:0;background:transparent;overflow:visible}
 </style>
-<link rel="stylesheet" href="/map-controls.css?v=20261206">
-<script src="/map-controls.js?v=20261206"></script>
+<link rel="stylesheet" href="/map-controls.css?v=20261207">
+<script src="/map-controls.js?v=20261207"></script>
 </head>
 <body>
 <div class="wrap">
@@ -358,7 +358,7 @@ function showPop(g, fee) {
   const el = document.createElement('div'); el.className = 'kpop';
   el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + esc(g.nm || g.dong + ' ' + g.jb) + '</b><div style="opacity:.65">' + esc(g.dong + ' ' + g.jb) + ' · ' + TN[g.deals[0][0]] + '</div>' + g.deals.map(r => '<div>' + dd(r[7]) + ' · ' + dealLine(r, fee) + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층</div>').join('');
   window.__nvDong = g.dong;
-  el.querySelector('b').insertAdjacentHTML('afterend', nLink(g.pos));
+  el.querySelector('b').nextElementSibling.insertAdjacentHTML('afterend', nLink(g.pos));
   el.querySelector('.x').onclick = closePop;
   pop = new kakao.maps.CustomOverlay({ position: g.pos, content: el, yAnchor: 1, clickable: true, zIndex: 30, map });
 }

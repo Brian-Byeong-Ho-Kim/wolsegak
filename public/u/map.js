@@ -145,14 +145,14 @@
   const nLand = (p, z) => 'https://fin.land.naver.com/map?center=' + naverCenter(p.getLat(), p.getLng()) + '&zoom=' + Math.min(z || 15, 15.5) + '&tradeTypes=B1-B2&realEstateTypes=A05-A06-A07-C02-A02';
   const dLand = (p, z) => 'https://www.dabangapp.com/map/onetwo?m_lat=' + p.getLat().toFixed(6) + '&m_lng=' + p.getLng().toFixed(6) + '&m_zoom=' + (z || 16);
   const zLand = (p, z) => 'https://www.zigbang.com/home/oneroom/map';
-  const nLink = (p, z) => '<span class="nlinks"><a class="nlink" title="네이버 부동산: 이 위치 주변으로 열려요" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버↗</a><a class="nlink" title="직방: 지도만 열려요. 동 이름이 복사되니 검색창에 붙여넣어 주세요" onclick="window.__zcopy()" href="' + zLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">직방↗</a><a class="nlink" title="다방: 이 위치로 열려요" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방↗</a></span>';
+  const nLink = (p, z) => '<div class="nlinks">매물보기 : <a class="nlink" title="다방: 이 위치로 열려요" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방</a>, <a class="nlink" title="직방: 지도만 열려요. 동 이름이 복사되니 검색창에 붙여넣어 주세요" onclick="window.__zcopy()" href="' + zLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">직방</a>, <a class="nlink" title="네이버 부동산: 이 위치 주변으로 열려요" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버</a></div>';
   function showDealPop(g, pos) {
     if (dealPop) dealPop.setMap(null);
     const el = document.createElement('div'); el.className = 'kpop';
     const rows = g.deals.map(r => '<div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('');
     el.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.nm || (g.dong + ' ' + g.jb)) + '</b><div style="opacity:.65">' + escH(g.dong + ' ' + g.jb) + ' · ' + TN[catOf(g.deals[0])] + '</div>' + rows;
     window.__nvDong = g.dong;
-    el.querySelector('b').insertAdjacentHTML('afterend', nLink(pos));
+    el.querySelector('b').nextElementSibling.insertAdjacentHTML('afterend', nLink(pos));
     el.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
     dealPop = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 1, clickable: true, zIndex: 30, map });
   }
