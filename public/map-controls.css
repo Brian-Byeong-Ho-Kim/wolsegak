@@ -112,3 +112,6 @@ body.mapfs{overflow:hidden}
 
 .nlink{display:block;margin-top:7px;font:700 12px/1.3 "Pretendard Variable",sans-serif;color:#047857;text-decoration:underline}
 .nlinks small{font-weight:400;opacity:.7}.nlinks .nlink{display:inline;margin:0 4px 0 0}.nbtn+.nbtn{margin-left:4px}
+
+.nlinks{display:inline-block;margin-left:8px;white-space:nowrap}.nlinks .nlink{display:inline;margin:0 6px 0 0;font-size:12px}
+.kpop>b{display:inline-block;vertical-align:middle}
