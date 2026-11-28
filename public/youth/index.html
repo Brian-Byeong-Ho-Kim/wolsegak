@@ -13,7 +13,7 @@ function districts(){const list=regions.filter(r=>r.name.split(' ')[0]===$('prov
 function item(tag,label){const el=document.createElement(tag);el.textContent=label;return el}
 async function showNotices(region,province,seq){
  const code=province.startsWith('세종')?'36110':region.code.slice(0,2);
- $('lh').href='https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancList.do?mi=1026&cnpCd='+code;
+ $('lh').href='https://apply.lh.or.kr/lhapply/apply/wt/wrtanc/selectWrtancList.do?mi=1026';
  let list,cached=false;
  try{list=await json('/api/youth-notices?region='+code)}catch{list=SNAPSHOT;cached=true}
  if(seq!==generation)return;
