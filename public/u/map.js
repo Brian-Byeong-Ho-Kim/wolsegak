@@ -143,7 +143,7 @@
   function naverCenter(lat, lng) { const [x, y] = utmk(lat, lng); return enc6(Math.round(x * 100) + OFF_X) + '-' + enc6(Math.round(y * 100) + OFF_Y); }
   const nLand = (p, z) => 'https://fin.land.naver.com/map?center=' + naverCenter(p.getLat(), p.getLng()) + '&zoom=' + Math.min(z || 15, 15.5) + '&tradeTypes=B1-B2&realEstateTypes=A05-A06-A07-C02-A02';
   const dLand = (p, z) => 'https://www.dabangapp.com/map/onetwo?m_lat=' + p.getLat().toFixed(6) + '&m_lng=' + p.getLng().toFixed(6) + '&m_zoom=' + (z || 16);
-  const nLink = (p, z) => '<div class="nlinks">매물보기 : <a class="nlink" title="다방: 이 위치로 열려요" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방</a>, <a class="nlink" title="네이버 부동산: 이 위치 주변으로 열려요" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버</a></div>';
+  const nLink = (p, z) => '<div class="nlinks">매물보기 : <a class="nlink" title="네이버 부동산: 이 위치 주변으로 열려요" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버</a>, <a class="nlink" title="다방: 이 위치로 열려요" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방</a></div>';
   function showDealPop(g, pos) {
     if (dealPop) dealPop.setMap(null);
     const el = document.createElement('div'); el.className = 'kpop';
