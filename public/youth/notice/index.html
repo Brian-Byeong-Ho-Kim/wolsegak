@@ -1,0 +1,23 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>공고 요약 | 월세각</title><style>*{box-sizing:border-box}body{background:#fff8f3;color:#28221c;font:16px/1.7 system-ui,sans-serif}main{max-width:820px;margin:auto;padding:20px 12px 60px}section{background:white;border:1px solid #eadbcf;border-radius:16px;padding:20px;margin:16px 0}a{color:#823d21}h1{font-size:clamp(22px,4vw,32px);line-height:1.4}h2{font-size:20px}select{width:100%;padding:10px;font:inherit}dt{font-weight:bold}dd{margin:0 0 10px}.action{display:inline-block;border-radius:9px;padding:9px 16px;background:#794020;color:white}</style>
+<main><a href="/youth/">← 청년 주거 공고 목록</a><h1 id="heading">공고 요약</h1><div id="body" role="status">공고를 불러오는 중입니다.</div></main>
+<script src="/youth/housing-map.js"></script><script>
+(async()=>{
+ const id=new URLSearchParams(location.search).get('id');
+ const directory=await youthDirectory;
+ let n=directory.find(entry=>noticeId(entry)===id);
+ if(!n){try{n=JSON.parse(sessionStorage.getItem('notice:'+id))}catch{}}
+ if(!n && /^\d+$/.test(id)){
+   const q=Object.fromEntries(new URLSearchParams(location.search));
+   try{const u=new URL(q.url);if(u.origin==='https://apply.lh.or.kr' && u.pathname==='/lhapply/apply/wt/wrtanc/selectWrtancInfo.do' && u.searchParams.get('panId')===id && q.title)n=q}catch{}
+ }
+ const body=document.getElementById('body');
+ if(!n || !/^https:\/\/apply\.lh\.or\.kr\//.test(n.url)){body.textContent='공고 정보를 찾을 수 없습니다. 청년 주거 목록에서 공고를 다시 선택해 주세요.';return}
+ document.getElementById('heading').textContent=n.title;document.title=n.title+' | 월세각';
+ function el(tag,text){const node=document.createElement(tag);node.textContent=text;return node}
+ body.replaceChildren();const info=el('section',''),dl=el('dl','');
+ for(const [key,value] of [['모집 지역',n.region],['게시일',n.posted],['공고 마감일',n.end],['접수 기간',n.schedule||'공고 원문에서 대상별 일정 확인'],['신청 자격·제출서류','나이, 무주택, 소득·자산 기준과 제출서류는 원문에서 모집 유형별로 확인하세요.']])dl.append(el('dt',key),el('dd',value));
+ const original=el('a','LH 공고 원문 바로가기');original.className='action';original.href=n.url;info.append(dl,original);body.append(info);
+ const geo=el('section','');geo.append(el('h2','공급 주택 위치'));const map=el('div','');geo.append(map);body.append(geo);showHousingMap(map,[n],n.region);
+ for(const site of n.sites||[])geo.append(el('p',[site.name,site.address,site.area&&site.area+'㎡'].filter(Boolean).join(' · ')));
+})();
+</script></html>
