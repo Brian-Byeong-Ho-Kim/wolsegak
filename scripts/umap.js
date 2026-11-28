@@ -130,8 +130,8 @@
   const escH = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const nLand = (p, z) => 'https://fin.land.naver.com/map?zoom=' + (z || 16) + '&tradeTypes=A1-B1&realEstateTypes=A01-A04-B01';
   const dLand = (p, z) => 'https://www.dabangapp.com/map/onetwo?m_lat=' + p.getLat().toFixed(6) + '&m_lng=' + p.getLng().toFixed(6) + '&m_zoom=' + (z || 16);
-  const zLand = (p, z) => 'https://www.zigbang.com/home/oneroom/map?lat=' + p.getLat().toFixed(6) + '&lng=' + p.getLng().toFixed(6) + '&zoom=' + (z || 16);
-  const nLink = (p, z) => '<span class="nlinks"><a class="nlink" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버 ↗</a><a class="nlink" href="' + zLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">직방 ↗</a><a class="nlink" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방 ↗</a> <small>에서 이 주변 매물 보기</small></span>';
+  const zLand = (p, z) => 'https://www.zigbang.com/home/oneroom/map';
+  const nLink = (p, z) => '<span class="nlinks"><a class="nlink" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버 ↗</a><a class="nlink" href="' + zLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">직방 ↗</a><a class="nlink" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방 ↗</a> <small>· 다방은 이 위치로 열려요. 네이버·직방은 위치 이동을 지원하지 않아, 열린 뒤 검색창에 동 이름을 입력해 주세요</small></span>';
   function showDealPop(g, pos) {
     if (dealPop) dealPop.setMap(null);
     const el = document.createElement('div'); el.className = 'kpop';
