@@ -1,8 +1,10 @@
-const nLand = (p, z) => 'https://new.land.naver.com/rooms?ms=' + p.getLat().toFixed(6) + ',' + p.getLng().toFixed(6) + ',' + (z || 17);
-const nLink = p => '<a class="nlink" href="' + nLand(p) + '" target="_blank" rel="noopener noreferrer">네이버 부동산에서 이 주변 매물 보기 ↗</a>';
+const nLand = (p, z) => 'https://fin.land.naver.com/map?zoom=' + (z || 16) + '&tradeTypes=A1-B1&realEstateTypes=A01-A04-B01';
+const dLand = (p, z) => 'https://www.dabangapp.com/map/onetwo?m_lat=' + p.getLat().toFixed(6) + '&m_lng=' + p.getLng().toFixed(6) + '&m_zoom=' + (z || 16);
+const zLand = (p, z) => 'https://www.zigbang.com/home/oneroom/map?lat=' + p.getLat().toFixed(6) + '&lng=' + p.getLng().toFixed(6) + '&zoom=' + (z || 16);
+const nLink = p => '<span class="nlinks"><a class="nlink" href="' + nLand(p) + '" target="_blank" rel="noopener noreferrer">네이버 ↗</a><a class="nlink" href="' + zLand(p) + '" target="_blank" rel="noopener noreferrer">직방 ↗</a><a class="nlink" href="' + dLand(p) + '" target="_blank" rel="noopener noreferrer">다방 ↗</a> <small>에서 이 주변 매물 보기</small></span>';
 function setupMapView(map, wrap, onReset) {
   const bar = document.createElement('div'); bar.className = 'mview';
-  bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><button type="button" data-v="naver" title="지금 보는 곳 주변 매물을 네이버 부동산에서 열어요 (새 창)">🏘 네이버 매물</button><button type="button" data-v="reset" title="지도 설정(필터·스카이뷰·로드뷰·창 크기)을 처음 상태로">↺ 초기화</button><span class="mvmsg hide"></span>';
+  bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><button type="button" data-v="naver" title="지금 보는 곳 주변 매물을 네이버 부동산에서 열어요 (새 창)">🏘 네이버 매물</button><button type="button" data-v="zig" title="직방에서 이 지도 위치의 매물 보기">직방</button><button type="button" data-v="dabang" title="다방에서 이 지도 위치의 매물 보기">다방</button><button type="button" data-v="reset" title="지도 설정(필터·스카이뷰·로드뷰·창 크기)을 처음 상태로">↺ 초기화</button><span class="mvmsg hide"></span>';
   const panel = document.createElement('div'); panel.className = 'rvpanel hide';
   panel.innerHTML = '<div class="rvgrip" title="위아래로 끌어서 로드뷰 크기 조절"></div><button type="button" class="rvx">✕ 닫기</button><div class="rvbox"></div>';
   wrap.querySelector('.map-footer').prepend(bar);
@@ -55,7 +57,7 @@ function setupMapView(map, wrap, onReset) {
   };
   bar.addEventListener('click', e => {
     const b = e.target.closest('button[data-v]'); if (!b) return;
-    if (b.dataset.v === 'naver') { window.open(nLand(map.getCenter(), Math.max(10, Math.min(19, 20 - map.getLevel()))), '_blank', 'noopener'); return; }
+    if (b.dataset.v === 'naver' || b.dataset.v === 'zig' || b.dataset.v === 'dabang') { const z = Math.max(10, Math.min(19, 20 - map.getLevel())); window.open((b.dataset.v === 'naver' ? nLand : b.dataset.v === 'zig' ? zLand : dLand)(map.getCenter(), z), '_blank', 'noopener'); return; }
     if (b.dataset.v === 'reset') {
       bar.querySelectorAll('button[aria-pressed]').forEach(x => x.setAttribute('aria-pressed', 'false'));
       map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP); map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW);

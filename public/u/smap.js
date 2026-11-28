@@ -32,11 +32,13 @@
   for (const [rad, so, fo] of [[500, .7, .07], [1000, .5, .035]]) new kakao.maps.Circle({ center: spos, radius: rad, strokeWeight: 2, strokeColor: '#ff6b3d', strokeOpacity: so, strokeStyle: 'dashed', fillColor: '#ff6b3d', fillOpacity: fo, map });
   for (const [rad, t] of [[500, '500m'], [1000, '1km']]) new kakao.maps.CustomOverlay({ position: LL(lat + rad / 111320, lng), content: '<div class="rlab">' + t + '</div>', xAnchor: .5, yAnchor: .5, zIndex: 3, map });
   // 스카이뷰(위성사진)·로드뷰(거리 사진) 전환 — 카카오맵 기본 기능
-  const nLand = (p, z) => 'https://new.land.naver.com/rooms?ms=' + p.getLat().toFixed(6) + ',' + p.getLng().toFixed(6) + ',' + (z || 17);
-  const nLink = p => '<a class="nlink" href="' + nLand(p) + '" target="_blank" rel="noopener noreferrer">네이버 부동산에서 이 주변 매물 보기 ↗</a>';
+  const nLand = (p, z) => 'https://fin.land.naver.com/map?zoom=' + (z || 16) + '&tradeTypes=A1-B1&realEstateTypes=A01-A04-B01';
+  const dLand = (p, z) => 'https://www.dabangapp.com/map/onetwo?m_lat=' + p.getLat().toFixed(6) + '&m_lng=' + p.getLng().toFixed(6) + '&m_zoom=' + (z || 16);
+  const zLand = (p, z) => 'https://www.zigbang.com/home/oneroom/map?lat=' + p.getLat().toFixed(6) + '&lng=' + p.getLng().toFixed(6) + '&zoom=' + (z || 16);
+  const nLink = p => '<span class="nlinks"><a class="nlink" href="' + nLand(p) + '" target="_blank" rel="noopener noreferrer">네이버 ↗</a><a class="nlink" href="' + zLand(p) + '" target="_blank" rel="noopener noreferrer">직방 ↗</a><a class="nlink" href="' + dLand(p) + '" target="_blank" rel="noopener noreferrer">다방 ↗</a> <small>에서 이 주변 매물 보기</small></span>';
   function setupMapView(map, wrap, onReset) {
     const bar = document.createElement('div'); bar.className = 'mview';
-    bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><button type="button" data-v="naver" title="지금 보는 곳 주변 매물을 네이버 부동산에서 열어요 (새 창)">🏘 네이버 매물</button><button type="button" data-v="reset" title="지도 설정(필터·스카이뷰·로드뷰·창 크기)을 처음 상태로">↺ 초기화</button><span class="mvmsg hide"></span>';
+    bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><button type="button" data-v="naver" title="지금 보는 곳 주변 매물을 네이버 부동산에서 열어요 (새 창)">🏘 네이버 매물</button><button type="button" data-v="zig" title="직방에서 이 지도 위치의 매물 보기">직방</button><button type="button" data-v="dabang" title="다방에서 이 지도 위치의 매물 보기">다방</button><button type="button" data-v="reset" title="지도 설정(필터·스카이뷰·로드뷰·창 크기)을 처음 상태로">↺ 초기화</button><span class="mvmsg hide"></span>';
     const panel = document.createElement('div'); panel.className = 'rvpanel hide';
     panel.innerHTML = '<div class="rvgrip" title="위아래로 끌어서 로드뷰 크기 조절"></div><button type="button" class="rvx">✕ 닫기</button><div class="rvbox"></div>';
     wrap.appendChild(bar); wrap.appendChild(panel);
@@ -78,7 +80,7 @@
     };
     bar.addEventListener('click', e => {
       const b = e.target.closest('button[data-v]'); if (!b) return;
-      if (b.dataset.v === 'naver') { window.open(nLand(map.getCenter(), Math.max(10, Math.min(19, 20 - map.getLevel()))), '_blank', 'noopener'); return; }
+      if (b.dataset.v === 'naver' || b.dataset.v === 'zig' || b.dataset.v === 'dabang') { const z = Math.max(10, Math.min(19, 20 - map.getLevel())); window.open((b.dataset.v === 'naver' ? nLand : b.dataset.v === 'zig' ? zLand : dLand)(map.getCenter(), z), '_blank', 'noopener'); return; }
     if (b.dataset.v === 'reset') {
         bar.querySelectorAll('button[aria-pressed]').forEach(x => x.setAttribute('aria-pressed', 'false'));
         map.setMapTypeId(kakao.maps.MapTypeId.ROADMAP); map.removeOverlayMapTypeId(kakao.maps.MapTypeId.ROADVIEW);
