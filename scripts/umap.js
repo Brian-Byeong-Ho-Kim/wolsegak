@@ -133,7 +133,7 @@
   const nLand = (p, z) => 'https://fin.land.naver.com/map?zoom=' + (z || 16) + '&tradeTypes=B1-B2&realEstateTypes=A05-A06-A07-C02-A02' + (__nl[window.__nvCode] ? '&layer=' + __nl[window.__nvCode] : '');
   const dLand = (p, z) => 'https://www.dabangapp.com/map/onetwo?m_lat=' + p.getLat().toFixed(6) + '&m_lng=' + p.getLng().toFixed(6) + '&m_zoom=' + (z || 16);
   const zLand = (p, z) => 'https://www.zigbang.com/home/oneroom/map';
-  const nLink = (p, z) => '<span class="nlinks"><a class="nlink" title="네이버 부동산: 이 지역(시군구)으로 열려요" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버↗</a><a class="nlink" title="직방: 지도만 열려요(검색창에 지역명 입력)" href="' + zLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">직방↗</a><a class="nlink" title="다방: 이 위치로 열려요" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방↗</a></span>';
+  const nLink = (p, z) => '<span class="nlinks"><a class="nlink" title="네이버 부동산: 이 지역(시군구)으로 열려요" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버↗</a><a class="nlink" title="직방: 지도만 열려요. 지역명이 복사되니 검색창에 붙여넣어 주세요" onclick="window.__zcopy()" href="' + zLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">직방↗</a><a class="nlink" title="다방: 이 위치로 열려요" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방↗</a></span>';
   function showDealPop(g, pos) {
     if (dealPop) dealPop.setMap(null);
     const el = document.createElement('div'); el.className = 'kpop';
