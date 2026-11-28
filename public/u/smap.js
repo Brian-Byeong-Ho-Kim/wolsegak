@@ -35,7 +35,7 @@
   const nLand = (p, z) => 'https://fin.land.naver.com/map?zoom=' + (z || 16) + '&tradeTypes=A1-B1&realEstateTypes=A01-A04-B01';
   const dLand = (p, z) => 'https://www.dabangapp.com/map/onetwo?m_lat=' + p.getLat().toFixed(6) + '&m_lng=' + p.getLng().toFixed(6) + '&m_zoom=' + (z || 16);
   const zLand = (p, z) => 'https://www.zigbang.com/home/oneroom/map?lat=' + p.getLat().toFixed(6) + '&lng=' + p.getLng().toFixed(6) + '&zoom=' + (z || 16);
-  const nLink = p => '<span class="nlinks"><a class="nlink" href="' + nLand(p) + '" target="_blank" rel="noopener noreferrer">네이버 ↗</a><a class="nlink" href="' + zLand(p) + '" target="_blank" rel="noopener noreferrer">직방 ↗</a><a class="nlink" href="' + dLand(p) + '" target="_blank" rel="noopener noreferrer">다방 ↗</a> <small>에서 이 주변 매물 보기</small></span>';
+  const nLink = (p, z) => '<span class="nlinks"><a class="nlink" href="' + nLand(p, z) + '" target="_blank" rel="noopener noreferrer">네이버 ↗</a><a class="nlink" href="' + zLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">직방 ↗</a><a class="nlink" href="' + dLand(p, z || 18) + '" target="_blank" rel="noopener noreferrer">다방 ↗</a> <small>에서 이 주변 매물 보기</small></span>';
   function setupMapView(map, wrap, onReset) {
     const bar = document.createElement('div'); bar.className = 'mview';
     bar.innerHTML = '<button type="button" data-v="sky" aria-pressed="false" title="위성 사진으로 보기">🛰 스카이뷰</button><button type="button" data-v="road" aria-pressed="false" title="지도를 누르면 그 자리의 거리 사진을 보여 줘요">🚶 로드뷰</button><button type="button" data-v="naver" title="지금 보는 곳 주변 매물을 네이버 부동산에서 열어요 (새 창)">🏘 네이버 매물</button><button type="button" data-v="zig" title="직방에서 이 지도 위치의 매물 보기">직방</button><button type="button" data-v="dabang" title="다방에서 이 지도 위치의 매물 보기">다방</button><button type="button" data-v="reset" title="지도 설정(필터·스카이뷰·로드뷰·창 크기)을 처음 상태로">↺ 초기화</button><span class="mvmsg hide"></span>';
@@ -224,7 +224,7 @@
         const all = rs.slice().sort((p, q) => q[7] - p[7]).slice(0, 30);
         const pe = document.createElement('div'); pe.className = 'kpop';
         pe.innerHTML = '<span class="x" aria-label="닫기">✕</span><b>' + escH(g.dong) + ' ' + TN[0] + ' ' + rs.length + '건</b><div style="opacity:.65">단독·다가구 · 지번이 없어 건물은 구분되지 않고, 동네 단위로 묶어 보여 드려요</div>' + all.map(r => '<div>' + dd(r[7]) + ' · ' + (r[4] <= 0 ? '전세 ' + eok(r[3]) : r[3].toLocaleString() + '/' + r[4] + '만') + ' · ' + Math.round(r[2]) + '㎡ · ' + fl(r[5]) + '층' + (r[8] === 2 ? ' · 갱신' : '') + '</div>').join('') + (rs.length > 30 ? '<div style="opacity:.6">… 외 ' + (rs.length - 30) + '건</div>' : '');
-        pe.insertAdjacentHTML('beforeend', nLink(pos));
+        pe.insertAdjacentHTML('beforeend', nLink(pos, 16));
         pe.querySelector('.x').onclick = () => { dealPop.setMap(null); dealPop = null; };
         dealPop = new kakao.maps.CustomOverlay({ position: pos, content: pe, yAnchor: 1, clickable: true, zIndex: 10, map });
       };
