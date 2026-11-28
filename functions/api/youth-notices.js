@@ -18,7 +18,7 @@ export async function onRequestGet({request}) {
   const code = new URL(request.url).searchParams.get('region');
   if (!['11','26','27','28','30','31','36110','41','51','43','44','52','12','47','48','50'].includes(code)) return new Response(null,{status:400});
   try {
-    const res = await fetch(base+'selectWrtancList.do?mi=1026&cnpCd='+code+'&listCo=50',{cf:{cacheTtl:1800,cacheEverything:true},signal:AbortSignal.timeout(10000)});
+    const res = await fetch(base+'selectWrtancList.do?mi=1026',{cf:{cacheTtl:1800,cacheEverything:true},signal:AbortSignal.timeout(10000)});
     if (!res.ok) throw Error();
     const html = await res.text();
     if (!html.includes('wrtancInfoBtn') || !html.includes('srchForm')) throw Error();
