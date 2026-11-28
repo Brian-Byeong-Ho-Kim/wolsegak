@@ -289,7 +289,7 @@ document.getElementById('f').addEventListener('input', e => {
 await writeFile(new URL('u/index.html', pub), listHtml);
 
 // sitemap
-const today = index.updated;
+const today = new Date().toISOString().slice(0, 10);  // 사이트맵 lastmod: 빌드한 날(페이지 내용이 바뀐 날)
 const urls = [['/', '1.0', 'weekly'], ['/u/', '0.9', 'weekly'], ['/guide/types/', '0.5', 'monthly'], ...pages.map(p => [p.path, '0.7', 'weekly'])];
 await writeFile(new URL('sitemap.xml', pub), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
